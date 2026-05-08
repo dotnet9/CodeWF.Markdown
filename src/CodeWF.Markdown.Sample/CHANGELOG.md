@@ -1,5 +1,11 @@
 # 更新日志
 
+V12.0.2.5（2026-05-09）
+
+- 🔨[优化]-示例应用从 `ResxLangPlugin` 切换到 `JsonLangPlugin`，启动时扫描输出目录 `I18n` 下的 JSON 语言资源
+- 🔨[优化]-示例语言资源从 Resx 迁移为 `I18n/CodeWF.Markdown.Sample/*.json`，AOT 发布后语言切换正常
+- 🔨[优化]-`Language.tt` 改为从 JSON 生成 `SampleL` 强类型资源键，并移除 Resx 资源文件
+
 V12.0.2.2（2026-05-05）
 
 - 😄[新增]-接入 `Lang.Avalonia.Resx` 多语言框架，在 `App.axaml.cs` 中注册 `ResxLangPlugin`，默认文化 `zh-CN`

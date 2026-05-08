@@ -1,0 +1,24 @@
+{
+  "language": "日本語",
+  "description": "日本語",
+  "cultureName": "ja-JP",
+  "CodeWF": {
+    "MarkdownL": {
+      "ImagePreviewTitle": "画像プレビュー",
+      "ImagePreviewZoomOut": "縮小",
+      "ImagePreviewZoomIn": "拡大",
+      "ImagePreviewRotateLeft": "左回転",
+      "ImagePreviewRotateRight": "右回転",
+      "ImagePreviewSaveAs": "名前を付けて保存",
+      "ImagePreviewImagesFileType": "画像",
+      "ImagePreviewZoomStatus": "{0:P0} / {1} 度",
+      "ImagePreviewActualSize": "1:1",
+      "ImagePreviewFit": "全体表示",
+      "ImageLoadFailed": "画像を読み込めませんでした：{0}",
+      "ImageFileNotFound": "ファイルが見つかりません：{0}",
+      "CopySelectedText": "選択したテキストをコピー",
+      "CopyRenderedText": "レンダリング済みテキストをコピー",
+      "Copy": "コピー"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "language": "English",
+  "description": "English",
+  "cultureName": "en-US",
+  "CodeWF": {
+    "MarkdownL": {
+      "ImagePreviewTitle": "Image Preview",
+      "ImagePreviewZoomOut": "Zoom -",
+      "ImagePreviewZoomIn": "Zoom +",
+      "ImagePreviewRotateLeft": "Rotate L",
+      "ImagePreviewRotateRight": "Rotate R",
+      "ImagePreviewSaveAs": "Save As",
+      "ImagePreviewImagesFileType": "Images",
+      "ImagePreviewZoomStatus": "{0:P0} / {1} deg",
+      "ImagePreviewActualSize": "1:1",
+      "ImagePreviewFit": "Fit",
+      "ImageLoadFailed": "Image failed to load: {0}",
+      "ImageFileNotFound": "File not found: {0}",
+      "CopySelectedText": "Copy selected text",
+      "CopyRenderedText": "Copy rendered text",
+      "Copy": "Copy"
+    }
+  }
+}

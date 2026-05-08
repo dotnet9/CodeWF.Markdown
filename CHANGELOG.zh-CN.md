@@ -1,5 +1,11 @@
 # 更新日志
 
+## 12.0.2.5 - 2026-05-09
+
+- 🔨[优化]-将 Markdown 包和示例应用的多语言资源从 `Lang.Avalonia.Resx` 替换为 `Lang.Avalonia.Json`。
+- 🔨[优化]-JSON 语言资源复制到输出目录 `I18n` 并随 NuGet content files 分发，AOT 发布后语言切换可正常工作。
+- 🔨[优化]-更新强类型语言键生成模板和示例启动注册，统一使用 JSON 语言资源。
+
 ## 12.0.2.4 - 2026-05-08
 
 - 🔨[优化]-将 CodeWF.Markdown 包和示例从原 `CodeWF.AvaloniaControls` 仓库拆分为独立仓库。

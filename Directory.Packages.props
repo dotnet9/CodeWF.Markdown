@@ -10,7 +10,7 @@
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageVersion Include="Lang.Avalonia.Resx" Version="12.0.2" />
+    <PackageVersion Include="Lang.Avalonia.Json" Version="12.0.2" />
     <PackageVersion Include="Markdig" Version="1.1.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="Semi.Avalonia" Version="$(SemiAvaloniaVersion)" />

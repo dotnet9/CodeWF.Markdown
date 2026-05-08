@@ -1,0 +1,24 @@
+{
+  "language": "繁體中文",
+  "description": "中文（繁體）",
+  "cultureName": "zh-Hant",
+  "CodeWF": {
+    "MarkdownL": {
+      "ImagePreviewTitle": "圖片預覽",
+      "ImagePreviewZoomOut": "縮小",
+      "ImagePreviewZoomIn": "放大",
+      "ImagePreviewRotateLeft": "左旋",
+      "ImagePreviewRotateRight": "右旋",
+      "ImagePreviewSaveAs": "另存為",
+      "ImagePreviewImagesFileType": "圖片",
+      "ImagePreviewZoomStatus": "{0:P0} / {1} 度",
+      "ImagePreviewActualSize": "1:1",
+      "ImagePreviewFit": "適應",
+      "ImageLoadFailed": "圖片載入失敗：{0}",
+      "ImageFileNotFound": "檔案不存在：{0}",
+      "CopySelectedText": "複製選取文字",
+      "CopyRenderedText": "複製渲染文字",
+      "Copy": "複製"
+    }
+  }
+}

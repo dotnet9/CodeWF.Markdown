@@ -1,5 +1,11 @@
 # 更新日志
 
+V12.0.2.5（2026-05-09）
+
+- 🔨[优化]-将 `Lang.Avalonia.Resx` 替换为 `Lang.Avalonia.Json`，控件内文案改为读取随包输出的 JSON 语言资源
+- 🔨[优化]-`I18n/*.json` 作为 content files 打包并复制到 `I18n/CodeWF.Markdown/`，AOT 发布后语言切换可正常读取控件资源
+- 🔨[优化]-`Language.tt` 改为从 JSON 递归生成 `MarkdownL` 强类型资源键，移除 `Resources.Designer.cs` 和 Resx 资源依赖
+
 V12.0.2.3（2026-05-05）
 
 - 🔴[修复]-修复 `BindTheme` 绑定订阅泄漏：`IDisposable` 令牌存储在 `RenderedBlock` 中，块重建时逐一 Dispose，杜绝 observer 列表无限增长

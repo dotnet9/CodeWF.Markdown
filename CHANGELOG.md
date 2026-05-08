@@ -1,5 +1,11 @@
 # Changelog
 
+## 12.0.2.5 - 2026-05-09
+
+- 🔨[优化]-Replaced `Lang.Avalonia.Resx` localization with `Lang.Avalonia.Json` resources for the Markdown package and sample app.
+- 🔨[优化]-Copied JSON language resources to the `I18n` output folder and package content files so AOT builds can switch languages normally.
+- 🔨[优化]-Updated generated localization key templates and sample startup registration to use JSON resources.
+
 ## 12.0.2.4 - 2026-05-08
 
 - 🔨[优化]-Split CodeWF.Markdown packages and samples into an independent repository.

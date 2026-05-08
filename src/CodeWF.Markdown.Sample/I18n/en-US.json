@@ -1,0 +1,18 @@
+{
+  "language": "English",
+  "description": "English",
+  "cultureName": "en-US",
+  "CodeWF": {
+    "Markdown": {
+      "SampleL": {
+        "WindowTitle": "CodeWF.Markdown Sample",
+        "AppTheme": "App Theme",
+        "TypographyTheme": "Typography Theme",
+        "Language": "Language",
+        "MarkdownInput": "Markdown Input",
+        "StartIncrementalDemo": "Start Incremental Demo",
+        "StopIncrementalDemo": "Stop Incremental Demo"
+      }
+    }
+  }
+}

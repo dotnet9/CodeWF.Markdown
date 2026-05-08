@@ -1,0 +1,18 @@
+{
+  "language": "日本語",
+  "description": "日本語",
+  "cultureName": "ja-JP",
+  "CodeWF": {
+    "Markdown": {
+      "SampleL": {
+        "WindowTitle": "CodeWF.Markdown サンプル",
+        "AppTheme": "アプリテーマ",
+        "TypographyTheme": "タイポグラフィテーマ",
+        "Language": "言語",
+        "MarkdownInput": "Markdown 入力",
+        "StartIncrementalDemo": "増分デモ開始",
+        "StopIncrementalDemo": "増分デモ停止"
+      }
+    }
+  }
+}

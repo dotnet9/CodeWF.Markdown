@@ -1,0 +1,18 @@
+{
+  "language": "简体中文",
+  "description": "中文（简体）",
+  "cultureName": "zh-CN",
+  "CodeWF": {
+    "Markdown": {
+      "SampleL": {
+        "WindowTitle": "CodeWF.Markdown 示例",
+        "AppTheme": "应用主题",
+        "TypographyTheme": "排版主题",
+        "Language": "语言",
+        "MarkdownInput": "Markdown 输入",
+        "StartIncrementalDemo": "开始增量演示",
+        "StopIncrementalDemo": "停止增量演示"
+      }
+    }
+  }
+}

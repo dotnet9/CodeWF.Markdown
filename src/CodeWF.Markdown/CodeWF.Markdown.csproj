@@ -26,7 +26,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Avalonia" />
-		<PackageReference Include="Lang.Avalonia.Resx" />
+		<PackageReference Include="Lang.Avalonia.Json" />
 		<PackageReference Include="Markdig" />
 		<PackageReference Include="Sylinko.CSharpMath.Avalonia" />
 		<PackageReference Include="Svg.Controls.Skia.Avalonia" />
@@ -45,6 +45,14 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Language.cs</LastGenOutput>
 		</None>
+		<None Remove="I18n\*.json" />
+		<Content Include="I18n\*.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>I18n\CodeWF.Markdown\%(Filename)%(Extension)</TargetPath>
+			<Pack>true</Pack>
+			<PackagePath>contentFiles\any\any\I18n\CodeWF.Markdown\%(Filename)%(Extension)</PackagePath>
+			<PackageCopyToOutput>true</PackageCopyToOutput>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,0 +1,24 @@
+{
+  "language": "简体中文",
+  "description": "中文（简体）",
+  "cultureName": "zh-CN",
+  "CodeWF": {
+    "MarkdownL": {
+      "ImagePreviewTitle": "图片预览",
+      "ImagePreviewZoomOut": "缩小",
+      "ImagePreviewZoomIn": "放大",
+      "ImagePreviewRotateLeft": "左旋",
+      "ImagePreviewRotateRight": "右旋",
+      "ImagePreviewSaveAs": "另存为",
+      "ImagePreviewImagesFileType": "图片",
+      "ImagePreviewZoomStatus": "{0:P0} / {1} 度",
+      "ImagePreviewActualSize": "1:1",
+      "ImagePreviewFit": "适应",
+      "ImageLoadFailed": "图片加载失败：{0}",
+      "ImageFileNotFound": "文件不存在：{0}",
+      "CopySelectedText": "复制选中文本",
+      "CopyRenderedText": "复制渲染文本",
+      "Copy": "复制"
+    }
+  }
+}
