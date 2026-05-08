@@ -1,37 +1,26 @@
 # CodeWF.Markdown
 
-Avalonia Markdown viewer controls, typography themes, and runnable sample apps split from `CodeWF.AvaloniaControls` into a standalone repository.
+Avalonia Markdown viewer controls, typography themes, and a runnable sample app split from `CodeWF.AvaloniaControls` into a standalone repository.
 
 [简体中文](README.zh-CN.md) | English
+
+Changelog: [English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
 
 | Package | NuGet | Downloads |
 | --- | --- | --- |
 | CodeWF.Markdown | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.svg)](https://www.nuget.org/packages/CodeWF.Markdown/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.svg)](https://www.nuget.org/packages/CodeWF.Markdown/) |
 | CodeWF.Markdown.Themes | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Themes/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Themes/) |
-| CodeWF.Markdown.Lite | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Lite.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Lite.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite/) |
-| CodeWF.Markdown.Lite.Themes | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Lite.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite.Themes/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Lite.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite.Themes/) |
 
 ## Packages
 
 - `CodeWF.Markdown`: full Markdown viewer with common Markdown elements, code highlighting, image preview, SVG/image support, math rendering hooks, localization, and incremental rendering.
 - `CodeWF.Markdown.Themes`: default templates and typography themes for `CodeWF.Markdown`.
-- `CodeWF.Markdown.Lite`: lightweight Markdown viewer without SVG, math rendering, TextMate, or localization dependencies.
-- `CodeWF.Markdown.Lite.Themes`: default templates and typography themes for `CodeWF.Markdown.Lite`.
 
 ## Installation
-
-Full viewer:
 
 ```powershell
 Install-Package CodeWF.Markdown
 Install-Package CodeWF.Markdown.Themes
-```
-
-Lite viewer:
-
-```powershell
-Install-Package CodeWF.Markdown.Lite
-Install-Package CodeWF.Markdown.Lite.Themes
 ```
 
 ## Usage
@@ -63,17 +52,15 @@ Use `MarkdownViewer` in a view:
 </UserControl>
 ```
 
-For the Lite package, reference `CodeWF.Markdown.Lite.Themes` and use the same XML namespace. The sample apps show live editing, file loading, theme switching, and incremental rendering stress scenarios.
+The sample app shows live editing, file loading, theme switching, and incremental rendering stress scenarios.
 
 ## Repository Layout
 
 - `src/CodeWF.Markdown`: full Markdown viewer package
 - `src/CodeWF.Markdown.Themes`: full viewer templates and typography themes
-- `src/CodeWF.Markdown.Lite`: lightweight Markdown viewer package
-- `src/CodeWF.Markdown.Lite.Themes`: Lite viewer templates and typography themes
 - `src/CodeWF.Markdown.Sample`: full viewer sample app
-- `src/CodeWF.Markdown.Lite.Sample`: Lite viewer sample app
-- `CodeWF.Markdown.slnx`: solution view for all Markdown projects and samples
+- `tests/CodeWF.Markdown.Tests`: rendering and diff service tests
+- `CodeWF.Markdown.slnx`: solution view for Markdown projects, sample, and tests
 
 ## Build
 
@@ -88,7 +75,7 @@ To create NuGet packages:
 .\pack.bat
 ```
 
-To publish both sample apps for `win-x64` and `linux-x64`:
+To publish the sample app for `win-x64` and `linux-x64`:
 
 ```powershell
 .\publish_Markdown.bat

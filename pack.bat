@@ -22,8 +22,6 @@ echo [3/3] Packing libraries...
 for %%P in (
     "src\CodeWF.Markdown\CodeWF.Markdown.csproj"
     "src\CodeWF.Markdown.Themes\CodeWF.Markdown.Themes.csproj"
-    "src\CodeWF.Markdown.Lite\CodeWF.Markdown.Lite.csproj"
-    "src\CodeWF.Markdown.Lite.Themes\CodeWF.Markdown.Lite.Themes.csproj"
 ) do (
     dotnet pack %%~P -c %CONFIGURATION% --no-build -o "%PACKAGES_DIR%"
     if errorlevel 1 goto :error

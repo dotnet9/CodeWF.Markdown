@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 if "%~1"=="" (
-    set "project_paths=src\CodeWF.Markdown.Lite.Sample src\CodeWF.Markdown.Sample"
+    set "project_paths=src\CodeWF.Markdown.Sample"
 ) else (
     set "project_paths=%~1"
 )

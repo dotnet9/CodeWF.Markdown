@@ -1,6 +1,0 @@
-<Styles
-    x:Class="CodeWF.Markdown.Lite.Themes.MarkdownThemes"
-    xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StyleInclude Source="Themes/Common.axaml" />
-</Styles>

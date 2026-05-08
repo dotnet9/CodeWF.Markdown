@@ -2,6 +2,7 @@
   <Folder Name="/solution/">
     <File Path=".gitignore" />
     <File Path="CHANGELOG.md" />
+    <File Path="CHANGELOG.zh-CN.md" />
     <File Path="codewf.png" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />
@@ -19,11 +20,8 @@
   </Folder>
   <Folder Name="/samples/">
     <Project Path="src/CodeWF.Markdown.Sample/CodeWF.Markdown.Sample.csproj" />
-    <Project Path="src/CodeWF.Markdown.Lite.Sample/CodeWF.Markdown.Lite.Sample.csproj" />
   </Folder>
   <Project Path="src/CodeWF.Markdown/CodeWF.Markdown.csproj" />
   <Project Path="src/CodeWF.Markdown.Themes/CodeWF.Markdown.Themes.csproj" />
-  <Project Path="src/CodeWF.Markdown.Lite/CodeWF.Markdown.Lite.csproj" />
-  <Project Path="src/CodeWF.Markdown.Lite.Themes/CodeWF.Markdown.Lite.Themes.csproj" />
   <Project Path="tests/CodeWF.Markdown.Tests/CodeWF.Markdown.Tests.csproj" />
 </Solution>
