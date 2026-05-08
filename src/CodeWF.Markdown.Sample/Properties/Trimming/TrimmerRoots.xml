@@ -1,0 +1,3 @@
+<linker>
+  <assembly fullname="CodeWF.Markdown.Sample" preserve="all" />
+</linker>

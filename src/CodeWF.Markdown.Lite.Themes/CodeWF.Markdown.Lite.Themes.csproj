@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Title>CodeWF.Markdown.Lite.Themes</Title>
+		<TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
+		<Version>$(CodeWFMarkdownVersion)</Version>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<OutputType>Library</OutputType>
+		<IsPackable>true</IsPackable>
+		<Description>CodeWF.Markdown.Lite 的配套排版主题资源，内置多套公众号/技术文档风格，并适配 Avalonia 明暗主题。Typography themes for CodeWF.Markdown.Lite.</Description>
+		<PackageId>CodeWF.Markdown.Lite.Themes</PackageId>
+		<AssemblyName>CodeWF.Markdown.Lite.Themes</AssemblyName>
+		<RootNamespace>CodeWF.Markdown.Lite.Themes</RootNamespace>
+		<PackageIcon>codewf.png</PackageIcon>
+		<PackageTags>avalonia ui,markdown,themes,typography,codewf</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CodeWF.Markdown.Lite\CodeWF.Markdown.Lite.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,20 @@
+<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="CodeWF.Markdown.Lite.Themes.Themes.BlueGlowTypographyResources">
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#2488FF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#EDF6FF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#EDF6FF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#D8EBFF" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#78B7FF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#142D46" />
+            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#142D46" />
+            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#193A5F" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

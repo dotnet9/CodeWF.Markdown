@@ -1,42 +1,42 @@
 # CodeWF.Markdown
 
-Avalonia Markdown viewer controls, typography themes, and runnable sample apps split from `CodeWF.AvaloniaControls` into a standalone repository.
+基于 Avalonia 12 的 Markdown 渲染控件、排版主题和可运行示例。该仓库从 `CodeWF.AvaloniaControls` 拆分而来，只保留 Markdown 相关代码与文档。
 
-[简体中文](README.zh-CN.md) | English
+[English](README.md) | 简体中文
 
-| Package | NuGet | Downloads |
+| 名称 | NuGet | 下载量 |
 | --- | --- | --- |
 | CodeWF.Markdown | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.svg)](https://www.nuget.org/packages/CodeWF.Markdown/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.svg)](https://www.nuget.org/packages/CodeWF.Markdown/) |
 | CodeWF.Markdown.Themes | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Themes/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Themes/) |
 | CodeWF.Markdown.Lite | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Lite.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Lite.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite/) |
 | CodeWF.Markdown.Lite.Themes | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Lite.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite.Themes/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Lite.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite.Themes/) |
 
-## Packages
+## 包线说明
 
-- `CodeWF.Markdown`: full Markdown viewer with common Markdown elements, code highlighting, image preview, SVG/image support, math rendering hooks, localization, and incremental rendering.
-- `CodeWF.Markdown.Themes`: default templates and typography themes for `CodeWF.Markdown`.
-- `CodeWF.Markdown.Lite`: lightweight Markdown viewer without SVG, math rendering, TextMate, or localization dependencies.
-- `CodeWF.Markdown.Lite.Themes`: default templates and typography themes for `CodeWF.Markdown.Lite`.
+- `CodeWF.Markdown`：完整 MarkdownViewer，支持常见 Markdown 元素、代码高亮、图片预览、SVG/图片、数学渲染扩展、多语言资源和增量渲染。
+- `CodeWF.Markdown.Themes`：`CodeWF.Markdown` 的默认控件模板和多套排版主题。
+- `CodeWF.Markdown.Lite`：轻量 MarkdownViewer，不依赖 SVG、数学渲染、TextMate 或多语言包。
+- `CodeWF.Markdown.Lite.Themes`：`CodeWF.Markdown.Lite` 的默认控件模板和多套排版主题。
 
-## Installation
+## 安装
 
-Full viewer:
+完整版本：
 
 ```powershell
 Install-Package CodeWF.Markdown
 Install-Package CodeWF.Markdown.Themes
 ```
 
-Lite viewer:
+轻量版本：
 
 ```powershell
 Install-Package CodeWF.Markdown.Lite
 Install-Package CodeWF.Markdown.Lite.Themes
 ```
 
-## Usage
+## 使用方式
 
-Add the theme package in `App.axaml`:
+在 `App.axaml` 引入主题包：
 
 ```xml
 <Application
@@ -49,7 +49,7 @@ Add the theme package in `App.axaml`:
 </Application>
 ```
 
-Use `MarkdownViewer` in a view:
+在页面中使用 `MarkdownViewer`：
 
 ```xml
 <UserControl
@@ -63,37 +63,37 @@ Use `MarkdownViewer` in a view:
 </UserControl>
 ```
 
-For the Lite package, reference `CodeWF.Markdown.Lite.Themes` and use the same XML namespace. The sample apps show live editing, file loading, theme switching, and incremental rendering stress scenarios.
+Lite 版本同样使用 `https://codewf.com` XML 命名空间，按需引用 `CodeWF.Markdown.Lite.Themes`。示例工程包含实时编辑、样例文档加载、排版主题切换和增量渲染压力测试。
 
-## Repository Layout
+## 仓库结构
 
-- `src/CodeWF.Markdown`: full Markdown viewer package
-- `src/CodeWF.Markdown.Themes`: full viewer templates and typography themes
-- `src/CodeWF.Markdown.Lite`: lightweight Markdown viewer package
-- `src/CodeWF.Markdown.Lite.Themes`: Lite viewer templates and typography themes
-- `src/CodeWF.Markdown.Sample`: full viewer sample app
-- `src/CodeWF.Markdown.Lite.Sample`: Lite viewer sample app
-- `CodeWF.Markdown.slnx`: solution view for all Markdown projects and samples
+- `src/CodeWF.Markdown`：完整 MarkdownViewer 类库
+- `src/CodeWF.Markdown.Themes`：完整版本控件模板和排版主题
+- `src/CodeWF.Markdown.Lite`：轻量 MarkdownViewer 类库
+- `src/CodeWF.Markdown.Lite.Themes`：轻量版本控件模板和排版主题
+- `src/CodeWF.Markdown.Sample`：完整版本示例工程
+- `src/CodeWF.Markdown.Lite.Sample`：轻量版本示例工程
+- `CodeWF.Markdown.slnx`：Markdown 类库和示例的解决方案视图
 
-## Build
+## 构建
 
 ```powershell
 dotnet restore CodeWF.Markdown.slnx
 dotnet build CodeWF.Markdown.slnx --no-restore
 ```
 
-To create NuGet packages:
+打包 NuGet：
 
 ```powershell
 .\pack.bat
 ```
 
-To publish both sample apps for `win-x64` and `linux-x64`:
+发布两个示例工程到 `win-x64` 和 `linux-x64`：
 
 ```powershell
 .\publish_Markdown.bat
 ```
 
-## License
+## 许可证
 
-MIT. See [LICENSE](LICENSE).
+MIT，详见 [LICENSE](LICENSE)。

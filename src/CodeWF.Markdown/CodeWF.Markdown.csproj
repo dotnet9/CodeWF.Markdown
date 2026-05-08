@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Title>CodeWF.Markdown</Title>
+		<TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
+		<Version>$(CodeWFMarkdownVersion)</Version>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<OutputType>Library</OutputType>
+		<IsPackable>true</IsPackable>
+		<Description>基于 Avalonia 12 的 Markdown 解析与渲染控件，支持常规 Markdown 元素、代码高亮、规范样式 Key 与增量渲染。Avalonia Markdown viewer with common Markdown rendering hooks and incremental rendering.</Description>
+		<PackageId>CodeWF.Markdown</PackageId>
+		<AssemblyName>CodeWF.Markdown</AssemblyName>
+		<RootNamespace>CodeWF.Markdown</RootNamespace>
+		<PackageIcon>codewf.png</PackageIcon>
+		<PackageTags>avalonia ui,markdown,viewer,controls,codewf</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" />
+		<PackageReference Include="Lang.Avalonia.Resx" />
+		<PackageReference Include="Markdig" />
+		<PackageReference Include="Sylinko.CSharpMath.Avalonia" />
+		<PackageReference Include="Svg.Controls.Skia.Avalonia" />
+		<PackageReference Include="Svg.Skia" />
+		<PackageReference Include="TextMateSharp" />
+		<PackageReference Include="TextMateSharp.Grammars" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="I18n\Language.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Language.tt</DependentUpon>
+		</Compile>
+		<None Update="I18n\Language.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Language.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+</Project>

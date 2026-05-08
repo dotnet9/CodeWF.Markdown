@@ -1,0 +1,16 @@
+<Project>
+	<PropertyGroup>
+		<CodeWFMarkdownVersion>12.0.2.3</CodeWFMarkdownVersion>
+		<Version Condition="'$(Version)' == ''">$(CodeWFMarkdownVersion)</Version>
+		<Authors>沙漠尽头的狼</Authors>
+		<RepositoryUrl>https://github.com/dotnet9/CodeWF.Markdown</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/dotnet9/CodeWF.Markdown</PackageProjectUrl>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<RepositoryType>git</RepositoryType>
+		<Copyright>https://codewf.com</Copyright>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+	</PropertyGroup>
+</Project>

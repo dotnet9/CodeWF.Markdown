@@ -1,0 +1,290 @@
+<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:md="https://codewf.com">
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="CodeWFMarkdownTextBrush" Color="#1F2328" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownMutedTextBrush" Color="#667085" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownBorderBrush" Color="#D0D7DE" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#4B5563" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#F6F7F9" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownCodeBackgroundBrush" Color="#F6F8FA" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#F6F7F9" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#EAECF0" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownAccentForegroundBrush" Color="#FFFFFF" />
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="CodeWFMarkdownTextBrush" Color="#E6EDF3" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownMutedTextBrush" Color="#9BA7B4" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownBorderBrush" Color="#30363D" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#D1D5DB" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#252933" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownCodeBackgroundBrush" Color="#0D1117" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#252933" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#303643" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownAccentForegroundBrush" Color="#0D1117" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <x:Double x:Key="CodeWFMarkdownParagraphFontSize">16</x:Double>
+            <x:Double x:Key="CodeWFMarkdownParagraphLineHeight">28</x:Double>
+            <x:Double x:Key="CodeWFMarkdownHeading1FontSize">30</x:Double>
+            <x:Double x:Key="CodeWFMarkdownHeading2FontSize">26</x:Double>
+            <x:Double x:Key="CodeWFMarkdownHeading3FontSize">22</x:Double>
+            <x:Double x:Key="CodeWFMarkdownHeading4FontSize">20</x:Double>
+            <x:Double x:Key="CodeWFMarkdownHeading5FontSize">18</x:Double>
+            <x:Double x:Key="CodeWFMarkdownHeading6FontSize">16</x:Double>
+            <x:Double x:Key="CodeWFMarkdownBlockSpacing">8</x:Double>
+            <x:Double x:Key="CodeWFMarkdownDocumentBottomPadding">72</x:Double>
+            <Thickness x:Key="CodeWFMarkdownDocumentMargin">0</Thickness>
+            <Thickness x:Key="CodeWFMarkdownParagraphMargin">0 4 0 10</Thickness>
+            <Thickness x:Key="CodeWFMarkdownHeadingMargin">0 18 0 10</Thickness>
+            <Thickness x:Key="CodeWFMarkdownHeading2BorderThickness">0 0 0 2</Thickness>
+            <Thickness x:Key="CodeWFMarkdownHeading2Padding">0 0 0 6</Thickness>
+
+            <x:Double x:Key="CodeWFMarkdownCodeBlockFontSize">13</x:Double>
+            <x:Double x:Key="CodeWFMarkdownCodeBlockLineHeight">20</x:Double>
+            <x:Double x:Key="CodeWFMarkdownCodeLanguageFontSize">12</x:Double>
+            <CornerRadius x:Key="CodeWFMarkdownCodeBlockCornerRadius">8</CornerRadius>
+            <Thickness x:Key="CodeWFMarkdownCodeBlockBorderThickness">1</Thickness>
+            <Thickness x:Key="CodeWFMarkdownCodeBlockPadding">12</Thickness>
+            <Thickness x:Key="CodeWFMarkdownCodeBlockMargin">0 8 0 12</Thickness>
+            <x:Double x:Key="CodeWFMarkdownCodeBlockSpacing">8</x:Double>
+            <x:Double x:Key="CodeWFMarkdownCodeBlockHeaderSpacing">8</x:Double>
+            <x:Double x:Key="CodeWFMarkdownCopyButtonMinWidth">54</x:Double>
+            <x:Double x:Key="CodeWFMarkdownCopyButtonHeight">28</x:Double>
+            <Thickness x:Key="CodeWFMarkdownCopyButtonPadding">10 0</Thickness>
+            <CornerRadius x:Key="CodeWFMarkdownCopyButtonCornerRadius">5</CornerRadius>
+
+            <x:Double x:Key="CodeWFMarkdownListSpacing">6</x:Double>
+            <Thickness x:Key="CodeWFMarkdownListMargin">0 2 0 8</Thickness>
+            <Thickness x:Key="CodeWFMarkdownListItemMargin">0 2 0 2</Thickness>
+            <x:Double x:Key="CodeWFMarkdownListItemContentSpacing">4</x:Double>
+            <Thickness x:Key="CodeWFMarkdownListMarkerMargin">0 0 8 0</Thickness>
+            <Thickness x:Key="CodeWFMarkdownTaskMarkerBoxMargin">0 1 0 0</Thickness>
+            <x:Double x:Key="CodeWFMarkdownUnorderedListMarkerWidth">24</x:Double>
+            <x:Double x:Key="CodeWFMarkdownOrderedListMarkerMinWidth">28</x:Double>
+            <x:Double x:Key="CodeWFMarkdownOrderedListMarkerCharacterWidth">9</x:Double>
+            <x:Double x:Key="CodeWFMarkdownOrderedListMarkerExtraWidth">6</x:Double>
+            <Thickness x:Key="CodeWFMarkdownListFirstParagraphMargin">0 0 0 2</Thickness>
+            <Thickness x:Key="CodeWFMarkdownListNestedParagraphMargin">0 2 0 2</Thickness>
+
+            <Thickness x:Key="CodeWFMarkdownQuoteBorderThickness">4 0 0 0</Thickness>
+            <CornerRadius x:Key="CodeWFMarkdownQuoteCornerRadius">6</CornerRadius>
+            <Thickness x:Key="CodeWFMarkdownQuotePadding">12 8</Thickness>
+            <Thickness x:Key="CodeWFMarkdownQuoteMargin">0 6 0 12</Thickness>
+            <x:Double x:Key="CodeWFMarkdownQuoteContentSpacing">4</x:Double>
+            <x:Double x:Key="CodeWFMarkdownThematicBreakHeight">1</x:Double>
+            <Thickness x:Key="CodeWFMarkdownThematicBreakMargin">0 16 0 16</Thickness>
+
+            <Thickness x:Key="CodeWFMarkdownTableMargin">0 8 0 14</Thickness>
+            <Thickness x:Key="CodeWFMarkdownTableCellBorderThickness">1</Thickness>
+            <Thickness x:Key="CodeWFMarkdownTableCellPadding">10 8</Thickness>
+            <x:Double x:Key="CodeWFMarkdownTableCellMinHeight">38</x:Double>
+            <x:Double x:Key="CodeWFMarkdownTableCellContentSpacing">4</x:Double>
+
+            <x:Double x:Key="CodeWFMarkdownImageMaxWidth">900</x:Double>
+            <x:Double x:Key="CodeWFMarkdownImageMaxHeight">520</x:Double>
+            <Thickness x:Key="CodeWFMarkdownImageMargin">0 6 0 10</Thickness>
+            <Thickness x:Key="CodeWFMarkdownImageFallbackBorderThickness">1</Thickness>
+            <CornerRadius x:Key="CodeWFMarkdownImageFallbackCornerRadius">6</CornerRadius>
+            <Thickness x:Key="CodeWFMarkdownImageFallbackPadding">10</Thickness>
+            <Thickness x:Key="CodeWFMarkdownImageFallbackMargin">0 6 0 10</Thickness>
+            <x:Double x:Key="CodeWFMarkdownImageFallbackOpacity">0.72</x:Double>
+            <x:Double x:Key="CodeWFMarkdownImagePreviewWidth">1120</x:Double>
+            <x:Double x:Key="CodeWFMarkdownImagePreviewHeight">760</x:Double>
+            <x:Double x:Key="CodeWFMarkdownImagePreviewMinWidth">720</x:Double>
+            <x:Double x:Key="CodeWFMarkdownImagePreviewMinHeight">480</x:Double>
+            <Thickness x:Key="CodeWFMarkdownImagePreviewContentPadding">24</Thickness>
+            <x:Double x:Key="CodeWFMarkdownImagePreviewToolbarSpacing">8</x:Double>
+            <Thickness x:Key="CodeWFMarkdownImagePreviewToolbarMargin">12</Thickness>
+            <x:Double x:Key="CodeWFMarkdownImagePreviewZoomTextMinWidth">58</x:Double>
+            <Thickness x:Key="CodeWFMarkdownImagePreviewButtonPadding">12 6</Thickness>
+
+            <ControlTheme x:Key="{x:Type md:MarkdownViewer}" TargetType="md:MarkdownViewer">
+                <Setter Property="TextBrush" Value="{DynamicResource CodeWFMarkdownTextBrush}" />
+                <Setter Property="MutedTextBrush" Value="{DynamicResource CodeWFMarkdownMutedTextBrush}" />
+                <Setter Property="AccentBrush" Value="{DynamicResource CodeWFMarkdownAccentBrush}" />
+                <Setter Property="QuoteBackgroundBrush" Value="{DynamicResource CodeWFMarkdownQuoteBackgroundBrush}" />
+                <Setter Property="BorderLineBrush" Value="{DynamicResource CodeWFMarkdownBorderBrush}" />
+                <Setter Property="CodeBackgroundBrush" Value="{DynamicResource CodeWFMarkdownCodeBackgroundBrush}" />
+                <Setter Property="InlineCodeBackgroundBrush" Value="{DynamicResource CodeWFMarkdownInlineCodeBackgroundBrush}" />
+                <Setter Property="TableHeaderBackgroundBrush" Value="{DynamicResource CodeWFMarkdownTableHeaderBackgroundBrush}" />
+                <Setter Property="AccentForegroundBrush" Value="{DynamicResource CodeWFMarkdownAccentForegroundBrush}" />
+                <Setter Property="ParagraphFontSize" Value="{DynamicResource CodeWFMarkdownParagraphFontSize}" />
+                <Setter Property="ParagraphLineHeight" Value="{DynamicResource CodeWFMarkdownParagraphLineHeight}" />
+                <Setter Property="Heading1FontSize" Value="{DynamicResource CodeWFMarkdownHeading1FontSize}" />
+                <Setter Property="Heading2FontSize" Value="{DynamicResource CodeWFMarkdownHeading2FontSize}" />
+                <Setter Property="Heading3FontSize" Value="{DynamicResource CodeWFMarkdownHeading3FontSize}" />
+                <Setter Property="Heading4FontSize" Value="{DynamicResource CodeWFMarkdownHeading4FontSize}" />
+                <Setter Property="Heading5FontSize" Value="{DynamicResource CodeWFMarkdownHeading5FontSize}" />
+                <Setter Property="Heading6FontSize" Value="{DynamicResource CodeWFMarkdownHeading6FontSize}" />
+                <Setter Property="BlockSpacing" Value="{DynamicResource CodeWFMarkdownBlockSpacing}" />
+                <Setter Property="DocumentBottomPadding" Value="{DynamicResource CodeWFMarkdownDocumentBottomPadding}" />
+                <Setter Property="ParagraphMargin" Value="{DynamicResource CodeWFMarkdownParagraphMargin}" />
+                <Setter Property="HeadingMargin" Value="{DynamicResource CodeWFMarkdownHeadingMargin}" />
+                <Setter Property="CodeBlockFontSize" Value="{DynamicResource CodeWFMarkdownCodeBlockFontSize}" />
+                <Setter Property="CodeBlockLineHeight" Value="{DynamicResource CodeWFMarkdownCodeBlockLineHeight}" />
+                <Setter Property="CodeLanguageFontSize" Value="{DynamicResource CodeWFMarkdownCodeLanguageFontSize}" />
+                <Setter Property="UnorderedListMarkerWidth" Value="{DynamicResource CodeWFMarkdownUnorderedListMarkerWidth}" />
+                <Setter Property="OrderedListMarkerMinWidth" Value="{DynamicResource CodeWFMarkdownOrderedListMarkerMinWidth}" />
+                <Setter Property="OrderedListMarkerCharacterWidth" Value="{DynamicResource CodeWFMarkdownOrderedListMarkerCharacterWidth}" />
+                <Setter Property="OrderedListMarkerExtraWidth" Value="{DynamicResource CodeWFMarkdownOrderedListMarkerExtraWidth}" />
+                <Setter Property="ListFirstParagraphMargin" Value="{DynamicResource CodeWFMarkdownListFirstParagraphMargin}" />
+                <Setter Property="ListNestedParagraphMargin" Value="{DynamicResource CodeWFMarkdownListNestedParagraphMargin}" />
+                <Setter Property="Template">
+                    <ControlTemplate TargetType="{x:Type md:MarkdownViewer}">
+                        <StackPanel
+                            Classes="MdDocument"
+                            Orientation="Vertical">
+                            <StackPanel
+                                Name="PART_DocumentHost"
+                                Orientation="Vertical"
+                                Spacing="{TemplateBinding BlockSpacing}" />
+                            <Border
+                                Classes="MdDocumentBottomSpacer"
+                                Height="{TemplateBinding DocumentBottomPadding}"
+                                IsHitTestVisible="False" />
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter>
+            </ControlTheme>
+
+            <ControlTheme x:Key="{x:Type md:MarkdownImage}" TargetType="md:MarkdownImage">
+                <Setter Property="Template">
+                    <ControlTemplate TargetType="{x:Type md:MarkdownImage}">
+                        <ContentControl Name="PART_ContentHost" />
+                    </ControlTemplate>
+                </Setter>
+            </ControlTheme>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <Style Selector="Border.MdH2Border">
+        <Setter Property="BorderThickness" Value="{DynamicResource CodeWFMarkdownHeading2BorderThickness}" />
+        <Setter Property="Padding" Value="{DynamicResource CodeWFMarkdownHeading2Padding}" />
+    </Style>
+
+    <Style Selector="StackPanel.MdDocument">
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownDocumentMargin}" />
+    </Style>
+
+    <Style Selector="Border.MdCodeBlock">
+        <Setter Property="CornerRadius" Value="{DynamicResource CodeWFMarkdownCodeBlockCornerRadius}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource CodeWFMarkdownCodeBlockBorderThickness}" />
+        <Setter Property="Padding" Value="{DynamicResource CodeWFMarkdownCodeBlockPadding}" />
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownCodeBlockMargin}" />
+    </Style>
+
+    <Style Selector="StackPanel.MdCodeBlockContent">
+        <Setter Property="Spacing" Value="{DynamicResource CodeWFMarkdownCodeBlockSpacing}" />
+    </Style>
+
+    <Style Selector="StackPanel.MdCodeBlockHeader">
+        <Setter Property="Spacing" Value="{DynamicResource CodeWFMarkdownCodeBlockHeaderSpacing}" />
+    </Style>
+
+    <Style Selector="Button.MdCopyButton">
+        <Setter Property="MinWidth" Value="{DynamicResource CodeWFMarkdownCopyButtonMinWidth}" />
+        <Setter Property="Height" Value="{DynamicResource CodeWFMarkdownCopyButtonHeight}" />
+        <Setter Property="Padding" Value="{DynamicResource CodeWFMarkdownCopyButtonPadding}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CodeWFMarkdownCopyButtonCornerRadius}" />
+    </Style>
+
+    <Style Selector="StackPanel.MdList">
+        <Setter Property="Spacing" Value="{DynamicResource CodeWFMarkdownListSpacing}" />
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownListMargin}" />
+    </Style>
+
+    <Style Selector="Grid.MdListItem">
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownListItemMargin}" />
+    </Style>
+
+    <Style Selector="StackPanel.MdListItemContent">
+        <Setter Property="Spacing" Value="{DynamicResource CodeWFMarkdownListItemContentSpacing}" />
+    </Style>
+
+    <Style Selector="Border.MdListMarker, SelectableTextBlock.MdListMarker">
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownListMarkerMargin}" />
+    </Style>
+
+    <Style Selector="CheckBox.MdTaskMarkerBox">
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownTaskMarkerBoxMargin}" />
+    </Style>
+
+    <Style Selector="Border.MdQuote">
+        <Setter Property="BorderThickness" Value="{DynamicResource CodeWFMarkdownQuoteBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CodeWFMarkdownQuoteCornerRadius}" />
+        <Setter Property="Padding" Value="{DynamicResource CodeWFMarkdownQuotePadding}" />
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownQuoteMargin}" />
+    </Style>
+
+    <Style Selector="StackPanel.MdQuoteContent">
+        <Setter Property="Spacing" Value="{DynamicResource CodeWFMarkdownQuoteContentSpacing}" />
+    </Style>
+
+    <Style Selector="Border.MdThematicBreak">
+        <Setter Property="Height" Value="{DynamicResource CodeWFMarkdownThematicBreakHeight}" />
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownThematicBreakMargin}" />
+    </Style>
+
+    <Style Selector="Grid.MdTable">
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownTableMargin}" />
+    </Style>
+
+    <Style Selector="Border.MdTableHeaderCell, Border.MdTableCell">
+        <Setter Property="BorderThickness" Value="{DynamicResource CodeWFMarkdownTableCellBorderThickness}" />
+        <Setter Property="Padding" Value="{DynamicResource CodeWFMarkdownTableCellPadding}" />
+        <Setter Property="MinHeight" Value="{DynamicResource CodeWFMarkdownTableCellMinHeight}" />
+    </Style>
+
+    <Style Selector="StackPanel.MdTableCellContent">
+        <Setter Property="Spacing" Value="{DynamicResource CodeWFMarkdownTableCellContentSpacing}" />
+    </Style>
+
+    <Style Selector="Image.MdImageContent">
+        <Setter Property="MaxWidth" Value="{DynamicResource CodeWFMarkdownImageMaxWidth}" />
+        <Setter Property="MaxHeight" Value="{DynamicResource CodeWFMarkdownImageMaxHeight}" />
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownImageMargin}" />
+    </Style>
+
+    <Style Selector="Border.MdImageFallback">
+        <Setter Property="BorderBrush" Value="{DynamicResource CodeWFMarkdownBorderBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource CodeWFMarkdownImageFallbackBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CodeWFMarkdownImageFallbackCornerRadius}" />
+        <Setter Property="Padding" Value="{DynamicResource CodeWFMarkdownImageFallbackPadding}" />
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownImageFallbackMargin}" />
+    </Style>
+
+    <Style Selector="TextBlock.MdImageFallbackText">
+        <Setter Property="Opacity" Value="{DynamicResource CodeWFMarkdownImageFallbackOpacity}" />
+    </Style>
+
+    <Style Selector="Window.MdImagePreviewWindow">
+        <Setter Property="Width" Value="{DynamicResource CodeWFMarkdownImagePreviewWidth}" />
+        <Setter Property="Height" Value="{DynamicResource CodeWFMarkdownImagePreviewHeight}" />
+        <Setter Property="MinWidth" Value="{DynamicResource CodeWFMarkdownImagePreviewMinWidth}" />
+        <Setter Property="MinHeight" Value="{DynamicResource CodeWFMarkdownImagePreviewMinHeight}" />
+    </Style>
+
+    <Style Selector="Border.MdImagePreviewContent">
+        <Setter Property="Padding" Value="{DynamicResource CodeWFMarkdownImagePreviewContentPadding}" />
+    </Style>
+
+    <Style Selector="StackPanel.MdImagePreviewToolbar">
+        <Setter Property="Spacing" Value="{DynamicResource CodeWFMarkdownImagePreviewToolbarSpacing}" />
+        <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownImagePreviewToolbarMargin}" />
+    </Style>
+
+    <Style Selector="TextBlock.MdImagePreviewZoomText">
+        <Setter Property="MinWidth" Value="{DynamicResource CodeWFMarkdownImagePreviewZoomTextMinWidth}" />
+    </Style>
+
+    <Style Selector="Button.MdImagePreviewButton">
+        <Setter Property="Padding" Value="{DynamicResource CodeWFMarkdownImagePreviewButtonPadding}" />
+    </Style>
+</Styles>
