@@ -10,6 +10,7 @@ public sealed record MarkdownTypographyTheme(string Name, string Key);
 /// </summary>
 public static class MarkdownTypographyThemes
 {
+    public const string Basic = "Basic";
     public const string OrangeHeart = "OrangeHeart";
     public const string InkBlack = "InkBlack";
     public const string ColorfulPurple = "ColorfulPurple";
@@ -29,6 +30,7 @@ public static class MarkdownTypographyThemes
 
     public static IReadOnlyList<MarkdownTypographyTheme> All { get; } =
     [
+        new("Basic", Basic),
         new("橙心", OrangeHeart),
         new("墨黑", InkBlack),
         new("彩紫", ColorfulPurple),

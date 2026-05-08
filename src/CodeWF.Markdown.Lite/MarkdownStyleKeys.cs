@@ -8,6 +8,7 @@ public static class MarkdownStyleKeys
 {
     public const string Document = "MdDocument";
     public const string DocumentBottomSpacer = "MdDocumentBottomSpacer";
+    public const string SelectedBlock = "MdSelectedBlock";
     public const string Paragraph = "MdParagraph";
     public const string Heading = "MdHeading";
     public const string HeadingBorder = "MdHeadingBorder";
@@ -38,6 +39,7 @@ public static class MarkdownStyleKeys
     public const string Quote = "MdQuote";
     public const string QuoteContent = "MdQuoteContent";
     public const string ThematicBreak = "MdThematicBreak";
+    public const string TableContainer = "MdTableContainer";
     public const string Table = "MdTable";
     public const string TableHeaderCell = "MdTableHeaderCell";
     public const string TableCell = "MdTableCell";

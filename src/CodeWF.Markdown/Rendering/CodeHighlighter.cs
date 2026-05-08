@@ -25,6 +25,8 @@ internal static class CodeHighlighter
     private const int MaxCacheSize = 32;
     private static readonly Dictionary<(string Language, ThemeName Theme), (IGrammar? Grammar, Theme Theme)> Cache = new();
     private static readonly Queue<(string Language, ThemeName Theme)> CacheOrder = new();
+    private static readonly Dictionary<HighlightCacheKey, HighlightedLine[]> HighlightCache = new();
+    private static readonly Queue<HighlightCacheKey> HighlightCacheOrder = new();
 
     public static Control Render(
         string code,
@@ -32,7 +34,9 @@ internal static class CodeHighlighter
         bool isDark,
         FontFamily fontFamily,
         double fontSize,
-        double lineHeight)
+        double lineHeight,
+        Func<bool>? hasGlobalSelection = null,
+        Func<Task>? copyGlobalSelectionAsync = null)
     {
         var themeName = isDark ? ThemeName.DarkPlus : ThemeName.LightPlus;
         var (grammar, theme) = GetOrCreateGrammar(NormalizeLanguage(language), themeName);
@@ -50,7 +54,7 @@ internal static class CodeHighlighter
         };
         textBlock.Classes.Add(MarkdownStyleKeys.CodeBlockText);
         TextOptions.SetBaselinePixelAlignment(textBlock, BaselinePixelAlignment.Aligned);
-        textBlock.ContextMenu = CreateCopyContextMenu(textBlock);
+        textBlock.ContextMenu = CreateCopyContextMenu(textBlock, hasGlobalSelection, copyGlobalSelectionAsync);
 
         if (grammar is null)
         {
@@ -58,23 +62,11 @@ internal static class CodeHighlighter
             return Wrap(textBlock);
         }
 
-        IStateStack? ruleStack = null;
-        foreach (var line in code.Replace("\r\n", "\n").Split('\n'))
+        foreach (var line in GetOrCreateHighlightedLines(code, NormalizeLanguage(language), themeName, grammar, theme, isDark))
         {
-            var result = grammar.TokenizeLine(line, ruleStack, TimeSpan.FromSeconds(2));
-            ruleStack = result.RuleStack;
-
-            foreach (var token in result.Tokens)
+            foreach (var token in line.Tokens)
             {
-                var start = Math.Min(token.StartIndex, line.Length);
-                var end = Math.Min(token.EndIndex, line.Length);
-                if (end <= start)
-                {
-                    continue;
-                }
-
-                var run = CreateRun(line[start..end], token.Scopes, theme, isDark);
-                textBlock.Inlines.Add(run);
+                textBlock.Inlines.Add(token.CreateRun());
             }
 
             textBlock.Inlines.Add(new LineBreak());
@@ -132,13 +124,26 @@ internal static class CodeHighlighter
         return scrollViewer;
     }
 
-    private static ContextMenu CreateCopyContextMenu(SelectableTextBlock textBlock)
+    private static ContextMenu CreateCopyContextMenu(
+        SelectableTextBlock textBlock,
+        Func<bool>? hasGlobalSelection,
+        Func<Task>? copyGlobalSelectionAsync)
     {
         var copySelectionItem = new MenuItem
         {
             Header = I18nManager.Instance.GetResource(MarkdownL.CopyRenderedText)
         };
-        copySelectionItem.Click += (_, _) => textBlock.Copy();
+        copySelectionItem.Click += async (_, _) =>
+        {
+            if (hasGlobalSelection?.Invoke() == true && copyGlobalSelectionAsync is not null)
+            {
+                await copyGlobalSelectionAsync();
+            }
+            else
+            {
+                textBlock.Copy();
+            }
+        };
         return new ContextMenu { ItemsSource = new[] { copySelectionItem } };
     }
 
@@ -169,7 +174,66 @@ internal static class CodeHighlighter
         return value;
     }
 
+    private static HighlightedLine[] GetOrCreateHighlightedLines(
+        string code,
+        string language,
+        ThemeName themeName,
+        IGrammar grammar,
+        Theme theme,
+        bool isDark)
+    {
+        var key = new HighlightCacheKey(code, language, themeName);
+        if (HighlightCache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        if (HighlightCache.Count >= MaxCacheSize)
+        {
+            var oldest = HighlightCacheOrder.Dequeue();
+            HighlightCache.Remove(oldest);
+        }
+
+        var highlightedLines = Tokenize(code, grammar, theme, isDark);
+        HighlightCache[key] = highlightedLines;
+        HighlightCacheOrder.Enqueue(key);
+        return highlightedLines;
+    }
+
+    private static HighlightedLine[] Tokenize(string code, IGrammar grammar, Theme theme, bool isDark)
+    {
+        var lines = new List<HighlightedLine>();
+        IStateStack? ruleStack = null;
+        foreach (var line in code.Replace("\r\n", "\n").Split('\n'))
+        {
+            var result = grammar.TokenizeLine(line, ruleStack, TimeSpan.FromSeconds(2));
+            ruleStack = result.RuleStack;
+            var tokens = new List<HighlightedToken>();
+
+            foreach (var token in result.Tokens)
+            {
+                var start = Math.Min(token.StartIndex, line.Length);
+                var end = Math.Min(token.EndIndex, line.Length);
+                if (end <= start)
+                {
+                    continue;
+                }
+
+                tokens.Add(CreateHighlightedToken(line[start..end], token.Scopes, theme, isDark));
+            }
+
+            lines.Add(new HighlightedLine(tokens));
+        }
+
+        return lines.ToArray();
+    }
+
     private static Run CreateRun(string text, IEnumerable<string> scopes, Theme theme, bool isDark)
+    {
+        return CreateHighlightedToken(text, scopes, theme, isDark).CreateRun();
+    }
+
+    private static HighlightedToken CreateHighlightedToken(string text, IEnumerable<string> scopes, Theme theme, bool isDark)
     {
         var foregroundId = -1;
         var backgroundId = -1;
@@ -193,28 +257,16 @@ internal static class CodeHighlighter
             }
         }
 
-        var run = new Run
-        {
-            Text = text,
-            Foreground = foregroundId == -1
+        return new HighlightedToken(
+            text,
+            foregroundId == -1
                 ? (isDark ? Brushes.White : Brushes.Black)
                 : new ImmutableSolidColorBrush(ParseColor(theme.GetColor(foregroundId))),
-            Background = backgroundId == -1
+            backgroundId == -1
                 ? null
-                : new ImmutableSolidColorBrush(ParseColor(theme.GetColor(backgroundId)))
-        };
-
-        if ((fontStyle & TextMateFontStyle.Bold) != 0)
-        {
-            run.FontWeight = FontWeight.Bold;
-        }
-
-        if ((fontStyle & TextMateFontStyle.Italic) != 0)
-        {
-            run.FontStyle = AvaloniaFontStyle.Italic;
-        }
-
-        return run;
+                : new ImmutableSolidColorBrush(ParseColor(theme.GetColor(backgroundId))),
+            (fontStyle & TextMateFontStyle.Bold) != 0 ? FontWeight.Bold : FontWeight.Normal,
+            (fontStyle & TextMateFontStyle.Italic) != 0 ? AvaloniaFontStyle.Italic : AvaloniaFontStyle.Normal);
     }
 
     private static string NormalizeLanguage(string? language)
@@ -253,4 +305,28 @@ internal static class CodeHighlighter
             byte.Parse(value.Substring(2, 2), NumberStyles.HexNumber),
             byte.Parse(value.Substring(4, 2), NumberStyles.HexNumber));
     }
+
+    private sealed record HighlightedLine(IReadOnlyList<HighlightedToken> Tokens);
+
+    private sealed record HighlightedToken(
+        string Text,
+        IBrush? Foreground,
+        IBrush? Background,
+        FontWeight FontWeight,
+        AvaloniaFontStyle FontStyle)
+    {
+        public Run CreateRun()
+        {
+            return new Run
+            {
+                Text = Text,
+                Foreground = Foreground,
+                Background = Background,
+                FontWeight = FontWeight,
+                FontStyle = FontStyle
+            };
+        }
+    }
+
+    private readonly record struct HighlightCacheKey(string Code, string Language, ThemeName Theme);
 }

@@ -8,6 +8,7 @@ using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
@@ -16,6 +17,7 @@ using Avalonia.VisualTree;
 
 using CodeWF.Markdown.Helpers;
 using CodeWF.Markdown.Rendering;
+using CodeWF.Markdown.Shared.Rendering;
 
 using CSharpMath.Avalonia;
 
@@ -23,6 +25,7 @@ using Lang.Avalonia;
 
 using Markdig;
 using Markdig.Extensions.Footnotes;
+using Markdig.Extensions.Mathematics;
 using Markdig.Extensions.TaskLists;
 using Markdig.Extensions.Tables;
 using Markdig.Syntax;
@@ -59,13 +62,30 @@ public class MarkdownViewer : TemplatedControl
 
     private readonly List<RenderedBlock> _renderedBlocks = [];
     private readonly List<IDisposable> _currentBlockDisposables = [];
+    private readonly MarkdownSelectionController _selectionController = new();
     private Panel? _documentHost;
     private string _renderedMarkdown = string.Empty;
+    private MarkdownDocumentModel _renderedModel = MarkdownDocumentModel.Empty;
     private MarkdownRenderMode _queuedRenderMode = MarkdownRenderMode.Incremental;
     private bool _isRenderQueued;
+    private MarkdownPointerSelectionState? _pointerSelectionState;
+    private SelectableTextBlock? _nativeSelectionTextBlock;
+    private bool _isPointerSelecting;
+    private string _selectedText = string.Empty;
+    private bool _hasSelection;
 
     public static readonly StyledProperty<string?> MarkdownProperty =
         AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(Markdown));
+
+    public static readonly DirectProperty<MarkdownViewer, string> SelectedTextProperty =
+        AvaloniaProperty.RegisterDirect<MarkdownViewer, string>(
+            nameof(SelectedText),
+            viewer => viewer.SelectedText);
+
+    public static readonly DirectProperty<MarkdownViewer, bool> HasSelectionProperty =
+        AvaloniaProperty.RegisterDirect<MarkdownViewer, bool>(
+            nameof(HasSelection),
+            viewer => viewer.HasSelection);
 
     public static readonly StyledProperty<IBrush?> TextBrushProperty =
         AvaloniaProperty.Register<MarkdownViewer, IBrush?>(nameof(TextBrush), Brushes.Black);
@@ -172,6 +192,18 @@ public class MarkdownViewer : TemplatedControl
     {
         get => GetValue(MarkdownProperty);
         set => SetValue(MarkdownProperty, value);
+    }
+
+    public string SelectedText
+    {
+        get => _selectedText;
+        private set => SetAndRaise(SelectedTextProperty, ref _selectedText, value);
+    }
+
+    public bool HasSelection
+    {
+        get => _hasSelection;
+        private set => SetAndRaise(HasSelectionProperty, ref _hasSelection, value);
     }
 
     public IBrush? TextBrush
@@ -368,6 +400,8 @@ public class MarkdownViewer : TemplatedControl
 
     public event EventHandler? CopyClick;
 
+    public event EventHandler? SelectionChanged;
+
     /// <summary>
     /// 在代码块工具栏创建完成后触发，调用方可追加自定义按钮。
     /// </summary>
@@ -385,6 +419,10 @@ public class MarkdownViewer : TemplatedControl
         Focusable = true;
         ContextMenu = CreateViewerContextMenu();
         TextOptions.SetBaselinePixelAlignment(this, BaselinePixelAlignment.Aligned);
+        AddHandler(PointerPressedEvent, OnViewerPointerPressed, RoutingStrategies.Tunnel);
+        AddHandler(PointerMovedEvent, OnViewerPointerMoved, RoutingStrategies.Tunnel);
+        AddHandler(PointerReleasedEvent, OnViewerPointerReleased, RoutingStrategies.Tunnel);
+        AddHandler(KeyDownEvent, OnViewerKeyDown, RoutingStrategies.Tunnel);
     }
 
     /// <summary>
@@ -394,26 +432,21 @@ public class MarkdownViewer : TemplatedControl
     {
         if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
         {
-            await clipboard.SetTextAsync(GetRenderedText());
+            await clipboard.SetTextAsync(HasSelection ? SelectedText : GetRenderedText());
+        }
+    }
+
+    public async Task CopySelectionAsync()
+    {
+        if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard && HasSelection)
+        {
+            await clipboard.SetTextAsync(SelectedText);
         }
     }
 
     public string GetRenderedText()
     {
-        var text = Markdown ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return string.Empty;
-        }
-
-        var document = Markdig.Markdown.Parse(text, Pipeline);
-        var builder = new StringBuilder();
-        foreach (var block in document)
-        {
-            AppendPlainTextBlock(builder, block, 0);
-        }
-
-        return builder.ToString().TrimEnd();
+        return MarkdownParser.Parse(Markdown, Pipeline).PlainText;
     }
 
     public void Rerender()
@@ -466,6 +499,17 @@ public class MarkdownViewer : TemplatedControl
             && (e.KeyModifiers & KeyModifiers.Control) != 0)
         {
             await CopyRenderedTextAsync();
+            e.Handled = true;
+        }
+    }
+
+    private async void OnViewerKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.C
+            && (e.KeyModifiers & KeyModifiers.Control) != 0
+            && HasSelection)
+        {
+            await CopySelectionAsync();
             e.Handled = true;
         }
     }
@@ -540,6 +584,8 @@ public class MarkdownViewer : TemplatedControl
         _documentHost.Children.Clear();
         _renderedBlocks.Clear();
         _renderedMarkdown = text;
+        _renderedModel = MarkdownParser.Parse(text, Pipeline);
+        ResetSelectionState();
 
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -547,12 +593,13 @@ public class MarkdownViewer : TemplatedControl
             return;
         }
 
-        foreach (var renderedBlock in CreateRenderedBlocks(text, 0))
+        foreach (var renderedBlock in CreateRenderedBlocks(_renderedModel.Blocks, text))
         {
             _documentHost.Children.Add(renderedBlock.Control);
             _renderedBlocks.Add(renderedBlock);
         }
 
+        RefreshSelectionBlocks();
         InvalidateDocumentLayout();
     }
 
@@ -573,6 +620,30 @@ public class MarkdownViewer : TemplatedControl
             return false;
         }
 
+        var newModel = MarkdownParser.Parse(text, Pipeline);
+        var diff = MarkdownDiffService.Compare(_renderedModel, newModel);
+        if (diff.RequiresFullRender)
+        {
+            return false;
+        }
+
+        if (diff.OldRemoveCount == 0 && diff.NewInsertCount == 0)
+        {
+            _renderedMarkdown = text;
+            _renderedModel = newModel;
+            return true;
+        }
+
+        var renderedNewBlocks = CreateRenderedBlocks(
+            newModel.Blocks.Skip(diff.NewStartIndex).Take(diff.NewInsertCount),
+            text);
+        ReplaceRenderedBlocks(diff.ReplaceStartIndex, diff.ReplaceEndIndex, renderedNewBlocks, newModel);
+
+        _renderedMarkdown = text;
+        _renderedModel = newModel;
+        return true;
+
+#if false
         var change = CalculateTextChange(_renderedMarkdown, text);
         if (ShouldFullRender(change, _renderedMarkdown.Length, text.Length))
         {
@@ -612,6 +683,32 @@ public class MarkdownViewer : TemplatedControl
 
         _renderedMarkdown = text;
         return true;
+#endif
+    }
+
+    private IReadOnlyList<RenderedBlock> CreateRenderedBlocks(IEnumerable<MarkdownDocumentBlock> modelBlocks, string markdown)
+    {
+        var renderedBlocks = new List<RenderedBlock>();
+        foreach (var modelBlock in modelBlocks)
+        {
+            var previousDisposableCount = _currentBlockDisposables.Count;
+            var control = ConvertBlock(modelBlock.SyntaxBlock, markdown);
+            if (control is null)
+            {
+                for (var i = _currentBlockDisposables.Count - 1; i >= previousDisposableCount; i--)
+                {
+                    _currentBlockDisposables[i].Dispose();
+                    _currentBlockDisposables.RemoveAt(i);
+                }
+                continue;
+            }
+
+            var blockDisposables = _currentBlockDisposables.GetRange(previousDisposableCount,
+                _currentBlockDisposables.Count - previousDisposableCount);
+            renderedBlocks.Add(RenderedBlock.FromModel(modelBlock, control, blockDisposables));
+        }
+
+        return renderedBlocks;
     }
 
     private IReadOnlyList<RenderedBlock> CreateRenderedBlocks(string markdown, int sourceOffset)
@@ -641,10 +738,56 @@ public class MarkdownViewer : TemplatedControl
             var range = GetBlockRange(block, sourceOffset, markdown.Length);
             var blockDisposables = _currentBlockDisposables.GetRange(previousDisposableCount,
                 _currentBlockDisposables.Count - previousDisposableCount);
-            renderedBlocks.Add(new RenderedBlock(range.Start, range.End, control, blockDisposables));
+            renderedBlocks.Add(new RenderedBlock(
+                range.Start,
+                range.End,
+                0,
+                0,
+                string.Empty,
+                MarkdownBlockKind.Unknown,
+                MarkdownDependencyFlags.None,
+                0,
+                control,
+                blockDisposables));
         }
 
         return renderedBlocks;
+    }
+
+    private void ReplaceRenderedBlocks(
+        int replaceStartIndex,
+        int replaceEndIndex,
+        IReadOnlyList<RenderedBlock> newBlocks,
+        MarkdownDocumentModel newModel)
+    {
+        if (_documentHost is null)
+        {
+            return;
+        }
+
+        var removeCount = replaceEndIndex - replaceStartIndex;
+        for (var i = 0; i < removeCount; i++)
+        {
+            _renderedBlocks[replaceStartIndex].Cleanup();
+            _documentHost.Children.RemoveAt(replaceStartIndex);
+            _renderedBlocks.RemoveAt(replaceStartIndex);
+        }
+
+        for (var i = 0; i < newBlocks.Count; i++)
+        {
+            var renderedBlock = newBlocks[i];
+            _documentHost.Children.Insert(replaceStartIndex + i, renderedBlock.Control);
+            _renderedBlocks.Insert(replaceStartIndex + i, renderedBlock);
+        }
+
+        for (var i = 0; i < _renderedBlocks.Count && i < newModel.Blocks.Count; i++)
+        {
+            _renderedBlocks[i] = _renderedBlocks[i].WithModel(newModel.Blocks[i]);
+        }
+
+        ResetSelectionState();
+        RefreshSelectionBlocks();
+        InvalidateDocumentLayout();
     }
 
     private void ReplaceRenderedBlocks(
@@ -679,6 +822,176 @@ public class MarkdownViewer : TemplatedControl
         }
 
         InvalidateDocumentLayout();
+    }
+
+    private void OnViewerPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (_documentHost is null
+            || e.GetCurrentPoint(this).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed
+            || IsLinkPointerSource(e)
+            || IsInteractiveSelectionSource(e.Source as Visual))
+        {
+            return;
+        }
+
+        var documentPoint = e.GetPosition(_documentHost);
+        if (_selectionController.Begin(documentPoint))
+        {
+            _pointerSelectionState = new MarkdownPointerSelectionState(e.GetPosition(this));
+            _nativeSelectionTextBlock = FindSelectableTextBlock(e.Source as Visual);
+            _isPointerSelecting = false;
+            UpdateSelectionState();
+        }
+    }
+
+    private void OnViewerPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_documentHost is null || _pointerSelectionState is not { } state)
+        {
+            return;
+        }
+
+        var properties = e.GetCurrentPoint(this).Properties;
+        if (!properties.IsLeftButtonPressed)
+        {
+            _pointerSelectionState = null;
+            _nativeSelectionTextBlock = null;
+            _isPointerSelecting = false;
+            e.Pointer.Capture(null);
+            return;
+        }
+
+        if (!state.IsDragging(e.GetPosition(this)))
+        {
+            return;
+        }
+
+        if (!_isPointerSelecting
+            && _nativeSelectionTextBlock is { } nativeTextBlock
+            && IsPointerInside(nativeTextBlock, e))
+        {
+            return;
+        }
+
+        if (_selectionController.Extend(e.GetPosition(_documentHost)))
+        {
+            _isPointerSelecting = true;
+            e.Pointer.Capture(this);
+            ClearNativeTextSelections();
+            UpdateSelectionState();
+            e.Handled = true;
+            return;
+        }
+
+        if (_isPointerSelecting)
+        {
+            e.Handled = true;
+        }
+    }
+
+    private void OnViewerPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_pointerSelectionState is null)
+        {
+            return;
+        }
+
+        if (_isPointerSelecting)
+        {
+            e.Handled = true;
+        }
+        else
+        {
+            _selectionController.CommitClickWithoutDrag();
+            UpdateSelectionState();
+        }
+
+        _pointerSelectionState = null;
+        _nativeSelectionTextBlock = null;
+        _isPointerSelecting = false;
+        e.Pointer.Capture(null);
+    }
+
+    private void RefreshSelectionBlocks()
+    {
+        _selectionController.SetBlocks(_renderedBlocks.Select(block =>
+            new MarkdownSelectionBlock(
+                block.Control,
+                new MarkdownTextSpan(block.PlainTextStart, block.PlainTextEnd),
+                block.PlainText)), _documentHost);
+        UpdateSelectionState();
+    }
+
+    private void ResetSelectionState()
+    {
+        _selectionController.Clear();
+        _pointerSelectionState = null;
+        _nativeSelectionTextBlock = null;
+        _isPointerSelecting = false;
+        UpdateSelectionState();
+    }
+
+    private void UpdateSelectionState()
+    {
+        var selectedText = _selectionController.SelectedText;
+        var hasSelection = !string.IsNullOrEmpty(selectedText);
+        var changed = selectedText != SelectedText || hasSelection != HasSelection;
+        SelectedText = selectedText;
+        HasSelection = hasSelection;
+        if (changed)
+        {
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private void ClearNativeTextSelections()
+    {
+        if (_documentHost is null)
+        {
+            return;
+        }
+
+        foreach (var textBlock in _documentHost.GetVisualDescendants().OfType<SelectableTextBlock>())
+        {
+            if (!string.IsNullOrEmpty(textBlock.SelectedText))
+            {
+                textBlock.ClearSelection();
+            }
+        }
+    }
+
+    private static bool IsInteractiveSelectionSource(Visual? source)
+    {
+        for (var current = source; current is not null; current = current.GetVisualParent())
+        {
+            if (current is Button
+                or MenuItem
+                or CheckBox
+                or ScrollBar
+                or MarkdownImage)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsPointerInside(Control control, PointerEventArgs e)
+    {
+        var point = e.GetPosition(control);
+        return new Rect(control.Bounds.Size).Contains(point);
+    }
+
+    private static bool IsLinkPointerSource(PointerEventArgs e)
+    {
+        if (FindSelectableTextBlock(e.Source as Visual) is not { } textBlock)
+        {
+            return false;
+        }
+
+        string? url;
+        return TryGetLinkAtPointer(textBlock, e, out url);
     }
 
     private void InvalidateDocumentLayout()
@@ -982,19 +1295,7 @@ public class MarkdownViewer : TemplatedControl
             textBlock.Inlines?.Add(inline);
         }
 
-        if (TryGetSingleTextLink(paragraph.Inline, out var linkUrl))
-        {
-            textBlock.Cursor = new Cursor(StandardCursorType.Hand);
-            textBlock.PointerReleased += (_, e) =>
-            {
-                if (e.InitialPressMouseButton == MouseButton.Left
-                    && string.IsNullOrEmpty(textBlock.SelectedText)
-                    && !string.IsNullOrWhiteSpace(linkUrl))
-                {
-                    UrlHelper.Open(linkUrl);
-                }
-            };
-        }
+        AttachLinkInteraction(textBlock, ExtractLinkSpans(paragraph.Inline, stripTaskPrefix));
 
         return textBlock;
     }
@@ -1019,6 +1320,8 @@ public class MarkdownViewer : TemplatedControl
         {
             textBlock.Inlines?.Add(inline);
         }
+
+        AttachLinkInteraction(textBlock, ExtractLinkSpans(heading.Inline));
 
         border.Child = textBlock;
         return border;
@@ -1075,7 +1378,9 @@ public class MarkdownViewer : TemplatedControl
             ActualThemeVariant == ThemeVariant.Dark,
             CodeFontFamily,
             CodeBlockFontSize,
-            CodeBlockLineHeight));
+            CodeBlockLineHeight,
+            () => HasSelection,
+            CopySelectionAsync));
 
         CodeBlockToolRender?.Invoke(this, new CodeBlockToolRenderEventArgs(header, stack, codeBlock));
 
@@ -1259,19 +1564,29 @@ public class MarkdownViewer : TemplatedControl
                     continue;
                 }
 
-                var cellBorder = CreateTableCell(cell, row.IsHeader);
+                var cellBorder = CreateTableCell(cell, row.IsHeader, rowIndex, columnIndex);
                 Grid.SetRow(cellBorder, rowIndex);
                 Grid.SetColumn(cellBorder, columnIndex);
                 grid.Children.Add(cellBorder);
             }
         }
 
-        return grid;
+        var container = new Border
+        {
+            Child = grid,
+            ClipToBounds = true
+        };
+        AddMarkdownClass(container, MarkdownStyleKeys.TableContainer);
+        BindTheme(container, Border.BorderBrushProperty, BorderLineBrushProperty);
+        return container;
     }
 
-    private Border CreateTableCell(TableCell cell, bool isHeader)
+    private Border CreateTableCell(TableCell cell, bool isHeader, int rowIndex, int columnIndex)
     {
-        var border = new Border();
+        var border = new Border
+        {
+            BorderThickness = new Thickness(columnIndex == 0 ? 0 : 1, rowIndex == 0 ? 0 : 1, 0, 0)
+        };
         AddMarkdownClass(border, isHeader ? MarkdownStyleKeys.TableHeaderCell : MarkdownStyleKeys.TableCell);
         BindTheme(border, Border.BorderBrushProperty, BorderLineBrushProperty);
         if (isHeader)
@@ -1283,7 +1598,7 @@ public class MarkdownViewer : TemplatedControl
         AddMarkdownClass(stack, MarkdownStyleKeys.TableCellContent);
         foreach (var block in cell)
         {
-            var child = ConvertBlock(block);
+            var child = CreateTableCellBlock(block, isHeader);
             if (child is not null)
             {
                 stack.Children.Add(child);
@@ -1465,6 +1780,11 @@ public class MarkdownViewer : TemplatedControl
 
     private Control CreateMathBlock(string latex)
     {
+        if (MarkdownChemistry.TryParseLatex(latex, out var chemExpression))
+        {
+            return CreateChemBlock(chemExpression);
+        }
+
         MathView view;
         try
         {
@@ -1478,6 +1798,44 @@ public class MarkdownViewer : TemplatedControl
         var border = new Border
         {
             Child = view,
+            Padding = new Thickness(0, 8),
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        AddMarkdownClass(border, MarkdownStyleKeys.HtmlBlock);
+        return border;
+    }
+
+    private Control? CreateTableCellBlock(Block block, bool isHeader)
+    {
+        var child = block is ParagraphBlock paragraph
+            ? CreateParagraph(paragraph, false, new Thickness(0))
+            : ConvertBlock(block);
+
+        if (isHeader && child is SelectableTextBlock textBlock)
+        {
+            textBlock.FontWeight = FontWeight.SemiBold;
+        }
+
+        return child;
+    }
+
+    private Control CreateChemBlock(MarkdownChemExpression expression)
+    {
+        var textBlock = CreateSelectableText(MarkdownStyleKeys.HtmlBlock);
+        textBlock.TextAlignment = TextAlignment.Center;
+        textBlock.FontSize = 20;
+        textBlock.LineHeight = Math.Max(28, ParagraphLineHeight);
+        BindTheme(textBlock, SelectableTextBlock.ForegroundProperty, TextBrushProperty);
+        BindTheme(textBlock, SelectableTextBlock.FontFamilyProperty, ContentFontFamilyProperty);
+
+        foreach (var inline in CreateChemInlines(expression, 20))
+        {
+            textBlock.Inlines?.Add(inline);
+        }
+
+        var border = new Border
+        {
+            Child = textBlock,
             Padding = new Thickness(0, 8),
             HorizontalAlignment = HorizontalAlignment.Center
         };
@@ -1850,15 +2208,23 @@ public class MarkdownViewer : TemplatedControl
     private static bool TryGetMathInlineLatex(Markdig.Syntax.Inlines.Inline inline, out string latex)
     {
         latex = string.Empty;
-        if (!inline.GetType().Name.Contains("Math", StringComparison.OrdinalIgnoreCase))
+        string text;
+        if (inline is MathInline mathInline)
         {
-            return false;
+            text = mathInline.Content.ToString().Trim();
         }
-
-        var text = inline.ToString()?.Trim() ?? string.Empty;
-        if (IsTypeNameFallback(text, inline.GetType()))
+        else
         {
-            text = inline.GetType().GetProperty("Content")?.GetValue(inline)?.ToString()?.Trim() ?? string.Empty;
+            if (!inline.GetType().Name.Contains("Math", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            text = inline.ToString()?.Trim() ?? string.Empty;
+            if (IsTypeNameFallback(text, inline.GetType()))
+            {
+                return false;
+            }
         }
 
         text = TrimInlineMathDelimiters(text);
@@ -1985,6 +2351,17 @@ public class MarkdownViewer : TemplatedControl
 
     private Inline CreateMathInline(string latex)
     {
+        if (MarkdownChemistry.TryParseLatex(latex, out var chemExpression))
+        {
+            var span = new Span();
+            foreach (var inline in CreateChemInlines(chemExpression, ParagraphFontSize))
+            {
+                span.Inlines.Add(inline);
+            }
+
+            return span;
+        }
+
         try
         {
             var view = CreateMathView(latex, ParagraphFontSize, CSharpMath.Atom.LineStyle.Text);
@@ -1994,6 +2371,26 @@ public class MarkdownViewer : TemplatedControl
         catch
         {
             return new Run($"${latex}$");
+        }
+    }
+
+    private IEnumerable<Inline> CreateChemInlines(MarkdownChemExpression expression, double fontSize)
+    {
+        foreach (var chemInline in expression.Inlines)
+        {
+            var run = new Run(chemInline.Text);
+            if (chemInline.Kind == MarkdownChemInlineKind.Subscript)
+            {
+                run.BaselineAlignment = BaselineAlignment.Subscript;
+                run.FontSize = Math.Max(9, fontSize * 0.72);
+            }
+            else if (chemInline.Kind == MarkdownChemInlineKind.Superscript)
+            {
+                run.BaselineAlignment = BaselineAlignment.Superscript;
+                run.FontSize = Math.Max(9, fontSize * 0.72);
+            }
+
+            yield return run;
         }
     }
 
@@ -2186,47 +2583,25 @@ public class MarkdownViewer : TemplatedControl
             text = linkInline.Url ?? string.Empty;
         }
 
-        var linkUrl = linkInline.Url;
-
-        var textBlock = new TextBlock
+        var span = new Span
         {
-            TextDecorations = TextDecorations.Underline,
-            Cursor = new Cursor(StandardCursorType.Hand),
-            Inlines = new InlineCollection(),
-            TextWrapping = TextWrapping.NoWrap,
-            Padding = new Thickness(0),
-            Margin = new Thickness(0)
+            TextDecorations = TextDecorations.Underline
         };
-        AddMarkdownClass(textBlock, MarkdownStyleKeys.Link);
-        BindTheme(textBlock, TextBlock.ForegroundProperty, AccentBrushProperty);
-        BindTheme(textBlock, TextBlock.FontFamilyProperty, ContentFontFamilyProperty);
-        BindTheme(textBlock, TextBlock.FontSizeProperty, ParagraphFontSizeProperty);
+        BindTheme(span, TextElement.ForegroundProperty, AccentBrushProperty);
+        BindTheme(span, TextElement.FontFamilyProperty, ContentFontFamilyProperty);
+        BindTheme(span, TextElement.FontSizeProperty, ParagraphFontSizeProperty);
 
         foreach (var inline in ConvertInlines(linkInline))
         {
-            textBlock.Inlines.Add(inline);
+            span.Inlines.Add(inline);
         }
 
-        if (textBlock.Inlines.Count == 0)
+        if (span.Inlines.Count == 0)
         {
-            textBlock.Inlines.Add(new Run(text));
+            span.Inlines.Add(new Run(text));
         }
 
-        textBlock.PointerPressed += (_, e) =>
-        {
-            e.Handled = true;
-        };
-
-        textBlock.PointerReleased += (_, e) =>
-        {
-            if (e.InitialPressMouseButton == MouseButton.Left && !string.IsNullOrWhiteSpace(linkUrl))
-            {
-                UrlHelper.Open(linkUrl);
-                e.Handled = true;
-            }
-        };
-
-        return new InlineUIContainer(textBlock);
+        return span;
     }
 
     private static InlineUIContainer CreateInlineContainer(Control control)
@@ -2251,15 +2626,183 @@ public class MarkdownViewer : TemplatedControl
                 CodeInline code => code.Content,
                 LineBreakInline => Environment.NewLine,
                 TaskList => string.Empty,
+                LinkInline { IsImage: true } image => ExtractImageText(image),
                 ContainerInline nested => ExtractPlainText(nested),
+                _ when MarkdownChemistry.TryGetChemInlinePlainText(child, out var chemText) => chemText,
                 _ => IsTypeNameFallback(child.ToString() ?? string.Empty, child.GetType())
                     ? string.Empty
-                    : child.ToString() ?? string.Empty
+                    : MarkdownChemistry.ReplaceChemCommandsWithPlainText(child.ToString() ?? string.Empty)
             });
             child = child.NextSibling;
         }
 
         return string.Concat(parts);
+    }
+
+    private static string ExtractImageText(LinkInline image)
+    {
+        var altText = ExtractPlainText((ContainerInline)image);
+        if (!string.IsNullOrWhiteSpace(altText))
+        {
+            return altText;
+        }
+
+        return string.IsNullOrWhiteSpace(image.Url) ? "[image]" : image.Url!;
+    }
+
+    private static IReadOnlyList<MarkdownLinkSpan> ExtractLinkSpans(ContainerInline? container, bool stripTaskPrefix = false)
+    {
+        var links = new List<MarkdownLinkSpan>();
+        CollectLinkSpans(container, 0, links, ref stripTaskPrefix);
+        return links;
+    }
+
+    private static int CollectLinkSpans(
+        ContainerInline? container,
+        int offset,
+        ICollection<MarkdownLinkSpan> links,
+        ref bool stripTaskPrefix)
+    {
+        var child = container?.FirstChild;
+        while (child is not null)
+        {
+            switch (child)
+            {
+                case LiteralInline literal:
+                    var literalText = literal.Content.ToString();
+                    if (stripTaskPrefix && TryStripTaskPrefix(literalText, out var stripped))
+                    {
+                        stripTaskPrefix = false;
+                        if (!string.IsNullOrWhiteSpace(stripped))
+                        {
+                            offset += stripped.TrimStart().Length;
+                        }
+                    }
+                    else
+                    {
+                        stripTaskPrefix = false;
+                        offset += literalText.Length;
+                    }
+
+                    break;
+                case CodeInline code:
+                    stripTaskPrefix = false;
+                    offset += code.Content.Length;
+                    break;
+                case LineBreakInline:
+                    stripTaskPrefix = false;
+                    offset += Environment.NewLine.Length;
+                    break;
+                case TaskList:
+                    stripTaskPrefix = false;
+                    break;
+                case LinkInline { IsImage: true } image:
+                    stripTaskPrefix = false;
+                    offset += ExtractImageText(image).Length;
+                    break;
+                case LinkInline { IsImage: false } link:
+                    stripTaskPrefix = false;
+                    var start = offset;
+                    offset = CollectLinkSpans(link, offset, links, ref stripTaskPrefix);
+                    if (offset == start && !string.IsNullOrWhiteSpace(link.Url))
+                    {
+                        offset += link.Url!.Length;
+                    }
+
+                    if (offset > start && !string.IsNullOrWhiteSpace(link.Url))
+                    {
+                        links.Add(new MarkdownLinkSpan(start, offset, link.Url!));
+                    }
+
+                    break;
+                case ContainerInline nested:
+                    stripTaskPrefix = false;
+                    offset = CollectLinkSpans(nested, offset, links, ref stripTaskPrefix);
+                    break;
+                default:
+                    stripTaskPrefix = false;
+                    var text = child.ToString() ?? string.Empty;
+                    if (!IsTypeNameFallback(text, child.GetType()))
+                    {
+                        offset += text.Length;
+                    }
+
+                    break;
+            }
+
+            child = child.NextSibling;
+        }
+
+        return offset;
+    }
+
+    private static void AttachLinkInteraction(SelectableTextBlock textBlock, IReadOnlyList<MarkdownLinkSpan> links)
+    {
+        if (links.Count == 0)
+        {
+            return;
+        }
+
+        textBlock.Tag = links;
+        textBlock.PointerMoved += (_, e) =>
+        {
+            string? ignored;
+            textBlock.Cursor = TryGetLinkAtPointer(textBlock, e, out ignored)
+                ? new Cursor(StandardCursorType.Hand)
+                : null;
+        };
+        textBlock.PointerExited += (_, _) => textBlock.Cursor = null;
+        textBlock.PointerReleased += (_, e) =>
+        {
+            if (e.InitialPressMouseButton == MouseButton.Left
+                && string.IsNullOrEmpty(textBlock.SelectedText)
+                && TryGetLinkAtPointer(textBlock, e, out var url)
+                && !string.IsNullOrWhiteSpace(url))
+            {
+                UrlHelper.Open(url);
+                e.Handled = true;
+            }
+        };
+    }
+
+    private static bool TryGetLinkAtPointer(SelectableTextBlock textBlock, PointerEventArgs e, out string? url)
+    {
+        url = null;
+        if (textBlock.Tag is not IReadOnlyList<MarkdownLinkSpan> links || links.Count == 0)
+        {
+            return false;
+        }
+
+        var hit = textBlock.TextLayout.HitTestPoint(e.GetPosition(textBlock));
+        if (!hit.IsInside)
+        {
+            return false;
+        }
+
+        var textPosition = hit.TextPosition;
+        foreach (var link in links)
+        {
+            if (textPosition >= link.Start && textPosition < link.End)
+            {
+                url = link.Url;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static SelectableTextBlock? FindSelectableTextBlock(Visual? source)
+    {
+        for (var current = source; current is not null; current = current.GetVisualParent())
+        {
+            if (current is SelectableTextBlock textBlock)
+            {
+                return textBlock;
+            }
+        }
+
+        return null;
     }
 
     private SelectableTextBlock CreateSelectableText(params string[] classes)
@@ -2292,7 +2835,17 @@ public class MarkdownViewer : TemplatedControl
         {
             Header = I18nManager.Instance.GetResource(MarkdownL.CopySelectedText)
         };
-        copySelectionItem.Click += (_, _) => textBlock.Copy();
+        copySelectionItem.Click += async (_, _) =>
+        {
+            if (HasSelection)
+            {
+                await CopySelectionAsync();
+            }
+            else
+            {
+                textBlock.Copy();
+            }
+        };
 
         var copyRenderedTextItem = new MenuItem
         {
@@ -2405,6 +2958,10 @@ public class MarkdownViewer : TemplatedControl
             case LinkReferenceDefinitionGroup:
             case LinkReferenceDefinition:
                 break;
+            case MathBlock mathBlock:
+                AppendIndentedLines(builder, indent, ExtractMathPlainText(mathBlock.Lines.ToString().TrimEnd()));
+                builder.AppendLine();
+                break;
             case CodeBlock codeBlock:
                 AppendIndentedLines(builder, indent, codeBlock.Lines.ToString().TrimEnd());
                 builder.AppendLine();
@@ -2436,12 +2993,19 @@ public class MarkdownViewer : TemplatedControl
                 var text = block.ToString() ?? string.Empty;
                 if (!IsTypeNameFallback(text, block.GetType()))
                 {
-                    AppendIndentedLine(builder, indent, text);
+                    AppendIndentedLine(builder, indent, MarkdownChemistry.ReplaceChemCommandsWithPlainText(text));
                     builder.AppendLine();
                 }
 
                 break;
         }
+    }
+
+    private static string ExtractMathPlainText(string text)
+    {
+        return MarkdownChemistry.TryParseLatex(text, out var expression)
+            ? expression.PlainText
+            : MarkdownChemistry.ReplaceChemCommandsWithPlainText(text);
     }
 
     private static bool IsTypeNameFallback(string text, Type type)
@@ -2530,8 +3094,38 @@ public class MarkdownViewer : TemplatedControl
         }
     }
 
-    private sealed record RenderedBlock(int Start, int End, Control Control, List<IDisposable>? Bindings)
+    private sealed record MarkdownLinkSpan(int Start, int End, string Url);
+
+    private sealed record RenderedBlock(
+        int Start,
+        int End,
+        int PlainTextStart,
+        int PlainTextEnd,
+        string PlainText,
+        MarkdownBlockKind Kind,
+        MarkdownDependencyFlags DependencyFlags,
+        ulong ContentHash,
+        Control Control,
+        List<IDisposable>? Bindings)
     {
+        public static RenderedBlock FromModel(
+            MarkdownDocumentBlock modelBlock,
+            Control control,
+            List<IDisposable>? bindings)
+        {
+            return new RenderedBlock(
+                modelBlock.SourceSpan.Start,
+                modelBlock.SourceSpan.End,
+                modelBlock.PlainTextSpan.Start,
+                modelBlock.PlainTextSpan.End,
+                modelBlock.PlainText,
+                modelBlock.Kind,
+                modelBlock.DependencyFlags,
+                modelBlock.ContentHash,
+                control,
+                bindings);
+        }
+
         public void Cleanup()
         {
             if (Bindings is not null)
@@ -2542,6 +3136,21 @@ public class MarkdownViewer : TemplatedControl
                 }
                 Bindings.Clear();
             }
+        }
+
+        public RenderedBlock WithModel(MarkdownDocumentBlock modelBlock)
+        {
+            return this with
+            {
+                Start = modelBlock.SourceSpan.Start,
+                End = modelBlock.SourceSpan.End,
+                PlainTextStart = modelBlock.PlainTextSpan.Start,
+                PlainTextEnd = modelBlock.PlainTextSpan.End,
+                PlainText = modelBlock.PlainText,
+                Kind = modelBlock.Kind,
+                DependencyFlags = modelBlock.DependencyFlags,
+                ContentHash = modelBlock.ContentHash
+            };
         }
 
         public RenderedBlock Shift(int delta)

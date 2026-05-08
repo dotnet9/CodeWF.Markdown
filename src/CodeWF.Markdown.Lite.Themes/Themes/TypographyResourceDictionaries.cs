@@ -3,6 +3,11 @@ using Avalonia.Markup.Xaml;
 
 namespace CodeWF.Markdown.Lite.Themes.Themes;
 
+public partial class BasicTypographyResources : ResourceDictionary
+{
+    public BasicTypographyResources() => AvaloniaXamlLoader.Load(this);
+}
+
 public partial class OrangeHeartTypographyResources : ResourceDictionary
 {
     public OrangeHeartTypographyResources() => AvaloniaXamlLoader.Load(this);

@@ -21,8 +21,12 @@ public class MarkdownImage : TemplatedControl
     private const string ContentHostPartName = "PART_ContentHost";
     private const double DefaultMaxImageWidth = 900;
     private const double DefaultMaxImageHeight = 520;
+    private const int MaxImageByteCacheSize = 64;
 
     private static readonly HttpClient HttpClient = new();
+    private static readonly Dictionary<string, ImageLoadResult> ImageByteCache = new(StringComparer.Ordinal);
+    private static readonly Queue<string> ImageByteCacheOrder = new();
+    private static readonly object ImageByteCacheGate = new();
 
     private ContentControl? _contentHost;
     private Bitmap? _bitmap;
@@ -135,11 +139,19 @@ public class MarkdownImage : TemplatedControl
 
     private async Task<ImageLoadResult> LoadBytesAsync(string source, CancellationToken token)
     {
+        if (TryGetCachedImageBytes(source, out var cached))
+        {
+            return cached;
+        }
+
+        ImageLoadResult result;
         if (TryReadDataUri(source, out var dataUriBytes))
         {
-            return new ImageLoadResult(
+            result = new ImageLoadResult(
                 dataUriBytes,
                 ResolveFileName(source));
+            AddImageBytesToCache(source, result);
+            return result;
         }
 
         if (Uri.TryCreate(source, UriKind.Absolute, out var uri))
@@ -150,18 +162,53 @@ public class MarkdownImage : TemplatedControl
                 response.EnsureSuccessStatusCode();
                 token.ThrowIfCancellationRequested();
                 var bytes = await response.Content.ReadAsByteArrayAsync(token);
-                return new ImageLoadResult(
+                result = new ImageLoadResult(
                     bytes,
                     ResolveFileName(source));
+                AddImageBytesToCache(source, result);
+                return result;
             }
 
             if (uri.IsFile)
             {
-                return await LoadLocalBytesAsync(new LocalImagePath(uri.LocalPath, uri.LocalPath));
+                result = await LoadLocalBytesAsync(new LocalImagePath(uri.LocalPath, uri.LocalPath));
+                AddImageBytesToCache(source, result);
+                return result;
             }
         }
 
-        return await LoadLocalBytesAsync(ResolveLocalPath(source));
+        result = await LoadLocalBytesAsync(ResolveLocalPath(source));
+        AddImageBytesToCache(source, result);
+        return result;
+    }
+
+    private static bool TryGetCachedImageBytes(string source, out ImageLoadResult result)
+    {
+        lock (ImageByteCacheGate)
+        {
+            return ImageByteCache.TryGetValue(source, out result!);
+        }
+    }
+
+    private static void AddImageBytesToCache(string source, ImageLoadResult result)
+    {
+        lock (ImageByteCacheGate)
+        {
+            if (ImageByteCache.ContainsKey(source))
+            {
+                ImageByteCache[source] = result;
+                return;
+            }
+
+            if (ImageByteCache.Count >= MaxImageByteCacheSize)
+            {
+                var oldest = ImageByteCacheOrder.Dequeue();
+                ImageByteCache.Remove(oldest);
+            }
+
+            ImageByteCache[source] = result;
+            ImageByteCacheOrder.Enqueue(source);
+        }
     }
 
     private static async Task<ImageLoadResult> LoadLocalBytesAsync(LocalImagePath localPath)

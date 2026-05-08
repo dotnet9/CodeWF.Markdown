@@ -14,7 +14,8 @@
                     <SolidColorBrush x:Key="CodeWFMarkdownCodeBackgroundBrush" Color="#F6F8FA" />
                     <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#F6F7F9" />
                     <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#EAECF0" />
-                    <SolidColorBrush x:Key="CodeWFMarkdownAccentForegroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentForegroundBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownSelectedBlockBrush" Color="#D9EAFD" />
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Dark">
@@ -27,6 +28,7 @@
                     <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#252933" />
                     <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#303643" />
                     <SolidColorBrush x:Key="CodeWFMarkdownAccentForegroundBrush" Color="#0D1117" />
+                    <SolidColorBrush x:Key="CodeWFMarkdownSelectedBlockBrush" Color="#243B55" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -82,6 +84,8 @@
             <Thickness x:Key="CodeWFMarkdownThematicBreakMargin">0 16 0 16</Thickness>
 
             <Thickness x:Key="CodeWFMarkdownTableMargin">0 8 0 14</Thickness>
+            <Thickness x:Key="CodeWFMarkdownTableContainerBorderThickness">1</Thickness>
+            <CornerRadius x:Key="CodeWFMarkdownTableCornerRadius">6</CornerRadius>
             <Thickness x:Key="CodeWFMarkdownTableCellBorderThickness">1</Thickness>
             <Thickness x:Key="CodeWFMarkdownTableCellPadding">10 8</Thickness>
             <x:Double x:Key="CodeWFMarkdownTableCellMinHeight">38</x:Double>
@@ -169,6 +173,22 @@
         <Setter Property="Padding" Value="{DynamicResource CodeWFMarkdownHeading2Padding}" />
     </Style>
 
+    <Style Selector="SelectableTextBlock.MdSelectedBlock">
+        <Setter Property="Background" Value="{DynamicResource CodeWFMarkdownSelectedBlockBrush}" />
+    </Style>
+
+    <Style Selector="Border.MdSelectedBlock">
+        <Setter Property="Background" Value="{DynamicResource CodeWFMarkdownSelectedBlockBrush}" />
+    </Style>
+
+    <Style Selector="Grid.MdSelectedBlock">
+        <Setter Property="Background" Value="{DynamicResource CodeWFMarkdownSelectedBlockBrush}" />
+    </Style>
+
+    <Style Selector="StackPanel.MdSelectedBlock">
+        <Setter Property="Background" Value="{DynamicResource CodeWFMarkdownSelectedBlockBrush}" />
+    </Style>
+
     <Style Selector="StackPanel.MdDocument">
         <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownDocumentMargin}" />
     </Style>
@@ -232,8 +252,14 @@
         <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownThematicBreakMargin}" />
     </Style>
 
-    <Style Selector="Grid.MdTable">
+    <Style Selector="Border.MdTableContainer">
         <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownTableMargin}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource CodeWFMarkdownTableContainerBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CodeWFMarkdownTableCornerRadius}" />
+    </Style>
+
+    <Style Selector="Grid.MdTable">
+        <Setter Property="Margin" Value="0" />
     </Style>
 
     <Style Selector="Border.MdTableHeaderCell, Border.MdTableCell">

@@ -21,6 +21,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\CodeWF.Markdown.Shared\Rendering\*.cs" Link="Rendering\Shared\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Avalonia" />
 		<PackageReference Include="Markdig" />
 	</ItemGroup>

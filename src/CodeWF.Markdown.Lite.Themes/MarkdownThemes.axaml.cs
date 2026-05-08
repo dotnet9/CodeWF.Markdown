@@ -18,6 +18,7 @@ public class MarkdownThemes : Styles
     private static readonly IReadOnlyDictionary<string, Func<ResourceDictionary>> ThemeResourceFactories =
         new Dictionary<string, Func<ResourceDictionary>>(StringComparer.OrdinalIgnoreCase)
     {
+        [MarkdownTypographyThemes.Basic] = static () => new BasicTypographyResources(),
         [MarkdownTypographyThemes.OrangeHeart] = static () => new OrangeHeartTypographyResources(),
         [MarkdownTypographyThemes.InkBlack] = static () => new InkBlackTypographyResources(),
         [MarkdownTypographyThemes.ColorfulPurple] = static () => new ColorfulPurpleTypographyResources(),
@@ -55,7 +56,7 @@ public class MarkdownThemes : Styles
 
     private static readonly ConditionalWeakTable<IResourceDictionary, AppliedTypographyResources> AppliedResources = new();
 
-    private string? _typographyTheme = MarkdownTypographyThemes.Simple;
+    private string? _typographyTheme = MarkdownTypographyThemes.Basic;
 
     public MarkdownThemes()
     {
@@ -127,7 +128,7 @@ public class MarkdownThemes : Styles
         return !string.IsNullOrWhiteSpace(typographyTheme)
                && ThemeResourceFactories.TryGetValue(typographyTheme.Trim(), out var factory)
             ? factory()
-            : ThemeResourceFactories[MarkdownTypographyThemes.Simple]();
+            : ThemeResourceFactories[MarkdownTypographyThemes.Basic]();
     }
 
     private sealed class AppliedTypographyResources

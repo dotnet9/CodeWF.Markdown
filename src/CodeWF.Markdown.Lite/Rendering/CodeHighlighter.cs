@@ -11,16 +11,21 @@ namespace CodeWF.Markdown.Lite.Rendering;
 
 internal static class CodeHighlighter
 {
+    private const int MaxCacheSize = 32;
+    private static readonly Dictionary<string, string[]> LineCache = new();
+    private static readonly Queue<string> LineCacheOrder = new();
+
     public static Control Render(
         string code,
         string language,
         bool isDark,
         FontFamily fontFamily,
         double fontSize,
-        double lineHeight)
+        double lineHeight,
+        Func<bool>? hasGlobalSelection = null,
+        Func<Task>? copyGlobalSelectionAsync = null)
     {
-        var normalized = code.Replace("\r\n", "\n");
-        var lines = normalized.Split('\n');
+        var lines = GetOrCreateLines(code);
         var textBlock = new SelectableTextBlock
         {
             Inlines = new InlineCollection(),
@@ -34,7 +39,7 @@ internal static class CodeHighlighter
         };
         textBlock.Classes.Add(MarkdownStyleKeys.CodeBlockText);
         TextOptions.SetBaselinePixelAlignment(textBlock, BaselinePixelAlignment.Aligned);
-        textBlock.ContextMenu = CreateCopyContextMenu(textBlock);
+        textBlock.ContextMenu = CreateCopyContextMenu(textBlock, hasGlobalSelection, copyGlobalSelectionAsync);
 
         for (var i = 0; i < lines.Length; i++)
         {
@@ -50,6 +55,25 @@ internal static class CodeHighlighter
         }
 
         return Wrap(textBlock, Math.Max(1, lines.Length));
+    }
+
+    private static string[] GetOrCreateLines(string code)
+    {
+        if (LineCache.TryGetValue(code, out var lines))
+        {
+            return lines;
+        }
+
+        if (LineCache.Count >= MaxCacheSize)
+        {
+            var oldest = LineCacheOrder.Dequeue();
+            LineCache.Remove(oldest);
+        }
+
+        lines = code.Replace("\r\n", "\n").Split('\n');
+        LineCache[code] = lines;
+        LineCacheOrder.Enqueue(code);
+        return lines;
     }
 
     private static Control Wrap(Control content, int lineCount)
@@ -94,13 +118,26 @@ internal static class CodeHighlighter
         return scrollViewer;
     }
 
-    private static ContextMenu CreateCopyContextMenu(SelectableTextBlock textBlock)
+    private static ContextMenu CreateCopyContextMenu(
+        SelectableTextBlock textBlock,
+        Func<bool>? hasGlobalSelection,
+        Func<Task>? copyGlobalSelectionAsync)
     {
         var copySelectionItem = new MenuItem
         {
             Header = "复制渲染文本"
         };
-        copySelectionItem.Click += (_, _) => textBlock.Copy();
+        copySelectionItem.Click += async (_, _) =>
+        {
+            if (hasGlobalSelection?.Invoke() == true && copyGlobalSelectionAsync is not null)
+            {
+                await copyGlobalSelectionAsync();
+            }
+            else
+            {
+                textBlock.Copy();
+            }
+        };
         return new ContextMenu { ItemsSource = new[] { copySelectionItem } };
     }
 }

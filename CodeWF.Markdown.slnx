@@ -25,4 +25,5 @@
   <Project Path="src/CodeWF.Markdown.Themes/CodeWF.Markdown.Themes.csproj" />
   <Project Path="src/CodeWF.Markdown.Lite/CodeWF.Markdown.Lite.csproj" />
   <Project Path="src/CodeWF.Markdown.Lite.Themes/CodeWF.Markdown.Lite.Themes.csproj" />
+  <Project Path="tests/CodeWF.Markdown.Tests/CodeWF.Markdown.Tests.csproj" />
 </Solution>
