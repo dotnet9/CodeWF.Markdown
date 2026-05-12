@@ -13,6 +13,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Lang.Avalonia;
 using SkiaSharp;
 using Svg.Skia;
@@ -74,33 +75,56 @@ public class MarkdownImage : TemplatedControl
         QueueLoad();
     }
 
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        Interlocked.Increment(ref _loadVersion);
+        CancelCurrentLoad();
+        ClearImageState();
+        base.OnDetachedFromVisualTree(e);
+    }
+
     private void QueueLoad()
     {
         var source = Source?.Trim();
+        var version = Interlocked.Increment(ref _loadVersion);
+        CancelCurrentLoad();
+
         if (string.IsNullOrWhiteSpace(source))
         {
-            _loadCts?.Cancel();
-            if (_bitmap is not null)
-            {
-                _bitmap.Dispose();
-                _bitmap = null;
-            }
-            _imageBytes = null;
-            _fileName = null;
-            _isSvg = false;
-            SetContent(null);
+            ClearImageState();
             return;
         }
 
-        _loadCts?.Cancel();
-        _loadCts = new CancellationTokenSource();
-        var token = _loadCts.Token;
-        var version = Interlocked.Increment(ref _loadVersion);
-        _ = LoadAsync(source, version, token);
+        var loadCts = new CancellationTokenSource();
+        _loadCts = loadCts;
+        _ = LoadAsync(source, version, loadCts);
     }
 
-    private async Task LoadAsync(string source, long version, CancellationToken token)
+    private void CancelCurrentLoad()
     {
+        var loadCts = _loadCts;
+        _loadCts = null;
+        loadCts?.Cancel();
+    }
+
+    private void ClearImageState()
+    {
+        var oldBitmap = _bitmap;
+        _bitmap = null;
+        _imageBytes = null;
+        _fileName = null;
+        _isSvg = false;
+        _pressedPoint = null;
+        _isPointerDragging = false;
+
+        SetContent(null);
+        oldBitmap?.Dispose();
+    }
+
+    private async Task LoadAsync(string source, long version, CancellationTokenSource loadCts)
+    {
+        var token = loadCts.Token;
+
         try
         {
             token.ThrowIfCancellationRequested();
@@ -127,11 +151,11 @@ public class MarkdownImage : TemplatedControl
                 _imageBytes = loadResult.Bytes;
                 _fileName = fileName;
                 _isSvg = loadResult.IsSvg;
-                oldBitmap?.Dispose();
 
                 SetContent(loadResult.IsSvg
                     ? CreateSvgContent(loadResult.Bytes, bitmap)
                     : CreateBitmapContent(bitmap));
+                oldBitmap?.Dispose();
             });
         }
         catch (OperationCanceledException)
@@ -149,6 +173,15 @@ public class MarkdownImage : TemplatedControl
             await ShowFallbackAsync(
                 version,
                 string.Format(I18nManager.Instance.GetResource(CodeWF.MarkdownL.ImageLoadFailed), AltText ?? source));
+        }
+        finally
+        {
+            if (ReferenceEquals(_loadCts, loadCts))
+            {
+                _loadCts = null;
+            }
+
+            loadCts.Dispose();
         }
     }
 
@@ -384,9 +417,23 @@ public class MarkdownImage : TemplatedControl
             return;
         }
 
+        Bitmap previewBitmap;
+        try
+        {
+            var previewBytes = _isSvg
+                ? RenderSvgToPngBytes(_imageBytes)
+                : _imageBytes;
+            using var previewStream = new MemoryStream(previewBytes);
+            previewBitmap = new Bitmap(previewStream);
+        }
+        catch
+        {
+            return;
+        }
+
         var title = !string.IsNullOrWhiteSpace(AltText) ? AltText : Source;
         var window = new MarkdownImagePreviewWindow(
-            _bitmap,
+            previewBitmap,
             _imageBytes,
             _fileName ?? (_isSvg ? "markdown-image.svg" : "markdown-image.png"),
             title,
@@ -562,6 +609,7 @@ public class MarkdownImage : TemplatedControl
                 return;
             }
 
+            var oldBitmap = _bitmap;
             _bitmap = null;
             _imageBytes = null;
             _fileName = null;
@@ -582,6 +630,7 @@ public class MarkdownImage : TemplatedControl
             }
 
             SetContent(fallback);
+            oldBitmap?.Dispose();
         });
     }
 

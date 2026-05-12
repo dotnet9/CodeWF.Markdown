@@ -57,33 +57,48 @@ public class MarkdownImage : TemplatedControl
 
 	protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
 	{
-		_loadCts?.Cancel();
-		_bitmap?.Dispose();
-		_bitmap = null;
+		Interlocked.Increment(ref _loadVersion);
+		CancelCurrentLoad();
+		ClearImageState();
 		base.OnDetachedFromVisualTree(e);
 	}
 
 	private void QueueLoad()
 	{
 		var source = Source?.Trim();
+		var version = Interlocked.Increment(ref _loadVersion);
+		CancelCurrentLoad();
+
 		if (string.IsNullOrWhiteSpace(source))
 		{
-			_loadCts?.Cancel();
-			_bitmap?.Dispose();
-			_bitmap = null;
-			SetContent(null);
+			ClearImageState();
 			return;
 		}
 
-		_loadCts?.Cancel();
-		_loadCts = new CancellationTokenSource();
-		var token = _loadCts.Token;
-		var version = Interlocked.Increment(ref _loadVersion);
-		_ = LoadAsync(source, version, token);
+		var loadCts = new CancellationTokenSource();
+		_loadCts = loadCts;
+		_ = LoadAsync(source, version, loadCts);
 	}
 
-	private async Task LoadAsync(string source, long version, CancellationToken token)
+	private void CancelCurrentLoad()
 	{
+		var loadCts = _loadCts;
+		_loadCts = null;
+		loadCts?.Cancel();
+	}
+
+	private void ClearImageState()
+	{
+		var oldBitmap = _bitmap;
+		_bitmap = null;
+		SetContent(null);
+		oldBitmap?.Dispose();
+	}
+
+	private async Task LoadAsync(string source, long version, CancellationTokenSource loadCts)
+	{
+		var token = loadCts.Token;
+
 		try
 		{
 			var bytes = await LoadBytesAsync(source, token);
@@ -101,8 +116,8 @@ public class MarkdownImage : TemplatedControl
 
 				var oldBitmap = _bitmap;
 				_bitmap = bitmap;
-				oldBitmap?.Dispose();
 				SetContent(CreateBitmapContent(bitmap));
+				oldBitmap?.Dispose();
 			});
 		}
 		catch (OperationCanceledException)
@@ -111,6 +126,15 @@ public class MarkdownImage : TemplatedControl
 		catch
 		{
 			await ShowFallbackAsync(version, AltText ?? source);
+		}
+		finally
+		{
+			if (ReferenceEquals(_loadCts, loadCts))
+			{
+				_loadCts = null;
+			}
+
+			loadCts.Dispose();
 		}
 	}
 
@@ -177,7 +201,7 @@ public class MarkdownImage : TemplatedControl
 				return;
 			}
 
-			_bitmap?.Dispose();
+			var oldBitmap = _bitmap;
 			_bitmap = null;
 
 			var fallbackText = new TextBlock
@@ -193,6 +217,7 @@ public class MarkdownImage : TemplatedControl
 			};
 			fallback.Classes.Add(MarkdownStyleKeys.ImageFallback);
 			SetContent(fallback);
+			oldBitmap?.Dispose();
 		});
 	}
 

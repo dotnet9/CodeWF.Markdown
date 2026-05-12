@@ -21,6 +21,7 @@ internal sealed class MarkdownImagePreviewWindow : Window
 
     private readonly byte[] _imageBytes;
     private readonly string _fileName;
+    private readonly Bitmap _bitmap;
     private readonly Control _image;
     private readonly Border _imageHost;
     private readonly ScrollViewer _scrollViewer;
@@ -37,6 +38,7 @@ internal sealed class MarkdownImagePreviewWindow : Window
 
     public MarkdownImagePreviewWindow(Bitmap bitmap, byte[] imageBytes, string fileName, string? title, bool isSvg)
     {
+        _bitmap = bitmap;
         _imageBytes = imageBytes;
         _fileName = string.IsNullOrWhiteSpace(fileName) ? "markdown-image.png" : fileName;
         _originalWidth = Math.Max(1, bitmap.PixelSize.Width);
@@ -80,8 +82,14 @@ internal sealed class MarkdownImagePreviewWindow : Window
         Content = CreateLayout();
         PointerWheelChanged += OnPointerWheelChanged;
         I18nManager.Instance.CultureChanged += OnCultureChanged;
-        Closed += (_, _) => I18nManager.Instance.CultureChanged -= OnCultureChanged;
+        Closed += OnClosed;
         UpdateImageSize();
+    }
+
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        I18nManager.Instance.CultureChanged -= OnCultureChanged;
+        _bitmap.Dispose();
     }
 
     private static Control CreateBitmapContent(Bitmap bitmap)

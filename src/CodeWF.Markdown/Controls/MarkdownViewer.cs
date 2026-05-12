@@ -609,6 +609,7 @@ public class MarkdownViewer : TemplatedControl
         {
             block.Cleanup();
         }
+        DisposePendingBlockDisposables(0);
         _documentHost.Children.Clear();
         _renderedBlocks.Clear();
         _renderedMarkdown = text;
@@ -723,16 +724,11 @@ public class MarkdownViewer : TemplatedControl
             var control = ConvertBlock(modelBlock.SyntaxBlock, markdown);
             if (control is null)
             {
-                for (var i = _currentBlockDisposables.Count - 1; i >= previousDisposableCount; i--)
-                {
-                    _currentBlockDisposables[i].Dispose();
-                    _currentBlockDisposables.RemoveAt(i);
-                }
+                DisposePendingBlockDisposables(previousDisposableCount);
                 continue;
             }
 
-            var blockDisposables = _currentBlockDisposables.GetRange(previousDisposableCount,
-                _currentBlockDisposables.Count - previousDisposableCount);
+            var blockDisposables = ExtractCurrentBlockDisposables(previousDisposableCount);
             renderedBlocks.Add(RenderedBlock.FromModel(modelBlock, control, blockDisposables));
         }
 
@@ -755,17 +751,12 @@ public class MarkdownViewer : TemplatedControl
             var control = ConvertBlock(block, markdown);
             if (control is null)
             {
-                for (var i = _currentBlockDisposables.Count - 1; i >= previousDisposableCount; i--)
-                {
-                    _currentBlockDisposables[i].Dispose();
-                    _currentBlockDisposables.RemoveAt(i);
-                }
+                DisposePendingBlockDisposables(previousDisposableCount);
                 continue;
             }
 
             var range = GetBlockRange(block, sourceOffset, markdown.Length);
-            var blockDisposables = _currentBlockDisposables.GetRange(previousDisposableCount,
-                _currentBlockDisposables.Count - previousDisposableCount);
+            var blockDisposables = ExtractCurrentBlockDisposables(previousDisposableCount);
             renderedBlocks.Add(new RenderedBlock(
                 range.Start,
                 range.End,
@@ -780,6 +771,28 @@ public class MarkdownViewer : TemplatedControl
         }
 
         return renderedBlocks;
+    }
+
+    private List<IDisposable>? ExtractCurrentBlockDisposables(int startIndex)
+    {
+        var count = _currentBlockDisposables.Count - startIndex;
+        if (count <= 0)
+        {
+            return null;
+        }
+
+        var blockDisposables = _currentBlockDisposables.GetRange(startIndex, count);
+        _currentBlockDisposables.RemoveRange(startIndex, count);
+        return blockDisposables;
+    }
+
+    private void DisposePendingBlockDisposables(int startIndex)
+    {
+        for (var i = _currentBlockDisposables.Count - 1; i >= startIndex; i--)
+        {
+            _currentBlockDisposables[i].Dispose();
+            _currentBlockDisposables.RemoveAt(i);
+        }
     }
 
     private void ReplaceRenderedBlocks(

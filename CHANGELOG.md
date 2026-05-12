@@ -7,6 +7,10 @@
 - Added `CodeWF.Markdown.Lite.Themes` with the same template and typography resources as `CodeWF.Markdown.Themes`, except for referencing the Lite viewer assembly.
 - Added `CodeWF.Markdown.Lite.Sample`, mirroring the editor preview and multi-viewer theme demos in Simplified Chinese without localization switching or AvaloniaEdit.
 - Fixed Lite inline text inheritance so heading typography resources are applied correctly.
+- Fixed full-viewer incremental rendering so per-block theme bindings are released when Markdown files are switched repeatedly.
+- Improved full and Lite image cleanup by cancelling in-flight image loads and disposing replaced or detached bitmaps.
+- Updated full image preview windows to own their preview bitmap so Markdown switches can release the viewer image safely.
+- Verified the full and Lite sample apps with repeated Markdown file switching and scrolling stress runs; no out-of-memory failure or CPU spike was observed after cleanup.
 - Updated solution, packing, and publishing scripts to include the Lite package line.
 - Removed project-level `CHANGELOG.md` files; root changelogs are now the single release-note source for all projects.
 
