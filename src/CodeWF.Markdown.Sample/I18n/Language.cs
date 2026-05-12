@@ -29,6 +29,8 @@ namespace CodeWF.Markdown
 
         public static readonly string TypographyTheme = "CodeWF.Markdown.SampleL.TypographyTheme";
 
+        public static readonly string CompactLayout = "CodeWF.Markdown.SampleL.CompactLayout";
+
         public static readonly string Language = "CodeWF.Markdown.SampleL.Language";
 
         public static readonly string MarkdownInput = "CodeWF.Markdown.SampleL.MarkdownInput";

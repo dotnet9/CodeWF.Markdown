@@ -33,12 +33,12 @@ Add the theme package in `App.axaml`:
     xmlns:markdown="https://codewf.com">
     <Application.Styles>
         <FluentTheme />
-        <markdown:MarkdownThemes TypographyTheme="Simple" />
+        <markdown:MarkdownThemes />
     </Application.Styles>
 </Application>
 ```
 
-Use `MarkdownViewer` in a view:
+Set `TypographyTheme` and `TypographySize` on `MarkdownThemes` for app defaults, or on `MarkdownViewer` for per-viewer overrides. Omitted values default to `Basic` and `Normal`.
 
 ```xml
 <UserControl
@@ -47,7 +47,10 @@ Use `MarkdownViewer` in a view:
     <ScrollViewer
         HorizontalScrollBarVisibility="Disabled"
         VerticalScrollBarVisibility="Auto">
-        <md:MarkdownViewer Markdown="{Binding Markdown}" />
+        <md:MarkdownViewer
+            Markdown="{Binding Markdown}"
+            TypographyTheme="Simple"
+            TypographySize="Small" />
     </ScrollViewer>
 </UserControl>
 ```

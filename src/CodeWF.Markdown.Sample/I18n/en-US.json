@@ -8,6 +8,7 @@
         "WindowTitle": "CodeWF.Markdown Sample",
         "AppTheme": "App Theme",
         "TypographyTheme": "Typography Theme",
+        "CompactLayout": "Compact Layout",
         "Language": "Language",
         "MarkdownInput": "Markdown Input",
         "StartIncrementalDemo": "Start Incremental Demo",

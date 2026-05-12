@@ -1,5 +1,11 @@
 # 更新日志
 
+V12.0.2.6（2026-05-12）
+
+- 😄[新增]-`MarkdownViewer` 新增 `TypographyTheme` 和 `TypographySize` 属性，支持单个 Viewer 独立设置排版主题和尺寸
+- 😄[新增]-新增排版主题、排版尺寸和基础资源跟踪样式 Key，便于主题包实现全局与局部资源继承
+- 🔨[优化]-`MarkdownViewer` 在排版主题或尺寸变化时触发完整重绘，确保字号、行高、间距和色彩资源即时生效
+
 V12.0.2.5（2026-05-09）
 
 - 🔨[优化]-将 `Lang.Avalonia.Resx` 替换为 `Lang.Avalonia.Json`，控件内文案改为读取随包输出的 JSON 语言资源

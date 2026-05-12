@@ -87,3 +87,13 @@ public partial class FullStackBlueTypographyResources : ResourceDictionary
 {
     public FullStackBlueTypographyResources() => AvaloniaXamlLoader.Load(this);
 }
+
+public partial class CommonTypographyResources : ResourceDictionary
+{
+    public CommonTypographyResources() => AvaloniaXamlLoader.Load(this);
+}
+
+public partial class CompactTypographyResources : ResourceDictionary
+{
+    public CompactTypographyResources() => AvaloniaXamlLoader.Load(this);
+}

@@ -33,12 +33,12 @@ Install-Package CodeWF.Markdown.Themes
     xmlns:markdown="https://codewf.com">
     <Application.Styles>
         <FluentTheme />
-        <markdown:MarkdownThemes TypographyTheme="Simple" />
+        <markdown:MarkdownThemes />
     </Application.Styles>
 </Application>
 ```
 
-在页面中使用 `MarkdownViewer`：
+可以在 `MarkdownThemes` 上设置全局默认，也可以在 `MarkdownViewer` 上设置单个 Viewer 覆盖。`TypographyTheme` 和 `TypographySize` 可不填，默认是 `Basic` 和 `Normal`。
 
 ```xml
 <UserControl
@@ -47,7 +47,10 @@ Install-Package CodeWF.Markdown.Themes
     <ScrollViewer
         HorizontalScrollBarVisibility="Disabled"
         VerticalScrollBarVisibility="Auto">
-        <md:MarkdownViewer Markdown="{Binding Markdown}" />
+        <md:MarkdownViewer
+            Markdown="{Binding Markdown}"
+            TypographyTheme="Simple"
+            TypographySize="Small" />
     </ScrollViewer>
 </UserControl>
 ```

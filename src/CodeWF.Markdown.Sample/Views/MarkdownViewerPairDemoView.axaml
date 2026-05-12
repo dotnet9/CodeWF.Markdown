@@ -1,0 +1,123 @@
+<UserControl
+    x:Class="CodeWF.Markdown.Sample.Views.MarkdownViewerPairDemoView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:md="https://codewf.com"
+    xmlns:vm="using:CodeWF.Markdown.Sample.ViewModels"
+    x:DataType="vm:MainWindowViewModel"
+    mc:Ignorable="d">
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Border.viewer-panel">
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="TextBlock.viewer-title">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.viewer-combo">
+            <Setter Property="Height" Value="30" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Margin="4" ColumnDefinitions="*,*">
+        <Border
+            Grid.Column="0"
+            Margin="0 0 8 0"
+            Classes="viewer-panel">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <TextBlock
+                    Classes="viewer-title"
+                    Text="Viewer A" />
+                <StackPanel
+                    Grid.Row="1"
+                    Margin="0 12 0 14"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <TextBlock
+                        Classes="label"
+                        Text="排版主题" />
+                    <ComboBox
+                        Classes="viewer-combo"
+                        Width="150"
+                        DisplayMemberBinding="{Binding Name}"
+                        ItemsSource="{Binding ViewerTypographyThemeChoices}"
+                        SelectedItem="{Binding FirstViewerSelectedTypographyTheme}" />
+                    <TextBlock
+                        Classes="label"
+                        Margin="12 0 0 0"
+                        Text="尺寸" />
+                    <ComboBox
+                        Classes="viewer-combo"
+                        Width="116"
+                        DisplayMemberBinding="{Binding Name}"
+                        ItemsSource="{Binding ViewerCompactLayoutChoices}"
+                        SelectedItem="{Binding FirstViewerSelectedCompactLayout}" />
+                </StackPanel>
+                <ScrollViewer
+                    Grid.Row="2"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <md:MarkdownViewer
+                        Markdown="{Binding FirstViewerMarkdown}"
+                        TypographySize="{Binding FirstViewerTypographySize}"
+                        TypographyTheme="{Binding FirstViewerTypographyTheme}" />
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <Border
+            Grid.Column="1"
+            Margin="8 0 0 0"
+            Classes="viewer-panel">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <TextBlock
+                    Classes="viewer-title"
+                    Text="Viewer B" />
+                <StackPanel
+                    Grid.Row="1"
+                    Margin="0 12 0 14"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <TextBlock
+                        Classes="label"
+                        Text="排版主题" />
+                    <ComboBox
+                        Classes="viewer-combo"
+                        Width="150"
+                        DisplayMemberBinding="{Binding Name}"
+                        ItemsSource="{Binding ViewerTypographyThemeChoices}"
+                        SelectedItem="{Binding SecondViewerSelectedTypographyTheme}" />
+                    <TextBlock
+                        Classes="label"
+                        Margin="12 0 0 0"
+                        Text="尺寸" />
+                    <ComboBox
+                        Classes="viewer-combo"
+                        Width="116"
+                        DisplayMemberBinding="{Binding Name}"
+                        ItemsSource="{Binding ViewerCompactLayoutChoices}"
+                        SelectedItem="{Binding SecondViewerSelectedCompactLayout}" />
+                </StackPanel>
+                <ScrollViewer
+                    Grid.Row="2"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <md:MarkdownViewer
+                        Markdown="{Binding SecondViewerMarkdown}"
+                        TypographySize="{Binding SecondViewerTypographySize}"
+                        TypographyTheme="{Binding SecondViewerTypographyTheme}" />
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

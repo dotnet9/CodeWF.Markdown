@@ -4,11 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="https://codewf.com"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:edit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:md="https://codewf.com"
     xmlns:sample="clr-namespace:CodeWF.Markdown.Sample"
     xmlns:l="clr-namespace:CodeWF.Markdown"
+    xmlns:views="using:CodeWF.Markdown.Sample.Views"
     xmlns:vm="using:CodeWF.Markdown.Sample.ViewModels"
     Title="{c:I18n {x:Static l:SampleL.WindowTitle}}"
     Width="1280"
@@ -24,18 +23,46 @@
     </Design.DataContext>
 
     <Window.Styles>
+        <Style Selector="Border.toolbar-shell">
+            <Setter Property="Padding" Value="14 10" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+        </Style>
+        <Style Selector="Border.toolbar-group">
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Margin" Value="0 0 10 0" />
+            <Setter Property="Padding" Value="10 6" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
         <Style Selector="TextBlock.label">
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Margin" Value="0 0 6 0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Opacity" Value="0.72" />
         </Style>
         <Style Selector="ComboBox.toolbar-combo">
             <Setter Property="MinWidth" Value="150" />
-            <Setter Property="Margin" Value="0 0 16 0" />
+            <Setter Property="Height" Value="30" />
+        </Style>
+        <Style Selector="ComboBox.typography-combo">
+            <Setter Property="MinWidth" Value="190" />
+            <Setter Property="Height" Value="30" />
         </Style>
         <Style Selector="ComboBox.language-combo">
             <Setter Property="MinWidth" Value="120" />
-            <Setter Property="Margin" Value="0 0 16 0" />
+            <Setter Property="Height" Value="30" />
+        </Style>
+        <Style Selector="ToggleSwitch.compact-toggle">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TabControl.preview-tabs">
+            <Setter Property="Margin" Value="12 8 12 12" />
+        </Style>
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="14 8" />
         </Style>
         <Style Selector="Button.stress-toggle">
             <Setter Property="MinWidth" Value="118" />
@@ -54,100 +81,66 @@
     </Window.Resources>
 
     <Grid RowDefinitions="Auto,*">
-        <Border
-            Padding="14 12"
-            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-            BorderThickness="0 0 0 1">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*">
-                <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.AppTheme}}" />
-                <ComboBox
-                    Grid.Column="1"
-                    Classes="toolbar-combo"
-                    DisplayMemberBinding="{Binding Name}"
-                    ItemsSource="{Binding ThemeVariants}"
-                    SelectedItem="{Binding SelectedThemeVariant}" />
+        <Border Classes="toolbar-shell">
+            <Grid ColumnDefinitions="*,Auto">
+                <WrapPanel
+                    ItemHeight="42"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Center">
+                    <Border Classes="toolbar-group">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.AppTheme}}" />
+                            <ComboBox
+                                Classes="toolbar-combo"
+                                DisplayMemberBinding="{Binding Name}"
+                                ItemsSource="{Binding ThemeVariants}"
+                                SelectedItem="{Binding SelectedThemeVariant}" />
+                        </StackPanel>
+                    </Border>
 
-                <TextBlock Grid.Column="2" Classes="label" Text="{c:I18n {x:Static l:SampleL.TypographyTheme}}" />
-                <ComboBox
-                    Grid.Column="3"
-                    HorizontalAlignment="Left"
-                    MinWidth="190"
-                    DisplayMemberBinding="{Binding Name}"
-                    ItemsSource="{Binding TypographyThemes}"
-                    SelectedItem="{Binding SelectedTypographyTheme}" />
+                    <Border Classes="toolbar-group">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.TypographyTheme}}" />
+                            <ComboBox
+                                Classes="typography-combo"
+                                DisplayMemberBinding="{Binding Name}"
+                                ItemsSource="{Binding TypographyThemes}"
+                                SelectedItem="{Binding SelectedTypographyTheme}" />
+                        </StackPanel>
+                    </Border>
 
-                <StackPanel Grid.Column="4" HorizontalAlignment="Right" Orientation="Horizontal">
-                    <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.Language}}" />
-                    <ComboBox
-                        Classes="language-combo"
-                        ItemTemplate="{StaticResource LanguageSelectionTemplate}"
-                        ItemsSource="{Binding Languages}"
-                        SelectedItem="{Binding SelectLanguage, Mode=TwoWay}"
-                        SelectionBoxItemTemplate="{StaticResource LanguageSelectionTemplate}" />
-                </StackPanel>
+                    <Border Classes="toolbar-group">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.CompactLayout}}" />
+                            <ToggleSwitch Classes="compact-toggle" IsChecked="{Binding IsCompactLayout}" />
+                        </StackPanel>
+                    </Border>
+                </WrapPanel>
+
+                <Border Grid.Column="1" Classes="toolbar-group" Margin="8 0 0 0">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.Language}}" />
+                        <ComboBox
+                            Classes="language-combo"
+                            ItemTemplate="{StaticResource LanguageSelectionTemplate}"
+                            ItemsSource="{Binding Languages}"
+                            SelectedItem="{Binding SelectLanguage, Mode=TwoWay}"
+                            SelectionBoxItemTemplate="{StaticResource LanguageSelectionTemplate}" />
+                    </StackPanel>
+                </Border>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="460" MinWidth="300" />
-                <ColumnDefinition Width="6" />
-                <ColumnDefinition Width="*" MinWidth="360" />
-            </Grid.ColumnDefinitions>
-
-            <Border
-                Grid.Column="0"
-                Padding="14"
-                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                BorderThickness="0 0 1 0">
-                <Grid RowDefinitions="Auto,Auto,*">
-                    <TextBlock
-                        FontSize="18"
-                        FontWeight="SemiBold"
-                        Text="{c:I18n {x:Static l:SampleL.MarkdownInput}}" />
-                    <Grid
-                        Grid.Row="1"
-                        Margin="0 10 0 12"
-                        ColumnDefinitions="*,Auto">
-                        <ComboBox
-                            Margin="0 0 10 0"
-                            DisplayMemberBinding="{Binding Name}"
-                            ItemsSource="{Binding MarkdownFiles}"
-                            SelectedItem="{Binding SelectedFile}" />
-                        <Button
-                            Grid.Column="1"
-                            Classes="stress-toggle"
-                            Command="{Binding ToggleIncrementalStressCommand}"
-                            Content="{Binding IncrementalStressButtonText}" />
-                    </Grid>
-                    <edit:TextEditor
-                        x:Name="MarkdownEditor"
-                        Grid.Row="2"
-                        FontFamily="Consolas, Cascadia Mono"
-                        FontSize="13"
-                        HorizontalScrollBarVisibility="Auto"
-                        ShowLineNumbers="True"
-                        VerticalScrollBarVisibility="Auto"
-                        WordWrap="True" />
-                </Grid>
-            </Border>
-
-            <GridSplitter
-                Grid.Column="1"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
-                Background="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                ResizeDirection="Columns" />
-
-            <Border
-                Grid.Column="2"
-                Padding="34 28 34 0">
-                <ScrollViewer
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <md:MarkdownViewer Markdown="{Binding Markdown}" />
-                </ScrollViewer>
-            </Border>
-        </Grid>
+        <TabControl
+            x:Name="PreviewTabs"
+            Grid.Row="1"
+            Classes="preview-tabs">
+            <TabItem Header="编辑预览">
+                <views:MarkdownEditorPreviewView />
+            </TabItem>
+            <TabItem Header="多 Viewer">
+                <views:MarkdownViewerPairDemoView />
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

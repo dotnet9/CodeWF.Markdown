@@ -8,6 +8,7 @@
         "WindowTitle": "CodeWF.Markdown サンプル",
         "AppTheme": "アプリテーマ",
         "TypographyTheme": "タイポグラフィテーマ",
+        "CompactLayout": "コンパクト表示",
         "Language": "言語",
         "MarkdownInput": "Markdown 入力",
         "StartIncrementalDemo": "増分デモ開始",

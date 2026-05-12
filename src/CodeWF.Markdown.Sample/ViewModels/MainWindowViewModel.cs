@@ -69,12 +69,29 @@ public sealed class MainWindowViewModel : ObservableObject
         ];
         TypographyThemes = new ObservableCollection<MarkdownTypographyTheme>(
             MarkdownTypographyThemes.All.Append(new MarkdownTypographyTheme("示例：青墨绿", SampleTypographyThemeKey)));
+        ViewerTypographyThemeChoices = new ObservableCollection<TypographyThemeChoice>(
+        [
+            new("跟随统一设置", null),
+            .. MarkdownTypographyThemes.All.Select(theme => new TypographyThemeChoice(theme.Name, theme.Key))
+        ]);
+        ViewerCompactLayoutChoices = new ObservableCollection<CompactLayoutChoice>(
+        [
+            new("跟随统一设置", null),
+            new("正常", MarkdownTypographySizes.Normal),
+            new("紧凑", MarkdownTypographySizes.Small)
+        ]);
         MarkdownFiles = new ObservableCollection<MarkdownSampleFile>(LoadMarkdownFiles());
         Languages = CreateLanguages(["zh-CN", "zh-Hant", "en-US", "ja-JP"]);
 
         SelectedThemeVariant = ThemeVariants[0];
         SelectedTypographyTheme = TypographyThemes.FirstOrDefault(theme => theme.Key == MarkdownTypographyThemes.OrangeHeart)
                                   ?? TypographyThemes.FirstOrDefault();
+        FirstViewerSelectedTypographyTheme = ViewerTypographyThemeChoices.FirstOrDefault();
+        FirstViewerSelectedCompactLayout = ViewerCompactLayoutChoices.FirstOrDefault();
+        SecondViewerSelectedTypographyTheme = ViewerTypographyThemeChoices.FirstOrDefault(theme => theme.Key == MarkdownTypographyThemes.Simple)
+                                             ?? ViewerTypographyThemeChoices.FirstOrDefault();
+        SecondViewerSelectedCompactLayout = ViewerCompactLayoutChoices.FirstOrDefault(layout => layout.Size == MarkdownTypographySizes.Small)
+                                            ?? ViewerCompactLayoutChoices.FirstOrDefault();
         SelectedFile = MarkdownFiles.FirstOrDefault();
         SelectLanguage = Languages.FirstOrDefault(l => l.CultureName == I18nManager.Instance.Culture?.Name)
                          ?? Languages.FirstOrDefault();
@@ -84,11 +101,83 @@ public sealed class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<MarkdownTypographyTheme> TypographyThemes { get; }
 
+    public ObservableCollection<TypographyThemeChoice> ViewerTypographyThemeChoices { get; }
+
+    public ObservableCollection<CompactLayoutChoice> ViewerCompactLayoutChoices { get; }
+
     public ObservableCollection<MarkdownSampleFile> MarkdownFiles { get; }
 
     public List<SampleLanguage> Languages { get; }
 
     public RelayCommand ToggleIncrementalStressCommand { get; }
+
+    public bool IsCompactLayout
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+            {
+                OnPropertyChanged(nameof(CurrentTypographySize));
+            }
+        }
+    }
+
+    public TypographyThemeChoice? FirstViewerSelectedTypographyTheme
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+            {
+                OnPropertyChanged(nameof(FirstViewerTypographyTheme));
+            }
+        }
+    }
+
+    public CompactLayoutChoice? FirstViewerSelectedCompactLayout
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+            {
+                OnPropertyChanged(nameof(FirstViewerTypographySize));
+            }
+        }
+    }
+
+    public TypographyThemeChoice? SecondViewerSelectedTypographyTheme
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+            {
+                OnPropertyChanged(nameof(SecondViewerTypographyTheme));
+            }
+        }
+    }
+
+    public CompactLayoutChoice? SecondViewerSelectedCompactLayout
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+            {
+                OnPropertyChanged(nameof(SecondViewerTypographySize));
+            }
+        }
+    }
+
+    public string? FirstViewerTypographyTheme => FirstViewerSelectedTypographyTheme?.Key;
+
+    public string? FirstViewerTypographySize => FirstViewerSelectedCompactLayout?.Size;
+
+    public string? SecondViewerTypographyTheme => SecondViewerSelectedTypographyTheme?.Key;
+
+    public string? SecondViewerTypographySize => SecondViewerSelectedCompactLayout?.Size;
 
     public bool IsIncrementalStressRunning
     {
@@ -102,15 +191,61 @@ public sealed class MainWindowViewModel : ObservableObject
         }
     }
 
-    public string IncrementalStressButtonText => IsIncrementalStressRunning
-        ? I18nManager.Instance.GetResource(SampleL.StopIncrementalDemo)
-        : I18nManager.Instance.GetResource(SampleL.StartIncrementalDemo);
+    public string IncrementalStressButtonText =>
+        I18nManager.Instance.GetResource(IsIncrementalStressRunning
+            ? SampleL.StopIncrementalDemo
+            : SampleL.StartIncrementalDemo) ?? string.Empty;
 
     public string Markdown
     {
         get;
         set => SetProperty(ref field, value ?? string.Empty);
     } = string.Empty;
+
+    public string FirstViewerMarkdown { get; } = """
+        # 方案摘要
+
+        这一份预览默认跟随上方统一排版设置。切换 TabControl 上方的排版主题或紧凑布局时，如果本 Viewer 的主题或尺寸选项保持“跟随统一设置”，这里会同步变化。
+
+        ## 重点
+
+        - 单个 Viewer 可以只接管主题或尺寸。
+        - 未接管的配置继续从外层 `MarkdownThemes` 资源读取。
+        - 表格、列表、引用和代码块都参与尺寸对比。
+
+        | 项目 | 状态 | 说明 |
+        | --- | --- | --- |
+        | 全局主题 | 跟随 | 由 TabControl 资源提供 |
+        | 局部主题 | 可选 | 设置后只影响当前 Viewer |
+        | 紧凑布局 | 可选 | Small 会收紧字号和间距 |
+
+        ```csharp
+        markdownViewer.TypographyTheme = null;
+        markdownViewer.TypographySize = MarkdownTypographySizes.Small;
+        ```
+        """;
+
+    public string SecondViewerMarkdown { get; } = """
+        # 评审记录
+
+        这一份预览初始使用自己的排版主题和紧凑尺寸。它适合观察同一个页面里两个 `MarkdownViewer` 采用不同阅读密度时，资源隔离是否稳定。
+
+        > 局部设置会写入当前 MarkdownViewer 的资源范围，不会污染同级 Viewer。
+
+        ## 清单
+
+        1. 标题层级保持清晰。
+        2. 引用块背景和强调色来自当前主题。
+        3. 代码块字号、按钮尺寸和表格间距会随尺寸变化。
+
+        ```json
+        {
+          "viewer": "second",
+          "theme": "local",
+          "size": "small"
+        }
+        ```
+        """;
 
     public MarkdownSampleFile? SelectedFile
     {
@@ -128,13 +263,7 @@ public sealed class MainWindowViewModel : ObservableObject
     public MarkdownTypographyTheme? SelectedTypographyTheme
     {
         get;
-        set
-        {
-            if (SetProperty(ref field, value))
-            {
-                ApplySelectedTypographyTheme();
-            }
-        }
+        set => SetProperty(ref field, value);
     }
 
     public ThemeVariantOption? SelectedThemeVariant
@@ -205,20 +334,16 @@ public sealed class MainWindowViewModel : ObservableObject
         _ => 4
     };
 
-    private void ApplySelectedTypographyTheme()
+    public void ApplyTypographyResourcesTo(StyledElement element)
     {
-        if (Application.Current is not { } app)
-        {
-            return;
-        }
-
         if (SelectedTypographyTheme?.Key == SampleTypographyThemeKey)
         {
-            MarkdownThemes.OverrideTypographyResources(app, LoadSampleTypographyResources());
+            var sampleResources = LoadSampleTypographyResources();
+            MarkdownThemes.OverrideTypographyResources(element, sampleResources, CurrentTypographySize);
             return;
         }
 
-        MarkdownThemes.OverrideTypographyResources(app, SelectedTypographyTheme?.Key);
+        MarkdownThemes.OverrideTypographyResources(element, SelectedTypographyTheme?.Key, CurrentTypographySize);
     }
 
     private void ToggleIncrementalStress()
@@ -521,6 +646,10 @@ public sealed class MainWindowViewModel : ObservableObject
         return new SampleTypographyThemeResources();
     }
 
+    public string CurrentTypographySize => IsCompactLayout
+        ? MarkdownTypographySizes.Small
+        : MarkdownTypographySizes.Normal;
+
     private static string ResolveMarkdownBasePath()
     {
         var outputPath = Path.Combine(AppContext.BaseDirectory, "MarkdownSamples");
@@ -535,5 +664,9 @@ public sealed class MainWindowViewModel : ObservableObject
 }
 
 public sealed record ThemeVariantOption(string Name, ThemeVariant ThemeVariant);
+
+public sealed record TypographyThemeChoice(string Name, string? Key);
+
+public sealed record CompactLayoutChoice(string Name, string? Size);
 
 public sealed record MarkdownSampleFile(string Name, string Path);

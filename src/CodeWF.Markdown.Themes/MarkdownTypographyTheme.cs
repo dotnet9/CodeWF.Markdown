@@ -49,3 +49,12 @@ public static class MarkdownTypographyThemes
         new("全栈蓝", FullStackBlue),
     ];
 }
+
+/// <summary>
+/// Markdown 排版尺寸 Key 集合，可与任意排版主题叠加使用。
+/// </summary>
+public static class MarkdownTypographySizes
+{
+    public const string Normal = "Normal";
+    public const string Small = "Small";
+}

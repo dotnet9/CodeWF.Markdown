@@ -72,6 +72,9 @@ public static class MarkdownStyleKeys
     public const string Heading4FontSizeResource = "CodeWFMarkdownHeading4FontSize";
     public const string Heading5FontSizeResource = "CodeWFMarkdownHeading5FontSize";
     public const string Heading6FontSizeResource = "CodeWFMarkdownHeading6FontSize";
+    public const string TypographyThemeResource = "CodeWFMarkdownTypographyTheme";
+    public const string TypographySizeResource = "CodeWFMarkdownTypographySize";
+    public const string TypographyBaseResourcesResource = "CodeWFMarkdownTypographyBaseResources";
 
     public static string GetHeadingClass(int level)
     {

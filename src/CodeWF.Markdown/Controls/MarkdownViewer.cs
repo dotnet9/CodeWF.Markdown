@@ -55,6 +55,8 @@ public enum MarkdownRenderMode
 public class MarkdownViewer : TemplatedControl
 {
     private const string DocumentHostPartName = "PART_DocumentHost";
+    private const string DefaultTypographyTheme = "Basic";
+    private const string DefaultTypographySize = "Normal";
 
     private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
@@ -76,6 +78,12 @@ public class MarkdownViewer : TemplatedControl
 
     public static readonly StyledProperty<string?> MarkdownProperty =
         AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(Markdown));
+
+    public static readonly StyledProperty<string?> TypographyThemeProperty =
+        AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(TypographyTheme));
+
+    public static readonly StyledProperty<string?> TypographySizeProperty =
+        AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(TypographySize));
 
     public static readonly DirectProperty<MarkdownViewer, string> SelectedTextProperty =
         AvaloniaProperty.RegisterDirect<MarkdownViewer, string>(
@@ -192,6 +200,24 @@ public class MarkdownViewer : TemplatedControl
     {
         get => GetValue(MarkdownProperty);
         set => SetValue(MarkdownProperty, value);
+    }
+
+    /// <summary>
+    /// 单个 MarkdownViewer 的排版主题 Key；未设置或设置为空时使用全局 MarkdownThemes 资源，默认行为为 Basic。
+    /// </summary>
+    public string? TypographyTheme
+    {
+        get => GetValue(TypographyThemeProperty) ?? DefaultTypographyTheme;
+        set => SetValue(TypographyThemeProperty, value);
+    }
+
+    /// <summary>
+    /// 单个 MarkdownViewer 的排版尺寸 Key；未设置或设置为空时使用全局 MarkdownThemes 资源，默认行为为 Normal。
+    /// </summary>
+    public string? TypographySize
+    {
+        get => GetValue(TypographySizeProperty) ?? DefaultTypographySize;
+        set => SetValue(TypographySizeProperty, value);
     }
 
     public string SelectedText
@@ -410,6 +436,8 @@ public class MarkdownViewer : TemplatedControl
     static MarkdownViewer()
     {
         MarkdownProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Incremental));
+        TypographyThemeProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Full));
+        TypographySizeProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Full));
     }
 
     private MenuItem? _viewerCopyMenuItem;

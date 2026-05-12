@@ -8,6 +8,7 @@
         "WindowTitle": "CodeWF.Markdown 示例",
         "AppTheme": "应用主题",
         "TypographyTheme": "排版主题",
+        "CompactLayout": "紧凑布局",
         "Language": "语言",
         "MarkdownInput": "Markdown 输入",
         "StartIncrementalDemo": "开始增量演示",

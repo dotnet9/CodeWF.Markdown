@@ -1,46 +1,28 @@
 using System.ComponentModel;
+
 using Avalonia.Controls;
-using AvaloniaEdit.Highlighting;
+
 using CodeWF.Markdown.Sample.ViewModels;
 
 namespace CodeWF.Markdown.Sample.Views;
 
 public partial class MainWindow : Window
 {
-    private bool _syncingEditor;
     private MainWindowViewModel? _viewModel;
 
     public MainWindow()
     {
         InitializeComponent();
-        ConfigureMarkdownEditor();
         DataContextChanged += (_, _) => AttachViewModel(DataContext as MainWindowViewModel);
+        AttachedToVisualTree += (_, _) => ApplyTypographyResources();
         AttachViewModel(DataContext as MainWindowViewModel);
-    }
-
-    private void ConfigureMarkdownEditor()
-    {
-        MarkdownEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("MarkDown");
-        MarkdownEditor.TextChanged += (_, _) =>
-        {
-            if (_syncingEditor || _viewModel == null)
-            {
-                return;
-            }
-
-            var text = MarkdownEditor.Text ?? string.Empty;
-            if (_viewModel.Markdown != text)
-            {
-                _viewModel.Markdown = text;
-            }
-        };
     }
 
     private void AttachViewModel(MainWindowViewModel? viewModel)
     {
         if (ReferenceEquals(_viewModel, viewModel))
         {
-            SyncEditorFromViewModel();
+            ApplyTypographyResources();
             return;
         }
 
@@ -56,32 +38,27 @@ public partial class MainWindow : Window
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         }
 
-        SyncEditorFromViewModel();
+        ApplyTypographyResources();
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(MainWindowViewModel.Markdown) or null)
+        if (e.PropertyName is nameof(MainWindowViewModel.SelectedTypographyTheme)
+            or nameof(MainWindowViewModel.IsCompactLayout)
+            or nameof(MainWindowViewModel.CurrentTypographySize)
+            or null)
         {
-            SyncEditorFromViewModel();
+            ApplyTypographyResources();
         }
     }
 
-    private void SyncEditorFromViewModel()
+    private void ApplyTypographyResources()
     {
         if (_viewModel == null)
         {
             return;
         }
 
-        var text = _viewModel.Markdown ?? string.Empty;
-        if (MarkdownEditor.Text == text)
-        {
-            return;
-        }
-
-        _syncingEditor = true;
-        MarkdownEditor.Text = text;
-        _syncingEditor = false;
+        _viewModel.ApplyTypographyResourcesTo(PreviewTabs);
     }
 }
