@@ -18,5 +18,7 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-    <x:Double x:Key="CodeWFMarkdownHeading1FontSize">29</x:Double>
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="/Themes/Shared/InkBlack.axaml" />
+    </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

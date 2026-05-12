@@ -18,5 +18,7 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-    <x:Double x:Key="CodeWFMarkdownParagraphLineHeight">29</x:Double>
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="/Themes/Shared/TechnologyBlue.axaml" />
+    </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

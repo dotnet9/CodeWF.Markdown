@@ -18,5 +18,7 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-    <x:Double x:Key="CodeWFMarkdownHeading1FontSize">31</x:Double>
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="/Themes/Shared/Yamabuki.axaml" />
+    </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

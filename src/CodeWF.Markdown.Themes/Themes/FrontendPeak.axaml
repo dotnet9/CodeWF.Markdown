@@ -18,6 +18,7 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-    <x:Double x:Key="CodeWFMarkdownParagraphLineHeight">30</x:Double>
-    <x:Double x:Key="CodeWFMarkdownHeading1FontSize">33</x:Double>
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="/Themes/Shared/FrontendPeak.axaml" />
+    </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

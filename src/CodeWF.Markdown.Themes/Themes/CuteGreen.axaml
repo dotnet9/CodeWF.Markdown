@@ -18,6 +18,7 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-    <x:Double x:Key="CodeWFMarkdownParagraphFontSize">16.5</x:Double>
-    <x:Double x:Key="CodeWFMarkdownParagraphLineHeight">30</x:Double>
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="/Themes/Shared/CuteGreen.axaml" />
+    </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>
