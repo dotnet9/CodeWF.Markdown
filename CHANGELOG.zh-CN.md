@@ -1,5 +1,15 @@
 # 更新日志
 
+## 12.0.2.7 - 2026-05-13
+
+- 新增 `CodeWF.Markdown.Lite`，提供基础 Markdown Viewer，直接包引用仅包含 `Avalonia` 和 `Markdig`。
+- Lite 渲染支持常用标题、段落、列表、任务列表、引用、表格、位图图片、纯文本代码块和复制按钮。
+- 新增 `CodeWF.Markdown.Lite.Themes`，模板和排版主题资源与 `CodeWF.Markdown.Themes` 保持一致，仅引用 Lite Viewer 程序集。
+- 新增 `CodeWF.Markdown.Lite.Sample`，以简体中文保留编辑预览和多预览主题演示，移除多语言切换和 AvaloniaEdit 依赖。
+- 修复 Lite 行内文本继承问题，标题字号等排版资源现在可正确生效。
+- 更新解决方案、打包脚本和发布脚本，纳入 Lite 包线。
+- 删除各工程目录下的 `CHANGELOG.md`，后续统一维护根目录更新日志。
+
 ## 12.0.2.6 - 2026-05-12
 
 - 😄[新增]-`MarkdownViewer` 新增 `TypographyTheme` 与 `TypographySize`，支持单个 Viewer 独立覆盖排版主题和尺寸。

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Title>CodeWF.Markdown.Lite.Themes</Title>
+		<TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
+		<Version>$(CodeWFMarkdownVersion)</Version>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<OutputType>Library</OutputType>
+		<IsPackable>true</IsPackable>
+		<Description>Typography themes and default control template for CodeWF.Markdown.Lite.</Description>
+		<PackageId>CodeWF.Markdown.Lite.Themes</PackageId>
+		<AssemblyName>CodeWF.Markdown.Lite.Themes</AssemblyName>
+		<RootNamespace>CodeWF.Markdown.Lite.Themes</RootNamespace>
+		<PackageIcon>codewf.png</PackageIcon>
+		<PackageTags>avalonia ui,markdown,themes,typography,lite,codewf</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CodeWF.Markdown.Lite\CodeWF.Markdown.Lite.csproj" />
+	</ItemGroup>
+</Project>

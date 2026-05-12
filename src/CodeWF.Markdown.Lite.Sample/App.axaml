@@ -1,0 +1,14 @@
+<Application
+    x:Class="CodeWF.Markdown.Lite.Sample.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:codewf="https://codewf.com"
+    RequestedThemeVariant="Light">
+    <Application.Styles>
+        <FluentTheme />
+		<codewf:MarkdownThemes />
+        <Style Selector="ScrollViewer">
+            <Setter Property="AllowAutoHide" Value="False" />
+        </Style>
+    </Application.Styles>
+</Application>

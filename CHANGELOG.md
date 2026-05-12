@@ -1,5 +1,15 @@
 # Changelog
 
+## 12.0.2.7 - 2026-05-13
+
+- Added `CodeWF.Markdown.Lite`, a basic Markdown viewer package with only direct `Avalonia` and `Markdig` package references.
+- Added Lite rendering support for common headings, paragraphs, lists, task lists, quotes, tables, bitmap images, plain-text code blocks, and copy buttons.
+- Added `CodeWF.Markdown.Lite.Themes` with the same template and typography resources as `CodeWF.Markdown.Themes`, except for referencing the Lite viewer assembly.
+- Added `CodeWF.Markdown.Lite.Sample`, mirroring the editor preview and multi-viewer theme demos in Simplified Chinese without localization switching or AvaloniaEdit.
+- Fixed Lite inline text inheritance so heading typography resources are applied correctly.
+- Updated solution, packing, and publishing scripts to include the Lite package line.
+- Removed project-level `CHANGELOG.md` files; root changelogs are now the single release-note source for all projects.
+
 ## 12.0.2.6 - 2026-05-12
 
 - 😄[Added]-Added `MarkdownViewer.TypographyTheme` and `MarkdownViewer.TypographySize` for per-viewer typography overrides.

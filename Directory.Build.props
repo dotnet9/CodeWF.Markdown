@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<CodeWFMarkdownVersion>12.0.2.6</CodeWFMarkdownVersion>
+		<CodeWFMarkdownVersion>12.0.2.7</CodeWFMarkdownVersion>
 		<Version Condition="'$(Version)' == ''">$(CodeWFMarkdownVersion)</Version>
 		<Authors>沙漠尽头的狼</Authors>
 		<RepositoryUrl>https://github.com/dotnet9/CodeWF.Markdown</RepositoryUrl>

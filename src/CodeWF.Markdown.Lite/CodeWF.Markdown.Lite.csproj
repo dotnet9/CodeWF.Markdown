@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Title>CodeWF.Markdown.Lite</Title>
+		<TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
+		<Version>$(CodeWFMarkdownVersion)</Version>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<OutputType>Library</OutputType>
+		<IsPackable>true</IsPackable>
+		<Description>Lightweight Avalonia Markdown viewer based on Markdig, intended for basic Markdown rendering without code highlighting, image preview, localization, math, or SVG dependencies.</Description>
+		<PackageId>CodeWF.Markdown.Lite</PackageId>
+		<AssemblyName>CodeWF.Markdown.Lite</AssemblyName>
+		<RootNamespace>CodeWF.Markdown.Lite</RootNamespace>
+		<PackageIcon>codewf.png</PackageIcon>
+		<PackageTags>avalonia ui,markdown,viewer,lite,codewf</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" />
+		<PackageReference Include="Markdig" />
+	</ItemGroup>
+</Project>
