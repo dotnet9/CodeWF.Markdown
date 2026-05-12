@@ -462,9 +462,10 @@ public class MarkdownViewer : TemplatedControl
 		var textBlock = CreateSelectableText(
 			MarkdownStyleKeys.Heading,
 			MarkdownStyleKeys.GetHeadingClass(heading.Level));
-		BindText(textBlock, GetHeadingFontSizeProperty(heading.Level));
-		BindTheme(textBlock, TextBlock.LineHeightProperty, ParagraphLineHeightProperty);
-		BindTheme(textBlock, Layoutable.MarginProperty, HeadingMarginProperty);
+		textBlock.FontWeight = FontWeight.Bold;
+		BindTheme(textBlock, TextBlock.ForegroundProperty, heading.Level <= 2 ? AccentBrushProperty : TextBrushProperty);
+		BindTheme(textBlock, TextElement.FontFamilyProperty, ContentFontFamilyProperty);
+		BindTheme(textBlock, TextElement.FontSizeProperty, GetHeadingFontSizeProperty(heading.Level));
 		foreach (var inline in ConvertInlines(heading.Inline))
 		{
 			textBlock.Inlines!.Add(inline);
@@ -478,7 +479,8 @@ public class MarkdownViewer : TemplatedControl
 			border,
 			MarkdownStyleKeys.HeadingBorder,
 			MarkdownStyleKeys.GetHeadingBorderClass(heading.Level));
-		BindTheme(border, Border.BorderBrushProperty, BorderLineBrushProperty);
+		BindTheme(border, Border.BorderBrushProperty, AccentBrushProperty);
+		BindTheme(border, Layoutable.MarginProperty, HeadingMarginProperty);
 		return border;
 	}
 
@@ -598,7 +600,7 @@ public class MarkdownViewer : TemplatedControl
 		else
 		{
 			var markerText = CreateSelectableText(MarkdownStyleKeys.ListMarker);
-			markerText.Text = isOrdered ? $"{index}." : "\u2022";
+			markerText.Text = isOrdered ? $"{index}." : "\u2022 ";
 			markerText.TextAlignment = TextAlignment.Right;
 			BindText(markerText, ParagraphFontSizeProperty);
 			BindTheme(markerText, TextBlock.LineHeightProperty, ParagraphLineHeightProperty);
