@@ -16,6 +16,8 @@
 		<PackageReference Include="Avalonia.Desktop" />
 		<PackageReference Include="Avalonia.Fonts.Inter" />
 		<PackageReference Include="Avalonia.Themes.Fluent" />
+		<PackageReference Include="VC-LTL" />
+		<PackageReference Include="YY-Thunks" Condition="'$(TargetFramework)' == 'net11.0-windows'" />
 	</ItemGroup>
 
 	<ItemGroup>
