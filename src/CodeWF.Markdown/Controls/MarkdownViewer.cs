@@ -19,8 +19,6 @@ using CodeWF.Markdown.Helpers;
 using CodeWF.Markdown.Rendering;
 using CodeWF.Markdown.Shared.Rendering;
 
-using CSharpMath.Avalonia;
-
 using Lang.Avalonia;
 
 using Markdig;
@@ -1826,7 +1824,7 @@ public class MarkdownViewer : TemplatedControl
             return CreateChemBlock(chemExpression);
         }
 
-        MathView view;
+        MarkdownMathView view;
         try
         {
             view = CreateMathView(latex, 20, CSharpMath.Atom.LineStyle.Display);
@@ -1884,15 +1882,16 @@ public class MarkdownViewer : TemplatedControl
         return border;
     }
 
-    private MathView CreateMathView(string latex, double fontSize, CSharpMath.Atom.LineStyle lineStyle)
+    private MarkdownMathView CreateMathView(string latex, double fontSize, CSharpMath.Atom.LineStyle lineStyle)
     {
-        var view = new MathView
+        var view = new MarkdownMathView
         {
             LaTeX = NormalizeLatex(latex),
             FontSize = (float)fontSize,
             LineStyle = lineStyle,
             DisplayErrorInline = false
         };
+        BindTheme(view, MarkdownMathView.ForegroundProperty, TextBrushProperty);
         return view;
     }
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 12.0.3.1 - 2026-05-16
+
+- Added an internal `MarkdownMathView` for formula rendering so math foreground color follows the active Markdown theme.
+- Updated the sample carousel Markdown in both full and Lite sample apps to use CodeWF screenshots.
+- Added sample trimming roots for the Markdown, theme, SVG, and related assemblies used by trimmed publishing.
+- Updated `publishbase.bat` to publish into a deterministic runtime/project output folder and fail when the expected executable is missing.
+- Bumped the shared package version to `12.0.3.1` and centralized Markdown package versioning through the root build props.
+- Updated SVG and runtime helper package baselines, including `Svg.Controls.Skia.Avalonia`, `Svg.Skia`, and `YY-Thunks`.
+
 ## 12.0.2.7 - 2026-05-13
 
 - Added `CodeWF.Markdown.Lite`, a basic Markdown viewer package with only direct `Avalonia` and `Markdig` package references.

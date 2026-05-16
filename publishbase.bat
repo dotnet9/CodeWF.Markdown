@@ -70,6 +70,8 @@ set "profile_file=%profile_dir%\%publish_profile%.pubxml"
 set "target_framework="
 set "runtime_identifier="
 set "profile_metadata="
+set "resolved_publish_dir="
+set "published_executable="
 
 if not exist "%profile_file%" (
     echo Missing publish profile: %profile_file%
@@ -96,8 +98,17 @@ if not defined runtime_identifier (
 )
 
 echo   - Using profile %publish_profile%...
-dotnet publish "%project_path%" -f %target_framework% -r %runtime_identifier% -p:PublishProfile=%publish_profile%
+set "resolved_publish_dir=%publish_root%\%runtime_identifier%\%project_name%\"
+echo   - Output %resolved_publish_dir%
+dotnet publish "%project_path%" -f %target_framework% -r %runtime_identifier% -p:PublishProfile=%publish_profile% "-p:PublishDir=%resolved_publish_dir%"
 if errorlevel 1 exit /b 1
+
+set "published_executable=%resolved_publish_dir%%project_name%"
+if /i "%runtime_identifier%"=="win-x64" set "published_executable=%published_executable%.exe"
+if not exist "%published_executable%" (
+    echo Missing published executable: %published_executable%
+    exit /b 1
+)
 
 if exist "%publish_root%" (
     set /a removed_pdb_count=0

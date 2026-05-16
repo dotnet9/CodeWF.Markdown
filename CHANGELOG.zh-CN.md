@@ -1,5 +1,14 @@
 # 更新日志
 
+## 12.0.3.1 - 2026-05-16
+
+- 新增内部 `MarkdownMathView` 用于公式渲染，使数学公式前景色跟随当前 Markdown 主题。
+- 更新完整版和 Lite 示例应用中的横向滑动图片 Markdown，改用 CodeWF 截图示例。
+- 为示例应用补充 Markdown、主题、SVG 及相关程序集的裁剪保留配置，改善裁剪发布兼容性。
+- 更新 `publishbase.bat`，按运行时和项目名输出到稳定发布目录，并在缺少预期可执行文件时失败退出。
+- 将共享包版本提升到 `12.0.3.1`，并通过根构建属性统一 Markdown 包版本配置。
+- 更新 SVG 与运行时辅助依赖基线，包括 `Svg.Controls.Skia.Avalonia`、`Svg.Skia` 和 `YY-Thunks`。
+
 ## 12.0.2.7 - 2026-05-13
 
 - 新增 `CodeWF.Markdown.Lite`，提供基础 Markdown Viewer，直接包引用仅包含 `Avalonia` 和 `Markdig`。

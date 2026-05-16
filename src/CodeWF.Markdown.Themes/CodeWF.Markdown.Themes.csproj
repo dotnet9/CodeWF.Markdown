@@ -2,7 +2,6 @@
 	<PropertyGroup>
 		<Title>CodeWF.Markdown.Themes</Title>
 		<TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
-		<Version>$(CodeWFMarkdownVersion)</Version>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>

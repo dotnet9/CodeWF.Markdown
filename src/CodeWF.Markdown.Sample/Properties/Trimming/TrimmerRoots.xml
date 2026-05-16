@@ -1,3 +1,12 @@
 <linker>
   <assembly fullname="CodeWF.Markdown.Sample" preserve="all" />
+  <assembly fullname="CodeWF.Markdown" preserve="all" />
+  <assembly fullname="CodeWF.Markdown.Themes" preserve="all" />
+  <assembly fullname="Svg.Controls.Skia.Avalonia" preserve="all" />
+  <assembly fullname="Svg.Skia" preserve="all" />
+  <assembly fullname="Svg.Model" preserve="all" />
+  <assembly fullname="Svg.SceneGraph" preserve="all" />
+  <assembly fullname="Svg.Custom" preserve="all" />
+  <assembly fullname="Svg.Animation" preserve="all" />
+  <assembly fullname="ExCSS" preserve="all" />
 </linker>
