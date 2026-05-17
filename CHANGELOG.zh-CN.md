@@ -2,26 +2,26 @@
 
 ## 12.0.3.1 - 2026-05-16
 
-- 新增内部 `MarkdownMathView` 用于公式渲染，使数学公式前景色跟随当前 Markdown 主题。
-- 更新完整版和 Lite 示例应用中的横向滑动图片 Markdown，改用 CodeWF 截图示例。
-- 为示例应用补充 Markdown、主题、SVG 及相关程序集的裁剪保留配置，改善裁剪发布兼容性。
-- 更新 `publishbase.bat`，按运行时和项目名输出到稳定发布目录，并在缺少预期可执行文件时失败退出。
-- 将共享包版本提升到 `12.0.3.1`，并通过根构建属性统一 Markdown 包版本配置。
-- 更新 SVG 与运行时辅助依赖基线，包括 `Svg.Controls.Skia.Avalonia`、`Svg.Skia` 和 `YY-Thunks`。
+- 😄[新增]-新增内部 `MarkdownMathView` 用于公式渲染，使数学公式前景色跟随当前 Markdown 主题。
+- 🔨[优化]-更新完整版和 Lite 示例应用中的横向滑动图片 Markdown，改用 CodeWF 截图示例。
+- 🔨[优化]-为示例应用补充 Markdown、主题、SVG 及相关程序集的裁剪保留配置，改善裁剪发布兼容性。
+- 🔨[优化]-更新 `publishbase.bat`，按运行时和项目名输出到稳定发布目录，并在缺少预期可执行文件时失败退出。
+- 🔨[优化]-将共享包版本提升到 `12.0.3.1`，并通过根构建属性统一 Markdown 包版本配置。
+- 🔨[优化]-更新 SVG 与运行时辅助依赖基线，包括 `Svg.Controls.Skia.Avalonia`、`Svg.Skia` 和 `YY-Thunks`。
 
 ## 12.0.2.7 - 2026-05-13
 
-- 新增 `CodeWF.Markdown.Lite`，提供基础 Markdown Viewer，直接包引用仅包含 `Avalonia` 和 `Markdig`。
-- Lite 渲染支持常用标题、段落、列表、任务列表、引用、表格、位图图片、纯文本代码块和复制按钮。
-- 新增 `CodeWF.Markdown.Lite.Themes`，模板和排版主题资源与 `CodeWF.Markdown.Themes` 保持一致，仅引用 Lite Viewer 程序集。
-- 新增 `CodeWF.Markdown.Lite.Sample`，以简体中文保留编辑预览和多预览主题演示，移除多语言切换和 AvaloniaEdit 依赖。
-- 修复 Lite 行内文本继承问题，标题字号等排版资源现在可正确生效。
-- 修复完整版增量渲染中块级主题绑定未及时释放的问题，连续切换 Markdown 文件时旧控件引用可正常清理。
-- 改进完整版与 Lite 的图片清理逻辑，图片被替换或控件离开可视树时会取消未完成加载并释放位图。
-- 调整完整版图片预览窗口，使预览窗口独立持有位图，Markdown 切换时 Viewer 图片资源可安全释放。
-- 已对完整版和 Lite 示例应用执行重复 Markdown 切换与滚动压力测试，清理后未发现内存溢出或 CPU 飙高。
-- 更新解决方案、打包脚本和发布脚本，纳入 Lite 包线。
-- 删除各工程目录下的 `CHANGELOG.md`，后续统一维护根目录更新日志。
+- 😄[新增]-新增 `CodeWF.Markdown.Lite`，提供基础 Markdown Viewer，直接包引用仅包含 `Avalonia` 和 `Markdig`。
+- 🔨[优化]-Lite 渲染支持常用标题、段落、列表、任务列表、引用、表格、位图图片、纯文本代码块和复制按钮。
+- 😄[新增]-新增 `CodeWF.Markdown.Lite.Themes`，模板和排版主题资源与 `CodeWF.Markdown.Themes` 保持一致，仅引用 Lite Viewer 程序集。
+- 😄[新增]-新增 `CodeWF.Markdown.Lite.Sample`，以简体中文保留编辑预览和多预览主题演示，移除多语言切换和 AvaloniaEdit 依赖。
+- 🔴[修复]-修复 Lite 行内文本继承问题，标题字号等排版资源现在可正确生效。
+- 🔴[修复]-修复完整版增量渲染中块级主题绑定未及时释放的问题，连续切换 Markdown 文件时旧控件引用可正常清理。
+- 🔨[优化]-改进完整版与 Lite 的图片清理逻辑，图片被替换或控件离开可视树时会取消未完成加载并释放位图。
+- 🔨[优化]-调整完整版图片预览窗口，使预览窗口独立持有位图，Markdown 切换时 Viewer 图片资源可安全释放。
+- 🔨[优化]-已对完整版和 Lite 示例应用执行重复 Markdown 切换与滚动压力测试，清理后未发现内存溢出或 CPU 飙高。
+- 🔨[优化]-更新解决方案、打包脚本和发布脚本，纳入 Lite 包线。
+- 🔨[优化]-删除各工程目录下的 `CHANGELOG.md`，后续统一维护根目录更新日志。
 
 ## 12.0.2.6 - 2026-05-12
 
