@@ -87,3 +87,30 @@ dotnet build CodeWF.Markdown.slnx --no-restore
 ## 许可证
 
 MIT，详见 [LICENSE](LICENSE)。
+
+## 第三方开源组件审计
+
+检查时间：2026-05-20。检查范围包括 NuGet 元数据、恢复后的 `project.assets.json`、NuGet.org 信息以及上游源码/许可证链接。优先接受 MIT / Apache-2.0 / BSD。
+
+本次整改：
+
+- 将 `Semi.Avalonia.AvaloniaEdit` 替换为开源 `Avalonia.AvaloniaEdit`。
+- 示例工程移除 `AvaloniaEditSemiTheme`，编辑器渲染改为使用开源 AvaloniaEdit 控件和本仓库自己的 Markdown 主题。
+
+| 包 | 协议 | 源码/项目地址 | 结论 |
+| --- | --- | --- | --- |
+| `Avalonia` / `Avalonia.Desktop` / `Avalonia.Fonts.Inter` / `Avalonia.Themes.Fluent` | MIT | https://github.com/AvaloniaUI/Avalonia | 通过 |
+| `Avalonia.AvaloniaEdit` | MIT | https://github.com/AvaloniaUI/AvaloniaEdit | 通过 |
+| `CommunityToolkit.Mvvm` | MIT | https://github.com/CommunityToolkit/dotnet | 通过 |
+| `Lang.Avalonia.Json` | MIT | https://github.com/dotnet9/Lang.Avalonia | 自研开源包 |
+| `Markdig` | BSD-2-Clause | https://github.com/xoofx/markdig | 通过 |
+| `Semi.Avalonia` | MIT | https://github.com/irihitech/Semi.Avalonia | 通过，仅示例使用开源主体包 |
+| `Svg.Controls.Skia.Avalonia` / `Svg.Skia` | MIT | https://github.com/wieslawsoltes/Svg.Skia | 通过 |
+| `Sylinko.CSharpMath.Avalonia` | MIT | https://github.com/Sylinko/CSharpMath.Avalonia | 通过 |
+| `TextMateSharp` / `TextMateSharp.Grammars` | MIT | https://github.com/danipen/TextMateSharp | 通过 |
+| `VC-LTL` | EPL-2.0 | https://github.com/Chuyu-Team/VC-LTL5 | 源码开放，按“非优先但可追溯”规则通过 |
+| `YY-Thunks` | MIT | https://github.com/Chuyu-Team/YY-Thunks | 通过 |
+| `Microsoft.NET.Test.Sdk` | MIT | https://github.com/microsoft/vstest | 测试依赖，通过 |
+| `xunit` / `xunit.runner.visualstudio` | Apache-2.0 | https://github.com/xunit/xunit | 测试依赖，通过 |
+
+传递依赖检查结论：Avalonia、SkiaSharp、Svg.Skia、CSharpMath、TextMateSharp 等链路均有公开源码，许可证为 MIT 或 BSD-style。有效项目文件中不再包含 `Semi.Avalonia.AvaloniaEdit`。

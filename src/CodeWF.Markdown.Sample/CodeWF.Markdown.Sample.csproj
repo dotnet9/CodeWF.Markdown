@@ -19,7 +19,7 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" />
 		<PackageReference Include="Lang.Avalonia.Json" />
 		<PackageReference Include="Semi.Avalonia" />
-		<PackageReference Include="Semi.Avalonia.AvaloniaEdit" />
+		<PackageReference Include="Avalonia.AvaloniaEdit" />
 		<PackageReference Include="VC-LTL" />
 		<PackageReference Include="YY-Thunks" Condition="'$(TargetFramework)' == 'net11.0-windows'" />
 	</ItemGroup>

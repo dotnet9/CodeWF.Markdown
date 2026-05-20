@@ -1,5 +1,13 @@
 # Changelog
 
+## 12.0.3.2 - 2026-05-20
+
+- Merged the latest upstream `12.0.3.1` release updates before applying the local dependency changes.
+- Replaced the sample app's `Semi.Avalonia.AvaloniaEdit` package with the source-open `Avalonia.AvaloniaEdit` package.
+- Removed `AvaloniaEditSemiTheme` from the full sample app so it no longer depends on the Semi AvaloniaEdit theme package.
+- Updated test dependencies to the latest stable versions: `Microsoft.NET.Test.Sdk 18.5.1`, `xunit 2.9.3`, and `xunit.runner.visualstudio 3.1.5`.
+- Updated the English and Simplified Chinese open-source dependency audit notes.
+
 ## 12.0.3.1 - 2026-05-16
 
 - Added an internal `MarkdownMathView` for formula rendering so math foreground color follows the active Markdown theme.

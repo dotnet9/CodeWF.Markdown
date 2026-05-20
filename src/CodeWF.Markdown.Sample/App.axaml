@@ -8,7 +8,6 @@
     <Application.Styles>
         <FluentTheme />
         <semi:SemiTheme />
-        <semi:AvaloniaEditSemiTheme />
         <markdownThemes:MarkdownThemes />
         <Style Selector="ScrollViewer">
             <Setter Property="AllowAutoHide" Value="False" />

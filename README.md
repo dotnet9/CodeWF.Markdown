@@ -87,3 +87,30 @@ To publish the sample app for `win-x64` and `linux-x64`:
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Third-Party Open Source Audit
+
+Checked on 2026-05-20 with NuGet metadata, restored `project.assets.json`, and upstream source/license links. MIT / Apache-2.0 / BSD are preferred.
+
+Remediation:
+
+- Replaced `Semi.Avalonia.AvaloniaEdit` with the open-source `Avalonia.AvaloniaEdit` package.
+- Removed `AvaloniaEditSemiTheme` from the full sample app; editor rendering now relies on the open AvaloniaEdit control and the repository's own Markdown themes.
+
+| Package | License | Source | Status |
+| --- | --- | --- | --- |
+| `Avalonia` / `Avalonia.Desktop` / `Avalonia.Fonts.Inter` / `Avalonia.Themes.Fluent` | MIT | https://github.com/AvaloniaUI/Avalonia | Approved |
+| `Avalonia.AvaloniaEdit` | MIT | https://github.com/AvaloniaUI/AvaloniaEdit | Approved |
+| `CommunityToolkit.Mvvm` | MIT | https://github.com/CommunityToolkit/dotnet | Approved |
+| `Lang.Avalonia.Json` | MIT | https://github.com/dotnet9/Lang.Avalonia | Approved |
+| `Markdig` | BSD-2-Clause | https://github.com/xoofx/markdig | Approved |
+| `Semi.Avalonia` | MIT | https://github.com/irihitech/Semi.Avalonia | Approved, only the open core package is used by the sample |
+| `Svg.Controls.Skia.Avalonia` / `Svg.Skia` | MIT | https://github.com/wieslawsoltes/Svg.Skia | Approved |
+| `Sylinko.CSharpMath.Avalonia` | MIT | https://github.com/Sylinko/CSharpMath.Avalonia | Approved |
+| `TextMateSharp` / `TextMateSharp.Grammars` | MIT | https://github.com/danipen/TextMateSharp | Approved |
+| `VC-LTL` | EPL-2.0 | https://github.com/Chuyu-Team/VC-LTL5 | Source-open; approved under the source-traceable non-preferred license rule |
+| `YY-Thunks` | MIT | https://github.com/Chuyu-Team/YY-Thunks | Approved |
+| `Microsoft.NET.Test.Sdk` | MIT | https://github.com/microsoft/vstest | Approved, test-only |
+| `xunit` / `xunit.runner.visualstudio` | Apache-2.0 | https://github.com/xunit/xunit | Approved, test-only |
+
+Transitive dependencies from Avalonia, SkiaSharp, Svg.Skia, CSharpMath, and TextMateSharp were checked and are source-open under MIT/BSD-style licenses. Active project files no longer contain `Semi.Avalonia.AvaloniaEdit`.

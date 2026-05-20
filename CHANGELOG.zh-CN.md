@@ -1,5 +1,13 @@
 # 更新日志
 
+## 12.0.3.2 - 2026-05-20
+
+- 🔨[优化]-先合并远端最新 `12.0.3.1` 发布更新，再应用本地依赖调整。
+- 🔨[优化]-示例应用将 `Semi.Avalonia.AvaloniaEdit` 替换为源码开放的 `Avalonia.AvaloniaEdit`。
+- 🔨[优化]-移除完整版示例应用中的 `AvaloniaEditSemiTheme`，避免继续依赖 Semi AvaloniaEdit 主题包。
+- 🔨[优化]-测试依赖升级到最新稳定版：`Microsoft.NET.Test.Sdk 18.5.1`、`xunit 2.9.3`、`xunit.runner.visualstudio 3.1.5`。
+- 🔨[优化]-同步更新英文和简体中文开源依赖审计说明。
+
 ## 12.0.3.1 - 2026-05-16
 
 - 😄[新增]-新增内部 `MarkdownMathView` 用于公式渲染，使数学公式前景色跟随当前 Markdown 主题。
