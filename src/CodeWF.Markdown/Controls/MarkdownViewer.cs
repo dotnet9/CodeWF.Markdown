@@ -485,6 +485,50 @@ public class MarkdownViewer : TemplatedControl
         QueueRenderDocument(MarkdownRenderMode.Incremental);
     }
 
+    /// <summary>
+    /// Try to locate the rendered block that contains the specified 1-based Markdown source line.
+    /// </summary>
+    public bool TryGetSourceLineBounds(int sourceLine, out Rect bounds)
+    {
+        var text = Markdown ?? string.Empty;
+        var offset = GetSourceLineOffset(text, sourceLine);
+        return TryGetSourceOffsetBounds(offset, out bounds);
+    }
+
+    /// <summary>
+    /// Try to locate the rendered block that contains the specified Markdown source offset.
+    /// The returned bounds are relative to this <see cref="MarkdownViewer"/>.
+    /// </summary>
+    public bool TryGetSourceOffsetBounds(int sourceOffset, out Rect bounds)
+    {
+        bounds = default;
+        if (_documentHost is null)
+        {
+            return false;
+        }
+
+        var text = Markdown ?? string.Empty;
+        if (!string.Equals(_renderedMarkdown, text, StringComparison.Ordinal))
+        {
+            RenderDocument(MarkdownRenderMode.Incremental);
+        }
+
+        if (_renderedBlocks.Count == 0)
+        {
+            return false;
+        }
+
+        var offset = Math.Clamp(sourceOffset, 0, text.Length);
+        var renderedBlock = FindRenderedBlockBySourceOffset(offset);
+        if (renderedBlock is null || renderedBlock.Control.TranslatePoint(new Point(0, 0), this) is not { } topLeft)
+        {
+            return false;
+        }
+
+        bounds = new Rect(topLeft, renderedBlock.Control.Bounds.Size);
+        return true;
+    }
+
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
@@ -1039,6 +1083,54 @@ public class MarkdownViewer : TemplatedControl
         _documentHost?.InvalidateArrange();
         InvalidateMeasure();
         InvalidateArrange();
+    }
+
+    private RenderedBlock? FindRenderedBlockBySourceOffset(int sourceOffset)
+    {
+        if (_renderedBlocks.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var block in _renderedBlocks)
+        {
+            if (sourceOffset >= block.Start && sourceOffset <= block.End)
+            {
+                return block;
+            }
+
+            if (sourceOffset < block.Start)
+            {
+                return block;
+            }
+        }
+
+        return _renderedBlocks[^1];
+    }
+
+    private static int GetSourceLineOffset(string text, int sourceLine)
+    {
+        if (sourceLine <= 1 || string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        var line = 1;
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] != '\n')
+            {
+                continue;
+            }
+
+            line++;
+            if (line == sourceLine)
+            {
+                return Math.Min(i + 1, text.Length);
+            }
+        }
+
+        return text.Length;
     }
 
     private int FindReplaceStartIndex(int oldChangeStart)
