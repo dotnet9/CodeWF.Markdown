@@ -77,6 +77,9 @@ public class MarkdownViewer : TemplatedControl
     public static readonly StyledProperty<string?> MarkdownProperty =
         AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(Markdown));
 
+    public static readonly StyledProperty<bool> AllowEditProperty =
+        AvaloniaProperty.Register<MarkdownViewer, bool>(nameof(AllowEdit));
+
     public static readonly StyledProperty<string?> TypographyThemeProperty =
         AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(TypographyTheme));
 
@@ -198,6 +201,15 @@ public class MarkdownViewer : TemplatedControl
     {
         get => GetValue(MarkdownProperty);
         set => SetValue(MarkdownProperty, value);
+    }
+
+    /// <summary>
+    /// 允许在渲染区内双击常见块进行轻量编辑。
+    /// </summary>
+    public bool AllowEdit
+    {
+        get => GetValue(AllowEditProperty);
+        set => SetValue(AllowEditProperty, value);
     }
 
     /// <summary>
@@ -426,6 +438,8 @@ public class MarkdownViewer : TemplatedControl
 
     public event EventHandler? SelectionChanged;
 
+    public event EventHandler<MarkdownEditedEventArgs>? MarkdownEdited;
+
     /// <summary>
     /// 在代码块工具栏创建完成后触发，调用方可追加自定义按钮。
     /// </summary>
@@ -448,6 +462,7 @@ public class MarkdownViewer : TemplatedControl
         AddHandler(PointerPressedEvent, OnViewerPointerPressed, RoutingStrategies.Tunnel);
         AddHandler(PointerMovedEvent, OnViewerPointerMoved, RoutingStrategies.Tunnel);
         AddHandler(PointerReleasedEvent, OnViewerPointerReleased, RoutingStrategies.Tunnel);
+        AddHandler(DoubleTappedEvent, OnViewerDoubleTapped, RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
         AddHandler(KeyDownEvent, OnViewerKeyDown, RoutingStrategies.Tunnel);
     }
 
@@ -865,10 +880,22 @@ public class MarkdownViewer : TemplatedControl
 
     private void OnViewerPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        var source = e.Source as Visual;
+        if (AllowEdit
+            && _documentHost is not null
+            && e.ClickCount >= 2
+            && !IsLinkPointerSource(e)
+            && !IsInteractiveSelectionSource(source)
+            && TryBeginVisualBlockEdit(source))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (_documentHost is null
             || e.GetCurrentPoint(this).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed
             || IsLinkPointerSource(e)
-            || IsInteractiveSelectionSource(e.Source as Visual))
+            || IsInteractiveSelectionSource(source))
         {
             return;
         }
@@ -881,6 +908,33 @@ public class MarkdownViewer : TemplatedControl
             _isPointerSelecting = false;
             UpdateSelectionState();
         }
+    }
+
+    private void OnViewerDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (!AllowEdit
+            || _documentHost is null
+            || IsInteractiveSelectionSource(e.Source as Visual))
+        {
+            return;
+        }
+
+        if (TryBeginVisualBlockEdit(e.Source as Visual))
+        {
+            e.Handled = true;
+        }
+    }
+
+    private bool TryBeginVisualBlockEdit(Visual? source)
+    {
+        var index = FindRenderedBlockIndex(source);
+        if (index < 0 || !MarkdownVisualEditFormatter.CanEdit(_renderedBlocks[index].Kind))
+        {
+            return false;
+        }
+
+        BeginVisualBlockEdit(index);
+        return true;
     }
 
     private void OnViewerPointerMoved(object? sender, PointerEventArgs e)
@@ -981,6 +1035,128 @@ public class MarkdownViewer : TemplatedControl
         {
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private int FindRenderedBlockIndex(Visual? source)
+    {
+        for (var visual = source; visual is not null; visual = visual.GetVisualParent())
+        {
+            for (var i = 0; i < _renderedBlocks.Count; i++)
+            {
+                if (ReferenceEquals(_renderedBlocks[i].Control, visual))
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private void BeginVisualBlockEdit(int index)
+    {
+        if (_documentHost is null || index < 0 || index >= _renderedBlocks.Count)
+        {
+            return;
+        }
+
+        var block = _renderedBlocks[index];
+        var sourceText = GetCurrentSourceText(block);
+        var editor = CreateVisualBlockEditor(block, sourceText);
+        var closed = false;
+
+        void Finish(bool commit)
+        {
+            if (closed)
+            {
+                return;
+            }
+
+            closed = true;
+            if (commit)
+            {
+                CommitVisualBlockEdit(block, sourceText, editor.Text ?? string.Empty);
+            }
+            else
+            {
+                RenderDocumentFull(Markdown ?? string.Empty);
+            }
+        }
+
+        editor.LostFocus += (_, _) => Finish(true);
+        editor.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+            {
+                Finish(false);
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            {
+                Finish(true);
+                e.Handled = true;
+            }
+        };
+
+        block.Cleanup();
+        _documentHost.Children.RemoveAt(index);
+        _documentHost.Children.Insert(index, editor);
+        _renderedBlocks[index] = block with { Control = editor, Bindings = null };
+        Dispatcher.UIThread.Post(() =>
+        {
+            editor.Focus();
+            editor.SelectAll();
+        });
+    }
+
+    private TextBox CreateVisualBlockEditor(RenderedBlock block, string sourceText)
+    {
+        var editor = new TextBox
+        {
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            MinHeight = Math.Max(36, block.Control.Bounds.Height),
+            Text = MarkdownVisualEditFormatter.ToEditorText(block.Kind, sourceText, block.PlainText)
+        };
+        editor.Classes.Add(MarkdownStyleKeys.Paragraph);
+        editor.FontFamily = block.Kind == MarkdownBlockKind.Code ? CodeFontFamily : ContentFontFamily;
+        editor.FontSize = block.Kind == MarkdownBlockKind.Heading ? Heading3FontSize : ParagraphFontSize;
+        editor.LineHeight = block.Kind == MarkdownBlockKind.Code ? CodeBlockLineHeight : ParagraphLineHeight;
+        editor.Margin = block.Kind == MarkdownBlockKind.Heading ? HeadingMargin : ParagraphMargin;
+        return editor;
+    }
+
+    private void CommitVisualBlockEdit(RenderedBlock block, string sourceText, string editedText)
+    {
+        var markdown = Markdown ?? string.Empty;
+        if (block.Start < 0 || block.End < block.Start || block.Start > markdown.Length)
+        {
+            RenderDocumentFull(markdown);
+            return;
+        }
+
+        var start = Math.Clamp(block.Start, 0, markdown.Length);
+        var end = Math.Clamp(block.End, start, markdown.Length);
+        var editedMarkdown = MarkdownVisualEditFormatter.FromEditorText(block.Kind, sourceText, editedText);
+        var newMarkdown = string.Concat(markdown.AsSpan(0, start), editedMarkdown, markdown.AsSpan(end));
+
+        SetCurrentValue(MarkdownProperty, newMarkdown);
+        MarkdownEdited?.Invoke(this, new MarkdownEditedEventArgs(newMarkdown));
+        RenderDocumentFull(newMarkdown);
+    }
+
+    private string GetCurrentSourceText(RenderedBlock block)
+    {
+        var markdown = Markdown ?? string.Empty;
+        if (block.Start < 0 || block.End < block.Start || block.Start >= markdown.Length)
+        {
+            return string.Empty;
+        }
+
+        var end = Math.Clamp(block.End, block.Start, markdown.Length);
+        return markdown[block.Start..end];
     }
 
     private void ClearNativeTextSelections()
