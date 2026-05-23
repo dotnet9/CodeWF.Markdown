@@ -83,6 +83,9 @@ public class MarkdownViewer : TemplatedControl
     public static readonly StyledProperty<string?> TypographySizeProperty =
         AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(TypographySize));
 
+    public static readonly StyledProperty<string?> ImageBasePathProperty =
+        AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(ImageBasePath));
+
     public static readonly DirectProperty<MarkdownViewer, string> SelectedTextProperty =
         AvaloniaProperty.RegisterDirect<MarkdownViewer, string>(
             nameof(SelectedText),
@@ -216,6 +219,15 @@ public class MarkdownViewer : TemplatedControl
     {
         get => GetValue(TypographySizeProperty) ?? DefaultTypographySize;
         set => SetValue(TypographySizeProperty, value);
+    }
+
+    /// <summary>
+    /// Base file or directory path used to resolve relative Markdown image URLs.
+    /// </summary>
+    public string? ImageBasePath
+    {
+        get => GetValue(ImageBasePathProperty);
+        set => SetValue(ImageBasePathProperty, value);
     }
 
     public string SelectedText
@@ -436,6 +448,7 @@ public class MarkdownViewer : TemplatedControl
         MarkdownProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Incremental));
         TypographyThemeProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Full));
         TypographySizeProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Full));
+        ImageBasePathProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Full));
     }
 
     private MenuItem? _viewerCopyMenuItem;
@@ -1379,6 +1392,7 @@ public class MarkdownViewer : TemplatedControl
         {
             Source = image.Url,
             AltText = ExtractPlainText(image),
+            ImageBasePath = ImageBasePath,
             HorizontalAlignment = HorizontalAlignment.Left
         };
         AddMarkdownClass(markdownImage, MarkdownStyleKeys.Image);
@@ -2181,6 +2195,7 @@ public class MarkdownViewer : TemplatedControl
             {
                 Source = match.Groups["url"].Value,
                 AltText = match.Groups["alt"].Value,
+                ImageBasePath = ImageBasePath,
                 Width = 320,
                 Height = 220,
                 MaxWidth = 360,
@@ -2686,7 +2701,8 @@ public class MarkdownViewer : TemplatedControl
         var image = new MarkdownImage
         {
             Source = imageInline.Url,
-            AltText = ExtractPlainText(imageInline)
+            AltText = ExtractPlainText(imageInline),
+            ImageBasePath = ImageBasePath
         };
         AddMarkdownClass(image, MarkdownStyleKeys.Image);
         return CreateInlineContainer(image);

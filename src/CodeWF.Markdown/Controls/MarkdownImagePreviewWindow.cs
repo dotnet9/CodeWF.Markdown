@@ -1,5 +1,6 @@
 using System.Text;
 
+using AnimatedImage.Avalonia;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -22,6 +23,7 @@ internal sealed class MarkdownImagePreviewWindow : Window
     private readonly byte[] _imageBytes;
     private readonly string _fileName;
     private readonly Bitmap _bitmap;
+    private readonly MemoryStream? _animatedStream;
     private readonly Control _image;
     private readonly Border _imageHost;
     private readonly ScrollViewer _scrollViewer;
@@ -36,7 +38,7 @@ internal sealed class MarkdownImagePreviewWindow : Window
     private Vector _panStartOffset;
     private bool _isPanning;
 
-    public MarkdownImagePreviewWindow(Bitmap bitmap, byte[] imageBytes, string fileName, string? title, bool isSvg)
+    public MarkdownImagePreviewWindow(Bitmap bitmap, byte[] imageBytes, string fileName, string? title, bool isSvg, bool isAnimatedGif)
     {
         _bitmap = bitmap;
         _imageBytes = imageBytes;
@@ -58,7 +60,9 @@ internal sealed class MarkdownImagePreviewWindow : Window
 
         _image = isSvg
             ? CreateSvgContent(imageBytes, bitmap)
-            : CreateBitmapContent(bitmap);
+            : isAnimatedGif
+                ? CreateAnimatedGifContent(imageBytes, bitmap, out _animatedStream)
+                : CreateBitmapContent(bitmap);
 
         _imageHost = new Border
         {
@@ -90,6 +94,7 @@ internal sealed class MarkdownImagePreviewWindow : Window
     {
         I18nManager.Instance.CultureChanged -= OnCultureChanged;
         _bitmap.Dispose();
+        _animatedStream?.Dispose();
     }
 
     private static Control CreateBitmapContent(Bitmap bitmap)
@@ -124,6 +129,21 @@ internal sealed class MarkdownImagePreviewWindow : Window
         {
             return CreateBitmapContent(fallbackBitmap);
         }
+    }
+
+    private static Control CreateAnimatedGifContent(byte[] gifBytes, Bitmap fallbackBitmap, out MemoryStream animatedStream)
+    {
+        animatedStream = new MemoryStream(gifBytes, writable: false);
+        var image = new Image
+        {
+            Stretch = Stretch.Fill,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            RenderTransformOrigin = RelativePoint.Center
+        };
+        ImageBehavior.SetAnimatedSource(image, new AnimatedImageSourceStream(animatedStream));
+        ImageBehavior.SetRepeatBehavior(image, RepeatBehavior.Forever);
+        return image;
     }
 
     private Control CreateLayout()

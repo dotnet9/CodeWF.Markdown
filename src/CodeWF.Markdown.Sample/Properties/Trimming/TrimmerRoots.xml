@@ -2,6 +2,8 @@
   <assembly fullname="CodeWF.Markdown.Sample" preserve="all" />
   <assembly fullname="CodeWF.Markdown" preserve="all" />
   <assembly fullname="CodeWF.Markdown.Themes" preserve="all" />
+  <assembly fullname="AnimatedImage" preserve="all" />
+  <assembly fullname="AnimatedImage.Avalonia" preserve="all" />
   <assembly fullname="Svg.Controls.Skia.Avalonia" preserve="all" />
   <assembly fullname="Svg.Skia" preserve="all" />
   <assembly fullname="Svg.Model" preserve="all" />

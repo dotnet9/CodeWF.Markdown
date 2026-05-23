@@ -9,6 +9,7 @@
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="AnimatedImage.Avalonia" Version="2.1.4" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="Lang.Avalonia.Json" Version="12.0.3.1" />
     <PackageVersion Include="Markdig" Version="1.2.0" />

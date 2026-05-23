@@ -90,7 +90,7 @@ MIT. See [LICENSE](LICENSE).
 
 ## Third-Party Open Source Audit
 
-Checked on 2026-05-20 with NuGet metadata, restored `project.assets.json`, and upstream source/license links. MIT / Apache-2.0 / BSD are preferred.
+Checked on 2026-05-23 with NuGet metadata, restored `project.assets.json`, and upstream source/license links. MIT / Apache-2.0 / BSD are preferred.
 
 Remediation:
 
@@ -99,6 +99,7 @@ Remediation:
 
 | Package | License | Source | Status |
 | --- | --- | --- | --- |
+| `AnimatedImage.Avalonia` | Apache-2.0 | https://github.com/whistyun/AnimatedImage | Approved |
 | `Avalonia` / `Avalonia.Desktop` / `Avalonia.Fonts.Inter` / `Avalonia.Themes.Fluent` | MIT | https://github.com/AvaloniaUI/Avalonia | Approved |
 | `Avalonia.AvaloniaEdit` | MIT | https://github.com/AvaloniaUI/AvaloniaEdit | Approved |
 | `CommunityToolkit.Mvvm` | MIT | https://github.com/CommunityToolkit/dotnet | Approved |
@@ -113,4 +114,4 @@ Remediation:
 | `Microsoft.NET.Test.Sdk` | MIT | https://github.com/microsoft/vstest | Approved, test-only |
 | `xunit` / `xunit.runner.visualstudio` | Apache-2.0 | https://github.com/xunit/xunit | Approved, test-only |
 
-Transitive dependencies from Avalonia, SkiaSharp, Svg.Skia, CSharpMath, and TextMateSharp were checked and are source-open under MIT/BSD-style licenses. Active project files no longer contain `Semi.Avalonia.AvaloniaEdit`.
+Transitive dependencies from Avalonia, AnimatedImage, SkiaSharp, Svg.Skia, CSharpMath, and TextMateSharp were checked and are source-open under MIT/BSD-style licenses. Active project files no longer contain `Semi.Avalonia.AvaloniaEdit`.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 12.0.3.6 - 2026-05-23
+
+- Added animated GIF rendering for Markdown image blocks, inline images, and the image preview window through `AnimatedImage.Avalonia`.
+- Added `MarkdownViewer.ImageBasePath` so relative Markdown image URLs resolve against the current document path instead of the application base directory.
+- Kept animated SVG rendering on the native SVG control path while preserving the existing raster fallback for sizing and preview safety.
+- Updated trimming roots and third-party audit notes for the new GIF animation dependency.
+
 ## 12.0.3.2 - 2026-05-20
 
 - Merged the latest upstream `12.0.3.1` release updates before applying the local dependency changes.

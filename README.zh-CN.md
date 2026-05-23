@@ -90,7 +90,7 @@ MIT，详见 [LICENSE](LICENSE)。
 
 ## 第三方开源组件审计
 
-检查时间：2026-05-20。检查范围包括 NuGet 元数据、恢复后的 `project.assets.json`、NuGet.org 信息以及上游源码/许可证链接。优先接受 MIT / Apache-2.0 / BSD。
+检查时间：2026-05-23。检查范围包括 NuGet 元数据、恢复后的 `project.assets.json`、NuGet.org 信息以及上游源码/许可证链接。优先接受 MIT / Apache-2.0 / BSD。
 
 本次整改：
 
@@ -99,6 +99,7 @@ MIT，详见 [LICENSE](LICENSE)。
 
 | 包 | 协议 | 源码/项目地址 | 结论 |
 | --- | --- | --- | --- |
+| `AnimatedImage.Avalonia` | Apache-2.0 | https://github.com/whistyun/AnimatedImage | 通过 |
 | `Avalonia` / `Avalonia.Desktop` / `Avalonia.Fonts.Inter` / `Avalonia.Themes.Fluent` | MIT | https://github.com/AvaloniaUI/Avalonia | 通过 |
 | `Avalonia.AvaloniaEdit` | MIT | https://github.com/AvaloniaUI/AvaloniaEdit | 通过 |
 | `CommunityToolkit.Mvvm` | MIT | https://github.com/CommunityToolkit/dotnet | 通过 |
@@ -113,4 +114,4 @@ MIT，详见 [LICENSE](LICENSE)。
 | `Microsoft.NET.Test.Sdk` | MIT | https://github.com/microsoft/vstest | 测试依赖，通过 |
 | `xunit` / `xunit.runner.visualstudio` | Apache-2.0 | https://github.com/xunit/xunit | 测试依赖，通过 |
 
-传递依赖检查结论：Avalonia、SkiaSharp、Svg.Skia、CSharpMath、TextMateSharp 等链路均有公开源码，许可证为 MIT 或 BSD-style。有效项目文件中不再包含 `Semi.Avalonia.AvaloniaEdit`。
+传递依赖检查结论：Avalonia、AnimatedImage、SkiaSharp、Svg.Skia、CSharpMath、TextMateSharp 等链路均有公开源码，许可证为 MIT 或 BSD-style。有效项目文件中不再包含 `Semi.Avalonia.AvaloniaEdit`。

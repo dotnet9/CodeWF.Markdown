@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 
+using AnimatedImage.Avalonia;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
@@ -36,9 +37,11 @@ public class MarkdownImage : TemplatedControl
 
     private ContentControl? _contentHost;
     private Bitmap? _bitmap;
+    private MemoryStream? _animatedStream;
     private byte[]? _imageBytes;
     private string? _fileName;
     private bool _isSvg;
+    private bool _isGif;
     private long _loadVersion;
     private CancellationTokenSource? _loadCts;
     private Point? _pressedPoint;
@@ -49,6 +52,9 @@ public class MarkdownImage : TemplatedControl
 
     public static readonly StyledProperty<string?> AltTextProperty =
         AvaloniaProperty.Register<MarkdownImage, string?>(nameof(AltText));
+
+    public static readonly StyledProperty<string?> ImageBasePathProperty =
+        AvaloniaProperty.Register<MarkdownImage, string?>(nameof(ImageBasePath));
 
     public string? Source
     {
@@ -62,9 +68,16 @@ public class MarkdownImage : TemplatedControl
         set => SetValue(AltTextProperty, value);
     }
 
+    public string? ImageBasePath
+    {
+        get => GetValue(ImageBasePathProperty);
+        set => SetValue(ImageBasePathProperty, value);
+    }
+
     static MarkdownImage()
     {
         SourceProperty.Changed.AddClassHandler<MarkdownImage>((image, _) => image.QueueLoad());
+        ImageBasePathProperty.Changed.AddClassHandler<MarkdownImage>((image, _) => image.QueueLoad());
     }
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
@@ -110,15 +123,19 @@ public class MarkdownImage : TemplatedControl
     private void ClearImageState()
     {
         var oldBitmap = _bitmap;
+        var oldAnimatedStream = _animatedStream;
         _bitmap = null;
+        _animatedStream = null;
         _imageBytes = null;
         _fileName = null;
         _isSvg = false;
+        _isGif = false;
         _pressedPoint = null;
         _isPointerDragging = false;
 
         SetContent(null);
         oldBitmap?.Dispose();
+        oldAnimatedStream?.Dispose();
     }
 
     private async Task LoadAsync(string source, long version, CancellationTokenSource loadCts)
@@ -146,16 +163,25 @@ public class MarkdownImage : TemplatedControl
                     return;
                 }
 
+                MemoryStream? animatedStream = null;
+                var content = loadResult.IsSvg
+                    ? CreateSvgContent(loadResult.Bytes, bitmap)
+                    : loadResult.IsGif
+                        ? CreateAnimatedGifContent(loadResult.Bytes, bitmap, out animatedStream)
+                        : CreateBitmapContent(bitmap);
+
                 var oldBitmap = _bitmap;
+                var oldAnimatedStream = _animatedStream;
                 _bitmap = bitmap;
+                _animatedStream = animatedStream;
                 _imageBytes = loadResult.Bytes;
                 _fileName = fileName;
                 _isSvg = loadResult.IsSvg;
+                _isGif = loadResult.IsGif;
 
-                SetContent(loadResult.IsSvg
-                    ? CreateSvgContent(loadResult.Bytes, bitmap)
-                    : CreateBitmapContent(bitmap));
+                SetContent(content);
                 oldBitmap?.Dispose();
+                oldAnimatedStream?.Dispose();
             });
         }
         catch (OperationCanceledException)
@@ -187,19 +213,21 @@ public class MarkdownImage : TemplatedControl
 
     private async Task<ImageLoadResult> LoadBytesAsync(string source, CancellationToken token)
     {
-        if (TryGetCachedImageBytes(source, out var cached))
+        var cacheKey = GetImageCacheKey(source);
+        if (TryGetCachedImageBytes(cacheKey, out var cached))
         {
             return cached;
         }
 
         ImageLoadResult result;
-        if (TryReadDataUri(source, out var dataUriBytes, out var dataUriIsSvg))
+        if (TryReadDataUri(source, out var dataUriBytes, out var dataUriIsSvg, out var dataUriIsGif))
         {
             result = new ImageLoadResult(
                 dataUriBytes,
                 ResolveFileName(source),
-                dataUriIsSvg || IsSvgBytes(dataUriBytes));
-            AddImageBytesToCache(source, result);
+                dataUriIsSvg || IsSvgBytes(dataUriBytes),
+                dataUriIsGif || IsGifBytes(dataUriBytes));
+            AddImageBytesToCache(cacheKey, result);
             return result;
         }
 
@@ -215,21 +243,22 @@ public class MarkdownImage : TemplatedControl
                 result = new ImageLoadResult(
                     bytes,
                     ResolveFileName(source),
-                    IsSvgMediaType(mediaType) || IsSvgPath(uri.LocalPath) || IsSvgBytes(bytes));
-                AddImageBytesToCache(source, result);
+                    IsSvgMediaType(mediaType) || IsSvgPath(uri.LocalPath) || IsSvgBytes(bytes),
+                    IsGifMediaType(mediaType) || IsGifPath(uri.LocalPath) || IsGifBytes(bytes));
+                AddImageBytesToCache(cacheKey, result);
                 return result;
             }
 
             if (uri.IsFile)
             {
                 result = await LoadLocalBytesAsync(new LocalImagePath(uri.LocalPath, uri.LocalPath));
-                AddImageBytesToCache(source, result);
+                AddImageBytesToCache(cacheKey, result);
                 return result;
             }
         }
 
         result = await LoadLocalBytesAsync(ResolveLocalPath(source));
-        AddImageBytesToCache(source, result);
+        AddImageBytesToCache(cacheKey, result);
         return result;
     }
 
@@ -270,24 +299,75 @@ public class MarkdownImage : TemplatedControl
         }
 
         var bytes = await File.ReadAllBytesAsync(localPath.Path);
-        return new ImageLoadResult(bytes, ResolveFileName(localPath.Path), IsSvgPath(localPath.Path) || IsSvgBytes(bytes));
+        return new ImageLoadResult(
+            bytes,
+            ResolveFileName(localPath.Path),
+            IsSvgPath(localPath.Path) || IsSvgBytes(bytes),
+            IsGifPath(localPath.Path) || IsGifBytes(bytes));
     }
 
-    private static LocalImagePath ResolveLocalPath(string source)
+    private LocalImagePath ResolveLocalPath(string source)
     {
         if (Path.IsPathRooted(source))
         {
             return new LocalImagePath(Path.GetFullPath(source), source);
         }
 
-        var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, source.Replace('/', Path.DirectorySeparatorChar)));
+        var baseDirectory = ResolveImageBaseDirectory() ?? AppContext.BaseDirectory;
+        var path = Path.GetFullPath(Path.Combine(baseDirectory, source.Replace('/', Path.DirectorySeparatorChar)));
         return new LocalImagePath(path, path);
     }
 
-    private static bool TryReadDataUri(string source, out byte[] bytes, out bool isSvg)
+    private string GetImageCacheKey(string source)
+    {
+        if (IsDataUri(source) || Uri.TryCreate(source, UriKind.Absolute, out _) || Path.IsPathRooted(source))
+        {
+            return source;
+        }
+
+        return $"{ResolveImageBaseDirectory() ?? AppContext.BaseDirectory}|{source}";
+    }
+
+    private string? ResolveImageBaseDirectory()
+    {
+        var basePath = ImageBasePath?.Trim();
+        if (string.IsNullOrWhiteSpace(basePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            if (Uri.TryCreate(basePath, UriKind.Absolute, out var uri) && uri.IsFile)
+            {
+                return ResolveExistingDirectory(uri.LocalPath);
+            }
+
+            return ResolveExistingDirectory(basePath);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return null;
+        }
+    }
+
+    private static string? ResolveExistingDirectory(string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        if (Directory.Exists(fullPath))
+        {
+            return fullPath;
+        }
+
+        var directory = Path.GetDirectoryName(fullPath);
+        return string.IsNullOrWhiteSpace(directory) ? null : directory;
+    }
+
+    private static bool TryReadDataUri(string source, out byte[] bytes, out bool isSvg, out bool isGif)
     {
         bytes = [];
         isSvg = false;
+        isGif = false;
 
         if (!source.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
         {
@@ -303,6 +383,7 @@ public class MarkdownImage : TemplatedControl
         var metadata = source[..commaIndex];
         var payload = source[(commaIndex + 1)..];
         isSvg = IsSvgMediaType(metadata);
+        isGif = IsGifMediaType(metadata);
         bytes = metadata.Contains(";base64", StringComparison.OrdinalIgnoreCase)
             ? Convert.FromBase64String(payload)
             : Encoding.UTF8.GetBytes(Uri.UnescapeDataString(payload));
@@ -324,6 +405,16 @@ public class MarkdownImage : TemplatedControl
         return string.Equals(Path.GetExtension(path), ".svg", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsGifMediaType(string? mediaType)
+    {
+        return mediaType?.Contains("image/gif", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static bool IsGifPath(string path)
+    {
+        return string.Equals(Path.GetExtension(path), ".gif", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool IsSvgBytes(byte[] bytes)
     {
         var length = Math.Min(bytes.Length, 512);
@@ -331,6 +422,17 @@ public class MarkdownImage : TemplatedControl
         return prefix.StartsWith("<svg", StringComparison.OrdinalIgnoreCase)
                || prefix.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase)
                && prefix.Contains("<svg", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsGifBytes(byte[] bytes)
+    {
+        return bytes.Length >= 6
+               && bytes[0] == 'G'
+               && bytes[1] == 'I'
+               && bytes[2] == 'F'
+               && bytes[3] == '8'
+               && (bytes[4] == '7' || bytes[4] == '9')
+               && bytes[5] == 'a';
     }
 
     [UnconditionalSuppressMessage(
@@ -435,9 +537,10 @@ public class MarkdownImage : TemplatedControl
         var window = new MarkdownImagePreviewWindow(
             previewBitmap,
             _imageBytes,
-            _fileName ?? (_isSvg ? "markdown-image.svg" : "markdown-image.png"),
+            _fileName ?? (_isSvg ? "markdown-image.svg" : _isGif ? "markdown-image.gif" : "markdown-image.png"),
             title,
-            _isSvg);
+            _isSvg,
+            _isGif);
         if (TopLevel.GetTopLevel(this) is Window owner)
         {
             window.Show(owner);
@@ -517,6 +620,22 @@ public class MarkdownImage : TemplatedControl
         {
             return CreateBitmapContent(previewBitmap);
         }
+    }
+
+    private Control CreateAnimatedGifContent(byte[] gifBytes, Bitmap previewBitmap, out MemoryStream animatedStream)
+    {
+        animatedStream = new MemoryStream(gifBytes, writable: false);
+        var image = new Image
+        {
+            Stretch = Stretch.Uniform,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Cursor = new Cursor(StandardCursorType.Hand)
+        };
+        ImageBehavior.SetAnimatedSource(image, new AnimatedImageSourceStream(animatedStream));
+        ImageBehavior.SetRepeatBehavior(image, RepeatBehavior.Forever);
+        ApplyImageChrome(image, previewBitmap);
+        AttachImageClick(image);
+        return image;
     }
 
     private void ApplyImageChrome(Control control, Bitmap bitmap)
@@ -610,10 +729,13 @@ public class MarkdownImage : TemplatedControl
             }
 
             var oldBitmap = _bitmap;
+            var oldAnimatedStream = _animatedStream;
             _bitmap = null;
+            _animatedStream = null;
             _imageBytes = null;
             _fileName = null;
             _isSvg = false;
+            _isGif = false;
 
             var fallback = new Border
             {
@@ -631,10 +753,11 @@ public class MarkdownImage : TemplatedControl
 
             SetContent(fallback);
             oldBitmap?.Dispose();
+            oldAnimatedStream?.Dispose();
         });
     }
 
-    private sealed record ImageLoadResult(byte[] Bytes, string FileName, bool IsSvg);
+    private sealed record ImageLoadResult(byte[] Bytes, string FileName, bool IsSvg, bool IsGif);
 
     private sealed record LocalImagePath(string Path, string DisplayPath);
 
