@@ -12,7 +12,7 @@ namespace CodeWF.Markdown.Lite.Sample.ViewModels;
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
 	private MarkdownSampleFile? _selectedFile;
-	private MarkdownTypographyTheme? _selectedTypographyTheme;
+	private TypographyThemeChoice? _selectedTypographyTheme;
 	private ThemeVariantOption? _selectedThemeVariant;
 	private bool _isCompactLayout;
 	private string _markdown = string.Empty;
@@ -21,6 +21,25 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 	private TypographyThemeChoice? _secondViewerSelectedTypographyTheme;
 	private CompactLayoutChoice? _secondViewerSelectedCompactLayout;
 
+	private static readonly TypographyThemeChoice[] BuiltInTypographyThemes =
+	[
+		new("简", MarkdownTypographyThemes.Simple),
+		new("橙心", MarkdownTypographyThemes.OrangeHeart),
+		new("墨黑", MarkdownTypographyThemes.InkBlack),
+		new("科技蓝", MarkdownTypographyThemes.TechnologyBlue),
+		new("全栈蓝", MarkdownTypographyThemes.FullStackBlue),
+		new("兰青", MarkdownTypographyThemes.LanQing),
+		new("姹紫", MarkdownTypographyThemes.ColorfulPurple),
+		new("嫩青", MarkdownTypographyThemes.TenderGreen),
+		new("山吹", MarkdownTypographyThemes.Yamabuki),
+		new("极客黑", MarkdownTypographyThemes.GeekBlack),
+		new("红绯", MarkdownTypographyThemes.RedScarlet),
+		new("绿意", MarkdownTypographyThemes.Verdant),
+		new("萌绿", MarkdownTypographyThemes.CuteGreen),
+		new("蓝莹", MarkdownTypographyThemes.BlueGlow),
+		new("蔷薇紫", MarkdownTypographyThemes.RosePurple),
+	];
+
 	public MainWindowViewModel()
 	{
 		ThemeVariants =
@@ -28,11 +47,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 			new("浅色", ThemeVariant.Light),
 			new("深色", ThemeVariant.Dark)
 		];
-		TypographyThemes = new ObservableCollection<MarkdownTypographyTheme>(MarkdownTypographyThemes.All);
+		TypographyThemes = new ObservableCollection<TypographyThemeChoice>(BuiltInTypographyThemes);
 		ViewerTypographyThemeChoices = new ObservableCollection<TypographyThemeChoice>(
 		[
 			new("跟随统一设置", null),
-			.. MarkdownTypographyThemes.All.Select(theme => new TypographyThemeChoice(theme.Name, theme.Key))
+			.. BuiltInTypographyThemes
 		]);
 		ViewerCompactLayoutChoices = new ObservableCollection<CompactLayoutChoice>(
 		[
@@ -58,7 +77,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
 	public ObservableCollection<ThemeVariantOption> ThemeVariants { get; }
 
-	public ObservableCollection<MarkdownTypographyTheme> TypographyThemes { get; }
+	public ObservableCollection<TypographyThemeChoice> TypographyThemes { get; }
 
 	public ObservableCollection<TypographyThemeChoice> ViewerTypographyThemeChoices { get; }
 
@@ -184,7 +203,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 		}
 	}
 
-	public MarkdownTypographyTheme? SelectedTypographyTheme
+	public TypographyThemeChoice? SelectedTypographyTheme
 	{
 		get => _selectedTypographyTheme;
 		set => SetProperty(ref _selectedTypographyTheme, value);

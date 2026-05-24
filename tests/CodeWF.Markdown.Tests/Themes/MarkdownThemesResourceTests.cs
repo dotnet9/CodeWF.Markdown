@@ -10,6 +10,12 @@ namespace CodeWF.Markdown.Tests.Themes;
 public sealed class MarkdownThemesResourceTests
 {
 	[Fact]
+	public void MarkdownTypographyThemes_DoesNotExposeThemeList()
+	{
+		Assert.Null(typeof(MarkdownTypographyThemes).GetProperty("All"));
+	}
+
+	[Fact]
 	public void OverrideTypographyResources_WhenViewerOverridesOnlySize_DoesNotReuseInheritedDictionary()
 	{
 		var parent = new Border();

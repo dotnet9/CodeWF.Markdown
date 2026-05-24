@@ -12,6 +12,12 @@ namespace CodeWF.Markdown.Tests.Themes;
 public sealed class LiteMarkdownThemesResourceTests
 {
 	[Fact]
+	public void LiteMarkdownTypographyThemes_DoesNotExposeThemeList()
+	{
+		Assert.Null(typeof(LiteMarkdownTypographyThemes).GetProperty("All"));
+	}
+
+	[Fact]
 	public void OverrideTypographyResources_WhenLiteViewerOverridesOnlySize_DoesNotReuseInheritedDictionary()
 	{
 		var parent = new Border();

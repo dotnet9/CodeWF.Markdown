@@ -29,6 +29,44 @@ namespace CodeWF.Markdown
 
         public static readonly string TypographyTheme = "CodeWF.Markdown.SampleL.TypographyTheme";
 
+        public static readonly string TypographyThemeFollowUnifiedSettings = "CodeWF.Markdown.SampleL.TypographyThemeFollowUnifiedSettings";
+
+        public static readonly string TypographySizeNormalName = "CodeWF.Markdown.SampleL.TypographySizeNormalName";
+
+        public static readonly string TypographySizeSmallName = "CodeWF.Markdown.SampleL.TypographySizeSmallName";
+
+        public static readonly string TypographyThemeSimpleName = "CodeWF.Markdown.SampleL.TypographyThemeSimpleName";
+
+        public static readonly string TypographyThemeOrangeHeartName = "CodeWF.Markdown.SampleL.TypographyThemeOrangeHeartName";
+
+        public static readonly string TypographyThemeInkBlackName = "CodeWF.Markdown.SampleL.TypographyThemeInkBlackName";
+
+        public static readonly string TypographyThemeTechnologyBlueName = "CodeWF.Markdown.SampleL.TypographyThemeTechnologyBlueName";
+
+        public static readonly string TypographyThemeFullStackBlueName = "CodeWF.Markdown.SampleL.TypographyThemeFullStackBlueName";
+
+        public static readonly string TypographyThemeLanQingName = "CodeWF.Markdown.SampleL.TypographyThemeLanQingName";
+
+        public static readonly string TypographyThemeColorfulPurpleName = "CodeWF.Markdown.SampleL.TypographyThemeColorfulPurpleName";
+
+        public static readonly string TypographyThemeTenderGreenName = "CodeWF.Markdown.SampleL.TypographyThemeTenderGreenName";
+
+        public static readonly string TypographyThemeYamabukiName = "CodeWF.Markdown.SampleL.TypographyThemeYamabukiName";
+
+        public static readonly string TypographyThemeGeekBlackName = "CodeWF.Markdown.SampleL.TypographyThemeGeekBlackName";
+
+        public static readonly string TypographyThemeRedScarletName = "CodeWF.Markdown.SampleL.TypographyThemeRedScarletName";
+
+        public static readonly string TypographyThemeVerdantName = "CodeWF.Markdown.SampleL.TypographyThemeVerdantName";
+
+        public static readonly string TypographyThemeCuteGreenName = "CodeWF.Markdown.SampleL.TypographyThemeCuteGreenName";
+
+        public static readonly string TypographyThemeBlueGlowName = "CodeWF.Markdown.SampleL.TypographyThemeBlueGlowName";
+
+        public static readonly string TypographyThemeRosePurpleName = "CodeWF.Markdown.SampleL.TypographyThemeRosePurpleName";
+
+        public static readonly string TypographyThemeSampleInkGreenName = "CodeWF.Markdown.SampleL.TypographyThemeSampleInkGreenName";
+
         public static readonly string CompactLayout = "CodeWF.Markdown.SampleL.CompactLayout";
 
         public static readonly string Language = "CodeWF.Markdown.SampleL.Language";
