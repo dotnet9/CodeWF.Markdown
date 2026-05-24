@@ -4,7 +4,7 @@
     x:Class="CodeWF.Markdown.Themes.Themes.YamabukiTypographyResources">
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#D99100" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#FFB11B" />
             <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#FFF7E6" />
             <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#FFF7E6" />
             <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#FFE8B3" />

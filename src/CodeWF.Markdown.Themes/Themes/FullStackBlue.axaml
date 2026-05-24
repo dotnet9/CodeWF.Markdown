@@ -4,14 +4,14 @@
     x:Class="CodeWF.Markdown.Themes.Themes.FullStackBlueTypographyResources">
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#2563EB" />
-            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#EFF4FF" />
-            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#EFF4FF" />
-            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#DBE7FF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#40B8FA" />
+            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#EFFAFF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#EFFAFF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#D8F1FF" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#7AA2FF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#7DD3FC" />
             <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#142449" />
             <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#142449" />
             <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#1B3163" />

@@ -30,23 +30,21 @@ public static class MarkdownTypographyThemes
 
     public static IReadOnlyList<MarkdownTypographyTheme> All { get; } =
     [
-        new("Basic", Basic),
+        new("简", Simple),
         new("橙心", OrangeHeart),
         new("墨黑", InkBlack),
-        new("彩紫", ColorfulPurple),
-        new("嫩青", TenderGreen),
-        new("绿意", Verdant),
-        new("红绯", RedScarlet),
-        new("蓝萤", BlueGlow),
         new("科技蓝", TechnologyBlue),
-        new("兰青", LanQing),
-        new("山吹", Yamabuki),
-        new("前端之峰", FrontendPeak),
-        new("极客黑", GeekBlack),
-        new("简洁", Simple),
-        new("蔷薇紫", RosePurple),
-        new("萌绿", CuteGreen),
         new("全栈蓝", FullStackBlue),
+        new("兰青", LanQing),
+        new("姹紫", ColorfulPurple),
+        new("嫩青", TenderGreen),
+        new("山吹", Yamabuki),
+        new("极客黑", GeekBlack),
+        new("红绯", RedScarlet),
+        new("绿意", Verdant),
+        new("萌绿", CuteGreen),
+        new("蓝莹", BlueGlow),
+        new("蔷薇紫", RosePurple),
     ];
 }
 

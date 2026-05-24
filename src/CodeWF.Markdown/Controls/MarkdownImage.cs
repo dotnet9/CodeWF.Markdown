@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Xml.Linq;
 
 using AnimatedImage.Avalonia;
 using Avalonia;
@@ -165,7 +166,7 @@ public class MarkdownImage : TemplatedControl
 
                 MemoryStream? animatedStream = null;
                 var content = loadResult.IsSvg
-                    ? CreateSvgContent(loadResult.Bytes, bitmap)
+                    ? CreateSvgContent(bitmap)
                     : loadResult.IsGif
                         ? CreateAnimatedGifContent(loadResult.Bytes, bitmap, out animatedStream)
                         : CreateBitmapContent(bitmap);
@@ -442,7 +443,7 @@ public class MarkdownImage : TemplatedControl
     private static byte[] RenderSvgToPngBytes(byte[] svgBytes)
     {
         using var svg = new SKSvg();
-        using var svgStream = new MemoryStream(svgBytes);
+        using var svgStream = new MemoryStream(PrepareSvgForSkia(svgBytes));
         var picture = svg.Load(svgStream) ?? svg.Picture;
         if (picture is null)
         {
@@ -472,6 +473,33 @@ public class MarkdownImage : TemplatedControl
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         return data?.ToArray() ?? throw new InvalidDataException("SVG picture could not be encoded.");
+    }
+
+    private static byte[] PrepareSvgForSkia(byte[] svgBytes)
+    {
+        try
+        {
+            var svgText = Encoding.UTF8.GetString(svgBytes);
+            var document = XDocument.Parse(svgText, LoadOptions.PreserveWhitespace);
+            var changed = false;
+
+            foreach (var attribute in document.Descendants()
+                         .SelectMany(element => element.Attributes())
+                         .Where(attribute => string.Equals(attribute.Name.LocalName, "filter", StringComparison.OrdinalIgnoreCase))
+                         .ToArray())
+            {
+                attribute.Remove();
+                changed = true;
+            }
+
+            return changed
+                ? Encoding.UTF8.GetBytes(document.ToString(SaveOptions.DisableFormatting))
+                : svgBytes;
+        }
+        catch
+        {
+            return svgBytes;
+        }
     }
 
     private void OnImagePointerPressed(object? sender, PointerPressedEventArgs e)
@@ -598,28 +626,9 @@ public class MarkdownImage : TemplatedControl
         return image;
     }
 
-    private Control CreateSvgContent(byte[] svgBytes, Bitmap previewBitmap)
+    private Control CreateSvgContent(Bitmap previewBitmap)
     {
-        try
-        {
-            var svg = new global::Avalonia.Svg.Skia.Svg(new Uri("file:///", UriKind.Absolute))
-            {
-                Source = Encoding.UTF8.GetString(svgBytes),
-                Stretch = Stretch.Uniform,
-                AnimationBackend = SvgAnimationHostBackend.DispatcherTimer,
-                AnimationFrameInterval = TimeSpan.FromMilliseconds(33),
-                AnimationPlaybackRate = 1,
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Cursor = new Cursor(StandardCursorType.Hand)
-            };
-            ApplyImageChrome(svg, previewBitmap);
-            AttachImageClick(svg);
-            return svg;
-        }
-        catch
-        {
-            return CreateBitmapContent(previewBitmap);
-        }
+        return CreateBitmapContent(previewBitmap);
     }
 
     private Control CreateAnimatedGifContent(byte[] gifBytes, Bitmap previewBitmap, out MemoryStream animatedStream)

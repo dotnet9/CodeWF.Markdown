@@ -4,7 +4,7 @@
     x:Class="CodeWF.Markdown.Themes.Themes.GeekBlackTypographyResources">
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#111827" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#212122" />
             <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#EEF2F7" />
             <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#EEF2F7" />
             <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#E2E8F0" />

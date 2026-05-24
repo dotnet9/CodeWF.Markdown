@@ -4,14 +4,14 @@
     x:Class="CodeWF.Markdown.Themes.Themes.TenderGreenTypographyResources">
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#3AAE8F" />
-            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#ECFBF5" />
-            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#ECFBF5" />
-            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#D5F6EA" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#595959" />
+            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#F5F5F5" />
+            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#F5F5F5" />
+            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#E8E8E8" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#62D6B4" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#D4D4D4" />
             <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#17372F" />
             <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#17372F" />
             <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#1F4A40" />

@@ -4,14 +4,14 @@
     x:Class="CodeWF.Markdown.Themes.Themes.LanQingTypographyResources">
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#1A9FB0" />
-            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#EAFBFD" />
-            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#EAFBFD" />
-            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#D6F4F7" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#009688" />
+            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#EAF7F5" />
+            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#EAF7F5" />
+            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#D6EFEC" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#63D3DF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#5EEAD4" />
             <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#12353A" />
             <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#12353A" />
             <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#19474E" />

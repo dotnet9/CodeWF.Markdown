@@ -4,14 +4,14 @@
     x:Class="CodeWF.Markdown.Themes.Themes.ColorfulPurpleTypographyResources">
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#8A4FFF" />
-            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#F5F0FF" />
-            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#F5F0FF" />
-            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#EADDFF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#773098" />
+            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#FAF2FF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#FAF2FF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#EFD8FA" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#B99CFF" />
+            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#D8A7F0" />
             <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#2B2140" />
             <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#2B2140" />
             <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#382A55" />
