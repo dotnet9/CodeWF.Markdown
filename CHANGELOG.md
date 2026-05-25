@@ -1,10 +1,17 @@
 # Changelog
 
+## 12.0.3.12 - 2026-05-25
+
+- Added `CopyKind`, `MarkdownSocialCopyRenderer`, `MarkdownSocialCopyProfiles`, and `MarkdownSocialCopyProfile` so WeChat Official Account, Zhihu, Juejin, and future publishing targets can share the same Markdown-to-inline-HTML rendering pipeline.
+- Added `MarkdownHtmlClipboardExtensions` for simple Avalonia clipboard calls such as `TrySetMarkdownHtmlAsync(markdown, themeName, targetName, typographySize)`, keeping host applications responsible only for the Markdown text, active typography theme, and target platform.
+- Social-copy HTML now embeds local images, resolves built-in theme names through `MarkdownExportStyle.Resolve`, writes CF_HTML through the shared clipboard helper, and keeps target suffix/tool-name text in localization resources.
+- Bumped package version to 12.0.3.12 and verified 41 `CodeWF.Markdown.Tests` pass before consuming the local NuGet packages from Vex.
+
 ## 12.0.3.11 - 2026-05-25
 
 - Added `ExportKind` and higher-level `MarkdownDocumentExporter.Export`, `ExportMarkdown`, and `ExportFile` APIs so host applications can export Markdown strings or Markdown files through one target-kind based entry point.
 - Added `MarkdownTypographyThemeRegistry` for application-defined typography themes while keeping built-in theme names as string constants for extensibility.
-- Added `MarkdownExportStyle.FromResources` and `MarkdownThemes.CreateExportStyle` so export, social-copy, and viewer styling can share the same typography resource dictionaries, including custom application themes.
+- Added `MarkdownExportStyle.FromResources` and `MarkdownThemes.CreateExportStyle` so export and custom social-copy styling can share the same typography resource dictionaries, including application-defined themes.
 
 ## 12.0.3.10 - 2026-05-25
 

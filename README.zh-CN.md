@@ -32,7 +32,7 @@ MarkdownDocumentExporter.ExportMarkdown(
 MarkdownDocumentExporter.ExportFile(
     @"C:\docs\article.md",
     ExportKind.Word,
-    MarkdownThemes.CreateExportStyle("Simple", "Normal"),
+    MarkdownTypographyThemes.Simple,
     "article.docx");
 
 var document = new MarkdownExportDocument(markdown, filePath, fileName);
@@ -43,7 +43,24 @@ MarkdownDocumentExporter.Export(document, ExportKind.Png, "article.png");
 
 ## 富 HTML 剪贴板辅助能力
 
-`MarkdownHtmlClipboard` 为宿主应用提供可复用的富 HTML 剪贴板载荷，适合把 Markdown 渲染后的 HTML 复制到微信公众号、知乎、稀土掘金等网页编辑器。它会同时写入 `text/html`、macOS `public.html` 和 Windows `HTML Format`；Windows 载荷使用带正确片段偏移的 UTF-8 CF_HTML 字节，避免 Chromium 系编辑器把带样式 HTML 当作普通文本显示。
+`MarkdownHtmlClipboard` 和 `MarkdownHtmlClipboardExtensions` 为宿主应用提供可复用的富 HTML 剪贴板载荷，适合把 Markdown 渲染后的 HTML 复制到微信公众号、知乎、稀土掘金等网页编辑器。它会同时写入 `text/plain`、`text/html`、macOS `public.html` 和 Windows `HTML Format`；Windows 载荷使用带正确片段偏移的 UTF-8 CF_HTML 字节，避免 Chromium 系编辑器把带样式 HTML 当作普通文本显示。
+
+Avalonia 剪贴板扩展的简单调用只需要当前 Markdown、排版主题和目标平台：
+
+```csharp
+await clipboard.TrySetMarkdownHtmlAsync(
+    markdown,
+    MarkdownTypographyThemes.Simple,
+    "wechat",
+    MarkdownTypographySizes.Small);
+
+await clipboard.SetMarkdownHtmlAsync(
+    markdown,
+    MarkdownExportStyle.Resolve("Simple", "Small"),
+    CopyKind.Zhihu);
+```
+
+内置目标包括 `CopyKind.Wechat`、`CopyKind.Zhihu` 和 `CopyKind.Juejin`；字符串目标名由 `MarkdownSocialCopyProfiles` 解析，方便宿主应用直接复用菜单命令参数。基于 Markdown 字符串复制时，相对图片按当前工作目录解析；基于 Markdown 文件生成内容时，相对图片可按文件路径解析。后续新增发布平台时，应用可传入自定义 `MarkdownSocialCopyProfile`，继续复用同一套 CF_HTML 剪贴板写入能力。
 
 ## 安装
 
@@ -114,7 +131,7 @@ var exportStyle = MarkdownThemes.CreateExportStyle("MyCompanyBlue");
 MarkdownDocumentExporter.ExportMarkdown(markdown, ExportKind.Pdf, exportStyle, "article.pdf");
 ```
 
-如果应用需要完全接管导出外观，也可以直接构造并传入 `MarkdownExportStyle`。如果应用已有自己的 XAML 资源字典，可以注册 `() => new MyCompanyMarkdownResources()`，让预览、PNG/PDF/Word 导出和自媒体复制 HTML 都从同一套排版资源解析样式。
+最简单的导出和自媒体复制 API 会通过 `MarkdownExportStyle.Resolve` 解析内置主题名和排版尺寸。如果应用需要完全接管导出外观，也可以直接构造并传入 `MarkdownExportStyle`。如果应用已有自己的 XAML 资源字典，可以注册 `() => new MyCompanyMarkdownResources()`，并在需要共享自定义资源时通过 `MarkdownThemes.CreateExportStyle(...)` 生成导出样式，让预览、PNG/PDF/Word 导出和自媒体复制 HTML 都从同一套排版资源解析样式。
 
 ## 仓库结构
 

@@ -32,7 +32,7 @@ MarkdownDocumentExporter.ExportMarkdown(
 MarkdownDocumentExporter.ExportFile(
     @"C:\docs\article.md",
     ExportKind.Word,
-    MarkdownThemes.CreateExportStyle("Simple", "Normal"),
+    MarkdownTypographyThemes.Simple,
     "article.docx");
 
 var document = new MarkdownExportDocument(markdown, filePath, fileName);
@@ -43,7 +43,24 @@ The built-in PNG/PDF/Word exporters reuse the shared image loader and rasterizer
 
 ## Rich HTML Clipboard Helpers
 
-`MarkdownHtmlClipboard` creates reusable rich HTML clipboard payloads for host applications that copy Markdown-rendered HTML into web editors such as WeChat Official Account, Zhihu, and Juejin. It writes `text/html`, macOS `public.html`, and Windows `HTML Format` data; the Windows payload is UTF-8 CF_HTML bytes with correct fragment offsets, so Chromium-based editors can paste styled HTML instead of showing the raw markup as plain text.
+`MarkdownHtmlClipboard` and `MarkdownHtmlClipboardExtensions` create reusable rich HTML clipboard payloads for host applications that copy Markdown-rendered HTML into web editors such as WeChat Official Account, Zhihu, and Juejin. They write `text/plain`, `text/html`, macOS `public.html`, and Windows `HTML Format` data; the Windows payload is UTF-8 CF_HTML bytes with correct fragment offsets, so Chromium-based editors can paste styled HTML instead of showing the raw markup as plain text.
+
+The simple Avalonia clipboard path only needs the Markdown text, active typography theme, and target platform:
+
+```csharp
+await clipboard.TrySetMarkdownHtmlAsync(
+    markdown,
+    MarkdownTypographyThemes.Simple,
+    "wechat",
+    MarkdownTypographySizes.Small);
+
+await clipboard.SetMarkdownHtmlAsync(
+    markdown,
+    MarkdownExportStyle.Resolve("Simple", "Small"),
+    CopyKind.Zhihu);
+```
+
+Built-in targets are `CopyKind.Wechat`, `CopyKind.Zhihu`, and `CopyKind.Juejin`; string target names are resolved by `MarkdownSocialCopyProfiles` so host applications can keep lightweight menu command parameters. Markdown string copy resolves relative images from the current working directory. File-based content creation can resolve relative images from the Markdown file path. Applications can pass a custom `MarkdownSocialCopyProfile` for new publishing targets while still reusing the same CF_HTML clipboard writer.
 
 ## Installation
 
@@ -114,7 +131,7 @@ var exportStyle = MarkdownThemes.CreateExportStyle("MyCompanyBlue");
 MarkdownDocumentExporter.ExportMarkdown(markdown, ExportKind.Pdf, exportStyle, "article.pdf");
 ```
 
-Applications that need complete control can still build and pass a `MarkdownExportStyle` directly. Applications that keep custom XAML resource dictionaries can register `() => new MyCompanyMarkdownResources()` so preview, PNG/PDF/Word export, and social-copy HTML styling resolve from the same typography resources.
+The simplest export and social-copy APIs resolve built-in theme names through `MarkdownExportStyle.Resolve`, including typography size. Applications that need complete control can still build and pass a `MarkdownExportStyle` directly. Applications that keep custom XAML resource dictionaries can register `() => new MyCompanyMarkdownResources()` and create an export style with `MarkdownThemes.CreateExportStyle(...)` when they want preview, PNG/PDF/Word export, and social-copy HTML styling to share the same custom resource dictionary.
 
 ## Repository Layout
 

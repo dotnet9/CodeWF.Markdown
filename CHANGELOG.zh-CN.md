@@ -1,10 +1,17 @@
 # 更新日志
 
+## 12.0.3.12 - 2026-05-25
+
+- 😄[新增]-新增 `CopyKind`、`MarkdownSocialCopyRenderer`、`MarkdownSocialCopyProfiles` 和 `MarkdownSocialCopyProfile`，微信公众号、知乎、稀土掘金以及后续发布目标可复用同一套 Markdown 到 inline HTML 的渲染链路。
+- 😄[新增]-新增 `MarkdownHtmlClipboardExtensions`，Avalonia 应用可直接调用 `TrySetMarkdownHtmlAsync(markdown, themeName, targetName, typographySize)`，宿主侧只需要传当前 Markdown、排版主题和目标平台。
+- 🔨[优化]-自媒体复制 HTML 现在会嵌入本地图片，内置主题名通过 `MarkdownExportStyle.Resolve` 解析，CF_HTML 继续复用公共剪贴板写入能力，目标尾注和工具名文案改为读取多语言资源。
+- 🧪[测试]-包版本提升到 12.0.3.12，并在 Vex 使用本地 NuGet 包消费前验证 `CodeWF.Markdown.Tests` 41 项通过。
+
 ## 12.0.3.11 - 2026-05-25
 
 - 😄[新增]-新增 `ExportKind` 以及更高层的 `MarkdownDocumentExporter.Export`、`ExportMarkdown`、`ExportFile` API，宿主应用可按导出类型一站式导出 Markdown 字符串或 Markdown 文件。
 - 😄[新增]-新增 `MarkdownTypographyThemeRegistry`，支持应用注册自定义排版主题；内置主题继续保持字符串常量，方便扩展第三方主题 Key。
-- 🔨[优化]-新增 `MarkdownExportStyle.FromResources` 与 `MarkdownThemes.CreateExportStyle`，导出、复制和预览可复用同一套排版资源字典，应用自定义主题也能参与导出样式解析。
+- 🔨[优化]-新增 `MarkdownExportStyle.FromResources` 与 `MarkdownThemes.CreateExportStyle`，导出和自定义自媒体复制样式可复用同一套排版资源字典，应用自定义主题也能参与样式解析。
 
 ## 12.0.3.10 - 2026-05-25
 
