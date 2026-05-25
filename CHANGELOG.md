@@ -1,5 +1,10 @@
 # Changelog
 
+## 12.0.3.9 - 2026-05-25
+
+- Added `MarkdownHtmlClipboard` for reusable rich HTML clipboard payloads, including CF_HTML byte offsets and native Windows `HTML Format` bytes for WeChat Official Account, Zhihu, Juejin, and similar social editor paste targets.
+- Added tests for fragment marker normalization and UTF-8 CF_HTML offsets.
+
 ## 12.0.3.8 - 2026-05-25
 
 - Added shared Markdown image source loading for data URIs, local paths, file URIs, and HTTP(S) URLs, including URL-decoded relative path fallback against `ImageBasePath`.

@@ -1,5 +1,10 @@
 # 更新日志
 
+## 12.0.3.9 - 2026-05-25
+
+- 😄[新增]-新增 `MarkdownHtmlClipboard` 富 HTML 剪贴板公共能力，统一生成 CF_HTML 字节偏移和 Windows 原生 `HTML Format` 字节数据，便于微信公众号、知乎、稀土掘金等编辑器按富文本粘贴。
+- 🧪[测试]-补充片段标记规范化和 UTF-8 CF_HTML 偏移测试。
+
 ## 12.0.3.8 - 2026-05-25
 
 - 😄[新增]-新增 Markdown 图片源公共加载能力，支持 `data:image`、本地路径、`file://` 与 HTTP(S) URL，并按 `ImageBasePath` 处理 URL 解码后的相对路径回退。

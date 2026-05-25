@@ -20,6 +20,10 @@ Changelog: [English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
 
 `CodeWF.Markdown` also exposes shared Markdown image utilities for host applications that export Markdown to offline files. `MarkdownImageSourceLoader` loads `data:image` URIs, local paths, `file://` URIs, and HTTP(S) images, resolving relative paths against the current Markdown document path and trying URL-decoded filenames. `MarkdownImageRasterizer` converts loaded SVG, GIF first frames, and other bitmap formats to static PNG bytes so PDF, PNG, Word, or other export pipelines can embed images without reimplementing viewer-specific loading logic.
 
+## Rich HTML Clipboard Helpers
+
+`MarkdownHtmlClipboard` creates reusable rich HTML clipboard payloads for host applications that copy Markdown-rendered HTML into web editors such as WeChat Official Account, Zhihu, and Juejin. It writes `text/html`, macOS `public.html`, and Windows `HTML Format` data; the Windows payload is UTF-8 CF_HTML bytes with correct fragment offsets, so Chromium-based editors can paste styled HTML instead of showing the raw markup as plain text.
+
 ## Installation
 
 ```powershell
