@@ -3,7 +3,7 @@
 ## 12.0.3.8 - 2026-05-25
 
 - Added shared Markdown image source loading for data URIs, local paths, file URIs, and HTTP(S) URLs, including URL-decoded relative path fallback against `ImageBasePath`.
-- Added reusable image rasterization helpers for SVG previews and static GIF first-frame output, so export pipelines can embed images without duplicating viewer-specific loading code.
+- Added reusable image rasterization helpers for SVG previews, static GIF first-frame output, and bitmap-to-PNG normalization, so export pipelines can embed images without duplicating viewer-specific loading code.
 - Updated the full `MarkdownImage` control to reuse the shared image loader and rasterizer while preserving animated GIF playback in the live viewer.
 - Added tests for data image URIs, URL-encoded relative local images, HTTP image loading, SVG rasterization, and GIF first-frame PNG output.
 

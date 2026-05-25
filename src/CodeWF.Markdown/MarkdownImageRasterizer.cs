@@ -13,9 +13,7 @@ public static class MarkdownImageRasterizer
 
 		return imageSource.IsSvg
 			? MarkdownSvgRasterizer.RenderToPngBytes(imageSource.Bytes)
-			: imageSource.IsGif
-				? RenderBitmapToPngBytes(imageSource.Bytes)
-				: imageSource.Bytes;
+			: RenderBitmapToPngBytes(imageSource.Bytes);
 	}
 
 	private static byte[] RenderBitmapToPngBytes(byte[] bytes)
