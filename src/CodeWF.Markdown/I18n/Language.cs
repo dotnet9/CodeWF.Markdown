@@ -53,6 +53,10 @@ namespace CodeWF
 
         public static readonly string Copy = "CodeWF.MarkdownL.Copy";
 
+        public static readonly string SocialCopyToolName = "CodeWF.MarkdownL.SocialCopyToolName";
+
+        public static readonly string SocialCopySuffixFormat = "CodeWF.MarkdownL.SocialCopySuffixFormat";
+
     }
 
 

@@ -34,6 +34,24 @@ public sealed class MarkdownThemesResourceTests
 		Assert.NotEmpty(viewer.Resources.MergedDictionaries);
 	}
 
+	[Theory]
+	[InlineData(MarkdownTypographyThemes.Simple, "#3E64FF", "#F6F8FA", "#F6F7F9", "#F6F7F9")]
+	[InlineData(MarkdownTypographyThemes.OrangeHeart, "#EF7060", "#F6F8FA", "#FFF3F0", "#FFF3F0")]
+	public void CreateExportStyle_WhenThemeUsesCommonResources_ResolvesIncludedBaseResources(
+		string themeName,
+		string accentColor,
+		string codeBackgroundColor,
+		string inlineCodeBackgroundColor,
+		string quoteBackgroundColor)
+	{
+		var style = MarkdownThemes.CreateExportStyle(themeName);
+
+		Assert.Equal(accentColor, style.LinkColor);
+		Assert.Equal(codeBackgroundColor, style.CodeBackgroundColor);
+		Assert.Equal(inlineCodeBackgroundColor, style.InlineCodeBackgroundColor);
+		Assert.Equal(quoteBackgroundColor, style.QuoteBackgroundColor);
+	}
+
 	[Fact]
 	public void CreateExportStyle_WhenCustomThemeRegistered_UsesThemeResources()
 	{

@@ -35,6 +35,8 @@ public sealed record MarkdownExportStyle(
     private const string DefaultMonoFontFamily = "Cascadia Mono, Consolas";
     private const string CompactTypographySize = "Small";
 
+    public string QuoteBackgroundColor { get; init; } = PageBackgroundColor;
+
     public static MarkdownExportStyle Resolve(string? typographyTheme, string? typographySize)
     {
         var palette = ResolvePalette(typographyTheme);
@@ -66,7 +68,10 @@ public sealed record MarkdownExportStyle(
             palette.InlineCodeForeground,
             palette.Link,
             palette.TableHeaderBackground,
-            palette.QuoteBorder);
+            palette.QuoteBorder)
+        {
+            QuoteBackgroundColor = palette.QuoteBackground
+        };
     }
 
     /// <summary>
@@ -139,7 +144,14 @@ public sealed record MarkdownExportStyle(
             accentColor,
             accentColor,
             GetColorResource(resources, MarkdownStyleKeys.TableHeaderBackgroundBrushResource, targetTheme, resolvedFallback.TableHeaderBackgroundColor),
-            accentColor);
+            accentColor)
+        {
+            QuoteBackgroundColor = GetColorResource(
+                resources,
+                MarkdownStyleKeys.QuoteBackgroundBrushResource,
+                targetTheme,
+                resolvedFallback.QuoteBackgroundColor)
+        };
     }
 
     private static double Scale(double value, double scale)
@@ -421,5 +433,8 @@ public sealed record MarkdownExportStyle(
         string InlineCodeForeground,
         string Link,
         string TableHeaderBackground,
-        string QuoteBorder);
+        string QuoteBorder)
+    {
+        public string QuoteBackground => TableHeaderBackground;
+    }
 }

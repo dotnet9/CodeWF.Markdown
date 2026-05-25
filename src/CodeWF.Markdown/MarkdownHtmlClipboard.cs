@@ -1,6 +1,9 @@
 using System.Globalization;
 using System.Text;
 
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 
@@ -33,6 +36,651 @@ public static class MarkdownHtmlClipboard
 		await clipboard.FlushAsync().ConfigureAwait(false);
 	}
 
+	public static Task SetHtmlAsync(IClipboard clipboard, MarkdownHtmlCopyContent content)
+	{
+		ArgumentNullException.ThrowIfNull(content);
+
+		return SetHtmlAsync(clipboard, content.Html, content.Text);
+	}
+
+	public static Task SetHtmlAsync(string markdown, CopyKind kind)
+	{
+		return SetHtmlAsync(ResolveClipboard(), markdown, kind, (MarkdownExportStyle?)null);
+	}
+
+	public static Task<bool> TrySetHtmlAsync(
+		string markdown,
+		string? targetName,
+		string? themeName = null,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return TrySetHtmlAsync(ResolveClipboard(), markdown, targetName, themeName, typographySize, options);
+	}
+
+	public static Task<bool> TrySetHtmlAsync(
+		string markdown,
+		string? targetName,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return TrySetHtmlAsync(ResolveClipboard(), markdown, targetName, theme, options);
+	}
+
+	public static Task SetHtmlAsync(
+		string markdown,
+		CopyKind kind,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(ResolveClipboard(), markdown, kind, themeName, typographySize, options);
+	}
+
+	public static Task SetHtmlAsync(
+		string markdown,
+		CopyKind kind,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(ResolveClipboard(), markdown, kind, theme, options);
+	}
+
+	public static Task SetHtmlAsync(string markdown, MarkdownSocialCopyProfile profile)
+	{
+		return SetHtmlAsync(ResolveClipboard(), markdown, profile, (MarkdownExportStyle?)null);
+	}
+
+	public static Task SetHtmlAsync(
+		string markdown,
+		MarkdownSocialCopyProfile profile,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(ResolveClipboard(), markdown, profile, themeName, typographySize, options);
+	}
+
+	public static Task SetHtmlAsync(
+		string markdown,
+		MarkdownSocialCopyProfile profile,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(ResolveClipboard(), markdown, profile, theme, options);
+	}
+
+	public static Task SetHtmlAsync(IClipboard clipboard, string markdown, CopyKind kind)
+	{
+		return SetHtmlAsync(clipboard, markdown, kind, (MarkdownExportStyle?)null);
+	}
+
+	public static async Task<bool> TrySetHtmlAsync(
+		IClipboard clipboard,
+		string markdown,
+		string? targetName,
+		string? themeName = null,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!TryCreateHtmlCopyContent(markdown, targetName, out var content, themeName, typographySize, options))
+		{
+			return false;
+		}
+
+		await SetHtmlAsync(clipboard, content).ConfigureAwait(false);
+		return true;
+	}
+
+	public static async Task<bool> TrySetHtmlAsync(
+		IClipboard clipboard,
+		string markdown,
+		string? targetName,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!TryCreateHtmlCopyContent(markdown, targetName, out var content, theme, options))
+		{
+			return false;
+		}
+
+		await SetHtmlAsync(clipboard, content).ConfigureAwait(false);
+		return true;
+	}
+
+	public static Task SetHtmlAsync(
+		IClipboard clipboard,
+		string markdown,
+		CopyKind kind,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateHtmlCopyContent(markdown, kind, themeName, typographySize, options));
+	}
+
+	public static Task SetHtmlAsync(
+		IClipboard clipboard,
+		string markdown,
+		CopyKind kind,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateHtmlCopyContent(markdown, kind, theme, options));
+	}
+
+	public static Task SetHtmlAsync(IClipboard clipboard, string markdown, MarkdownSocialCopyProfile profile)
+	{
+		return SetHtmlAsync(clipboard, markdown, profile, (MarkdownExportStyle?)null);
+	}
+
+	public static Task SetHtmlAsync(
+		IClipboard clipboard,
+		string markdown,
+		MarkdownSocialCopyProfile profile,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateHtmlCopyContent(markdown, profile, themeName, typographySize, options));
+	}
+
+	public static Task SetHtmlAsync(
+		IClipboard clipboard,
+		string markdown,
+		MarkdownSocialCopyProfile profile,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateHtmlCopyContent(markdown, profile, theme, options));
+	}
+
+	public static Task SetHtmlAsync(IClipboard clipboard, MarkdownExportDocument document, CopyKind kind)
+	{
+		return SetHtmlAsync(clipboard, document, kind, (MarkdownExportStyle?)null);
+	}
+
+	public static async Task<bool> TrySetHtmlAsync(
+		IClipboard clipboard,
+		MarkdownExportDocument document,
+		string? targetName,
+		string? themeName = null,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!TryCreateHtmlCopyContent(document, targetName, out var content, themeName, typographySize, options))
+		{
+			return false;
+		}
+
+		await SetHtmlAsync(clipboard, content).ConfigureAwait(false);
+		return true;
+	}
+
+	public static async Task<bool> TrySetHtmlAsync(
+		IClipboard clipboard,
+		MarkdownExportDocument document,
+		string? targetName,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!TryCreateHtmlCopyContent(document, targetName, out var content, theme, options))
+		{
+			return false;
+		}
+
+		await SetHtmlAsync(clipboard, content).ConfigureAwait(false);
+		return true;
+	}
+
+	public static Task SetHtmlAsync(
+		IClipboard clipboard,
+		MarkdownExportDocument document,
+		CopyKind kind,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateHtmlCopyContent(document, kind, themeName, typographySize, options));
+	}
+
+	public static Task SetHtmlAsync(
+		IClipboard clipboard,
+		MarkdownExportDocument document,
+		CopyKind kind,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateHtmlCopyContent(document, kind, theme, options));
+	}
+
+	public static Task SetHtmlAsync(IClipboard clipboard, MarkdownExportDocument document, MarkdownSocialCopyProfile profile)
+	{
+		return SetHtmlAsync(clipboard, document, profile, (MarkdownExportStyle?)null);
+	}
+
+	public static Task SetHtmlAsync(
+		IClipboard clipboard,
+		MarkdownExportDocument document,
+		MarkdownSocialCopyProfile profile,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateHtmlCopyContent(document, profile, themeName, typographySize, options));
+	}
+
+	public static Task SetHtmlAsync(
+		IClipboard clipboard,
+		MarkdownExportDocument document,
+		MarkdownSocialCopyProfile profile,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateHtmlCopyContent(document, profile, theme, options));
+	}
+
+	public static Task SetFileHtmlAsync(string markdownFilePath, CopyKind kind)
+	{
+		return SetFileHtmlAsync(ResolveClipboard(), markdownFilePath, kind, (MarkdownExportStyle?)null);
+	}
+
+	public static Task<bool> TrySetFileHtmlAsync(
+		string markdownFilePath,
+		string? targetName,
+		string? themeName = null,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return TrySetFileHtmlAsync(ResolveClipboard(), markdownFilePath, targetName, themeName, typographySize, options);
+	}
+
+	public static Task<bool> TrySetFileHtmlAsync(
+		string markdownFilePath,
+		string? targetName,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return TrySetFileHtmlAsync(ResolveClipboard(), markdownFilePath, targetName, theme, options);
+	}
+
+	public static Task SetFileHtmlAsync(
+		string markdownFilePath,
+		CopyKind kind,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetFileHtmlAsync(ResolveClipboard(), markdownFilePath, kind, themeName, typographySize, options);
+	}
+
+	public static Task SetFileHtmlAsync(
+		string markdownFilePath,
+		CopyKind kind,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetFileHtmlAsync(ResolveClipboard(), markdownFilePath, kind, theme, options);
+	}
+
+	public static Task SetFileHtmlAsync(string markdownFilePath, MarkdownSocialCopyProfile profile)
+	{
+		return SetFileHtmlAsync(ResolveClipboard(), markdownFilePath, profile, (MarkdownExportStyle?)null);
+	}
+
+	public static Task SetFileHtmlAsync(
+		string markdownFilePath,
+		MarkdownSocialCopyProfile profile,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetFileHtmlAsync(ResolveClipboard(), markdownFilePath, profile, themeName, typographySize, options);
+	}
+
+	public static Task SetFileHtmlAsync(
+		string markdownFilePath,
+		MarkdownSocialCopyProfile profile,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetFileHtmlAsync(ResolveClipboard(), markdownFilePath, profile, theme, options);
+	}
+
+	public static Task SetFileHtmlAsync(IClipboard clipboard, string markdownFilePath, CopyKind kind)
+	{
+		return SetFileHtmlAsync(clipboard, markdownFilePath, kind, (MarkdownExportStyle?)null);
+	}
+
+	public static async Task<bool> TrySetFileHtmlAsync(
+		IClipboard clipboard,
+		string markdownFilePath,
+		string? targetName,
+		string? themeName = null,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!TryCreateFileHtmlCopyContent(markdownFilePath, targetName, out var content, themeName, typographySize, options))
+		{
+			return false;
+		}
+
+		await SetHtmlAsync(clipboard, content).ConfigureAwait(false);
+		return true;
+	}
+
+	public static async Task<bool> TrySetFileHtmlAsync(
+		IClipboard clipboard,
+		string markdownFilePath,
+		string? targetName,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!TryCreateFileHtmlCopyContent(markdownFilePath, targetName, out var content, theme, options))
+		{
+			return false;
+		}
+
+		await SetHtmlAsync(clipboard, content).ConfigureAwait(false);
+		return true;
+	}
+
+	public static Task SetFileHtmlAsync(
+		IClipboard clipboard,
+		string markdownFilePath,
+		CopyKind kind,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateFileHtmlCopyContent(markdownFilePath, kind, themeName, typographySize, options));
+	}
+
+	public static Task SetFileHtmlAsync(
+		IClipboard clipboard,
+		string markdownFilePath,
+		CopyKind kind,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateFileHtmlCopyContent(markdownFilePath, kind, theme, options));
+	}
+
+	public static Task SetFileHtmlAsync(IClipboard clipboard, string markdownFilePath, MarkdownSocialCopyProfile profile)
+	{
+		return SetFileHtmlAsync(clipboard, markdownFilePath, profile, (MarkdownExportStyle?)null);
+	}
+
+	public static Task SetFileHtmlAsync(
+		IClipboard clipboard,
+		string markdownFilePath,
+		MarkdownSocialCopyProfile profile,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateFileHtmlCopyContent(markdownFilePath, profile, themeName, typographySize, options));
+	}
+
+	public static Task SetFileHtmlAsync(
+		IClipboard clipboard,
+		string markdownFilePath,
+		MarkdownSocialCopyProfile profile,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return SetHtmlAsync(clipboard, CreateFileHtmlCopyContent(markdownFilePath, profile, theme, options));
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(string markdown, CopyKind kind)
+	{
+		return CreateHtmlCopyContent(markdown, kind, (MarkdownExportStyle?)null);
+	}
+
+	public static bool TryCreateHtmlCopyContent(
+		string markdown,
+		string? targetName,
+		out MarkdownHtmlCopyContent content,
+		string? themeName = null,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!MarkdownSocialCopyProfiles.TryResolve(targetName, out var profile))
+		{
+			content = EmptyContent;
+			return false;
+		}
+
+		content = CreateHtmlCopyContent(markdown, profile, themeName, typographySize, options);
+		return true;
+	}
+
+	public static bool TryCreateHtmlCopyContent(
+		string markdown,
+		string? targetName,
+		out MarkdownHtmlCopyContent content,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!MarkdownSocialCopyProfiles.TryResolve(targetName, out var profile))
+		{
+			content = EmptyContent;
+			return false;
+		}
+
+		content = CreateHtmlCopyContent(markdown, profile, theme, options);
+		return true;
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(
+		string markdown,
+		CopyKind kind,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return CreateHtmlCopyContent(markdown, kind, MarkdownExportStyle.Resolve(themeName, typographySize), options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(
+		string markdown,
+		CopyKind kind,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return MarkdownSocialCopyRenderer.RenderMarkdown(markdown, kind, theme, options: options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(string markdown, MarkdownSocialCopyProfile profile)
+	{
+		return CreateHtmlCopyContent(markdown, profile, (MarkdownExportStyle?)null);
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(
+		string markdown,
+		MarkdownSocialCopyProfile profile,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return CreateHtmlCopyContent(markdown, profile, MarkdownExportStyle.Resolve(themeName, typographySize), options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(
+		string markdown,
+		MarkdownSocialCopyProfile profile,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return MarkdownSocialCopyRenderer.RenderMarkdown(markdown, profile, theme, options: options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(MarkdownExportDocument document, CopyKind kind)
+	{
+		return CreateHtmlCopyContent(document, kind, (MarkdownExportStyle?)null);
+	}
+
+	public static bool TryCreateHtmlCopyContent(
+		MarkdownExportDocument document,
+		string? targetName,
+		out MarkdownHtmlCopyContent content,
+		string? themeName = null,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!MarkdownSocialCopyProfiles.TryResolve(targetName, out var profile))
+		{
+			content = EmptyContent;
+			return false;
+		}
+
+		content = CreateHtmlCopyContent(document, profile, themeName, typographySize, options);
+		return true;
+	}
+
+	public static bool TryCreateHtmlCopyContent(
+		MarkdownExportDocument document,
+		string? targetName,
+		out MarkdownHtmlCopyContent content,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!MarkdownSocialCopyProfiles.TryResolve(targetName, out var profile))
+		{
+			content = EmptyContent;
+			return false;
+		}
+
+		content = CreateHtmlCopyContent(document, profile, theme, options);
+		return true;
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(
+		MarkdownExportDocument document,
+		CopyKind kind,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return CreateHtmlCopyContent(document, kind, MarkdownExportStyle.Resolve(themeName, typographySize), options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(
+		MarkdownExportDocument document,
+		CopyKind kind,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return MarkdownSocialCopyRenderer.Render(document, kind, theme, options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(MarkdownExportDocument document, MarkdownSocialCopyProfile profile)
+	{
+		return CreateHtmlCopyContent(document, profile, (MarkdownExportStyle?)null);
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(
+		MarkdownExportDocument document,
+		MarkdownSocialCopyProfile profile,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return CreateHtmlCopyContent(document, profile, MarkdownExportStyle.Resolve(themeName, typographySize), options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateHtmlCopyContent(
+		MarkdownExportDocument document,
+		MarkdownSocialCopyProfile profile,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return MarkdownSocialCopyRenderer.Render(document, profile, theme, options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateFileHtmlCopyContent(string markdownFilePath, CopyKind kind)
+	{
+		return CreateFileHtmlCopyContent(markdownFilePath, kind, (MarkdownExportStyle?)null);
+	}
+
+	public static bool TryCreateFileHtmlCopyContent(
+		string markdownFilePath,
+		string? targetName,
+		out MarkdownHtmlCopyContent content,
+		string? themeName = null,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!MarkdownSocialCopyProfiles.TryResolve(targetName, out var profile))
+		{
+			content = EmptyContent;
+			return false;
+		}
+
+		content = CreateFileHtmlCopyContent(markdownFilePath, profile, themeName, typographySize, options);
+		return true;
+	}
+
+	public static bool TryCreateFileHtmlCopyContent(
+		string markdownFilePath,
+		string? targetName,
+		out MarkdownHtmlCopyContent content,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		if (!MarkdownSocialCopyProfiles.TryResolve(targetName, out var profile))
+		{
+			content = EmptyContent;
+			return false;
+		}
+
+		content = CreateFileHtmlCopyContent(markdownFilePath, profile, theme, options);
+		return true;
+	}
+
+	public static MarkdownHtmlCopyContent CreateFileHtmlCopyContent(
+		string markdownFilePath,
+		CopyKind kind,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return CreateFileHtmlCopyContent(markdownFilePath, kind, MarkdownExportStyle.Resolve(themeName, typographySize), options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateFileHtmlCopyContent(
+		string markdownFilePath,
+		CopyKind kind,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return MarkdownSocialCopyRenderer.RenderFile(markdownFilePath, kind, theme, options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateFileHtmlCopyContent(string markdownFilePath, MarkdownSocialCopyProfile profile)
+	{
+		return CreateFileHtmlCopyContent(markdownFilePath, profile, (MarkdownExportStyle?)null);
+	}
+
+	public static MarkdownHtmlCopyContent CreateFileHtmlCopyContent(
+		string markdownFilePath,
+		MarkdownSocialCopyProfile profile,
+		string? themeName,
+		string? typographySize = null,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return CreateFileHtmlCopyContent(markdownFilePath, profile, MarkdownExportStyle.Resolve(themeName, typographySize), options);
+	}
+
+	public static MarkdownHtmlCopyContent CreateFileHtmlCopyContent(
+		string markdownFilePath,
+		MarkdownSocialCopyProfile profile,
+		MarkdownExportStyle? theme,
+		MarkdownSocialCopyOptions? options = null)
+	{
+		return MarkdownSocialCopyRenderer.RenderFile(markdownFilePath, profile, theme, options);
+	}
+
 	/// <summary>
 	/// Builds an Avalonia data transfer object containing text/plain, text/html,
 	/// macOS public.html, and Windows CF_HTML formats.
@@ -51,6 +699,13 @@ public static class MarkdownHtmlClipboard
 		var transfer = new DataTransfer();
 		transfer.Add(item);
 		return transfer;
+	}
+
+	public static DataTransfer CreateHtmlDataTransfer(MarkdownHtmlCopyContent content)
+	{
+		ArgumentNullException.ThrowIfNull(content);
+
+		return CreateHtmlDataTransfer(content.Html, content.Text);
 	}
 
 	/// <summary>
@@ -125,6 +780,8 @@ public static class MarkdownHtmlClipboard
 		return startMarkerIndex >= 0 && endMarkerIndex > startMarkerIndex;
 	}
 
+	private static readonly MarkdownHtmlCopyContent EmptyContent = new(string.Empty, string.Empty);
+
 	private static bool TryInsertBodyFragmentMarkers(string html, out string markedHtml)
 	{
 		markedHtml = string.Empty;
@@ -152,5 +809,22 @@ public static class MarkdownHtmlClipboard
 		builder.Append(html, bodyEndIndex, html.Length - bodyEndIndex);
 		markedHtml = builder.ToString();
 		return true;
+	}
+
+	private static IClipboard ResolveClipboard()
+	{
+		var lifetime = Application.Current?.ApplicationLifetime;
+		if (lifetime is IClassicDesktopStyleApplicationLifetime { MainWindow.Clipboard: { } desktopClipboard })
+		{
+			return desktopClipboard;
+		}
+
+		if (lifetime is ISingleViewApplicationLifetime { MainView: { } mainView }
+		    && TopLevel.GetTopLevel(mainView)?.Clipboard is { } singleViewClipboard)
+		{
+			return singleViewClipboard;
+		}
+
+		throw new InvalidOperationException("Could not resolve the current Avalonia clipboard. Pass IClipboard explicitly.");
 	}
 }

@@ -18,7 +18,9 @@
       "ImageFileNotFound": "ファイルが見つかりません：{0}",
       "CopySelectedText": "選択したテキストをコピー",
       "CopyRenderedText": "レンダリング済みテキストをコピー",
-      "Copy": "コピー"
+      "Copy": "コピー",
+      "SocialCopyToolName": "Markdown エディター",
+      "SocialCopySuffixFormat": "{0} で整形"
     }
   }
 }

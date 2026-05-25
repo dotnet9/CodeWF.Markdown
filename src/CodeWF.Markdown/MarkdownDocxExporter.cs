@@ -159,12 +159,12 @@ public static class MarkdownDocxExporter
                     new XElement(W + "pPrDefault",
                         new XElement(W + "pPr", CreateParagraphSpacing(style)))),
                 CreateNormalStyle(style),
-                CreateHeadingStyle("Heading1", "heading 1", style.Heading1FontSize, style.HeadingColor, style),
-                CreateHeadingStyle("Heading2", "heading 2", style.Heading2FontSize, style.HeadingColor, style),
-                CreateHeadingStyle("Heading3", "heading 3", style.Heading3FontSize, style.HeadingColor, style),
-                CreateHeadingStyle("Heading4", "heading 4", style.Heading4FontSize, style.HeadingColor, style),
-                CreateHeadingStyle("Heading5", "heading 5", style.Heading5FontSize, style.HeadingColor, style),
-                CreateHeadingStyle("Heading6", "heading 6", style.Heading6FontSize, style.HeadingColor, style)));
+                CreateHeadingStyle("Heading1", "heading 1", style.Heading1FontSize, style.HeadingColor, style, 1),
+                CreateHeadingStyle("Heading2", "heading 2", style.Heading2FontSize, style.HeadingColor, style, 2),
+                CreateHeadingStyle("Heading3", "heading 3", style.Heading3FontSize, style.BodyColor, style, 3),
+                CreateHeadingStyle("Heading4", "heading 4", style.Heading4FontSize, style.BodyColor, style, 4),
+                CreateHeadingStyle("Heading5", "heading 5", style.Heading5FontSize, style.BodyColor, style, 5),
+                CreateHeadingStyle("Heading6", "heading 6", style.Heading6FontSize, style.BodyColor, style, 6)));
     }
 
     private static XElement CreateNormalStyle(MarkdownExportStyle style)
@@ -184,8 +184,23 @@ public static class MarkdownDocxExporter
         string name,
         double fontSize,
         string color,
-        MarkdownExportStyle style)
+        MarkdownExportStyle style,
+        int level)
     {
+        var paragraphProperties = new XElement(W + "pPr",
+            new XElement(W + "spacing",
+                new XAttribute(W + "before", "360"),
+                new XAttribute(W + "after", "200")));
+        if (level == 2)
+        {
+            paragraphProperties.Add(new XElement(W + "pBdr",
+                new XElement(W + "bottom",
+                    new XAttribute(W + "val", "single"),
+                    new XAttribute(W + "sz", "8"),
+                    new XAttribute(W + "space", "4"),
+                    new XAttribute(W + "color", CssColorToWordColor(style.HeadingColor)))));
+        }
+
         return new XElement(W + "style",
             new XAttribute(W + "type", "paragraph"),
             new XAttribute(W + "styleId", styleId),
@@ -194,10 +209,7 @@ public static class MarkdownDocxExporter
             new XElement(W + "next", new XAttribute(W + "val", "Normal")),
             new XElement(W + "uiPriority", new XAttribute(W + "val", "9")),
             new XElement(W + "qFormat"),
-            new XElement(W + "pPr",
-                new XElement(W + "spacing",
-                    new XAttribute(W + "before", "360"),
-                    new XAttribute(W + "after", "200"))),
+            paragraphProperties,
             CreateStyleRunProperties(style, style.BodyFontFamily, fontSize, color, bold: true));
     }
 
@@ -249,11 +261,7 @@ public static class MarkdownDocxExporter
                 AddList(body, list, style, context, depth);
                 break;
             case QuoteBlock quote:
-                foreach (var child in quote)
-                {
-                    AddBlock(body, child, style, context, depth + 1);
-                }
-
+                AddQuote(body, quote, style, context, depth);
                 break;
             case CodeBlock code:
                 AddCodeBlock(body, code, style);
@@ -323,6 +331,62 @@ public static class MarkdownDocxExporter
         return new XElement(W + "p", CreateTextRun(text));
     }
 
+    private static void AddQuote(
+        XElement body,
+        QuoteBlock quote,
+        MarkdownExportStyle style,
+        DocxExportContext context,
+        int depth)
+    {
+        foreach (var child in quote)
+        {
+            switch (child)
+            {
+                case ParagraphBlock paragraph:
+                    body.Add(CreateQuoteParagraph(paragraph.Inline, style, context, depth));
+                    break;
+                case ContainerBlock container:
+                    foreach (var nested in container)
+                    {
+                        AddBlock(body, nested, style, context, depth + 1);
+                    }
+
+                    break;
+                default:
+                    AddBlock(body, child, style, context, depth + 1);
+                    break;
+            }
+        }
+    }
+
+    private static XElement CreateQuoteParagraph(
+        ContainerInline? inline,
+        MarkdownExportStyle style,
+        DocxExportContext context,
+        int depth)
+    {
+        var paragraph = CreateParagraph(inline, style, context, depth + 1);
+        var paragraphProperties = paragraph.Element(W + "pPr");
+        if (paragraphProperties is null)
+        {
+            paragraphProperties = new XElement(W + "pPr");
+            paragraph.AddFirst(paragraphProperties);
+        }
+
+        paragraphProperties.Add(
+            new XElement(W + "pBdr",
+                new XElement(W + "left",
+                    new XAttribute(W + "val", "single"),
+                    new XAttribute(W + "sz", "16"),
+                    new XAttribute(W + "space", "6"),
+                    new XAttribute(W + "color", CssColorToWordColor(style.QuoteBorderColor)))),
+            new XElement(W + "shd",
+                new XAttribute(W + "val", "clear"),
+                new XAttribute(W + "fill", CssColorToWordColor(style.QuoteBackgroundColor))));
+
+        return paragraph;
+    }
+
     private static void AddList(
         XElement body,
         ListBlock list,
@@ -342,10 +406,15 @@ public static class MarkdownDocxExporter
                 index++;
             }
 
+            var markerRun = CreateTextRun($"{marker} ");
+            AddRunProperty(markerRun,
+                new XElement(W + "b"),
+                new XElement(W + "color", new XAttribute(W + "val", CssColorToWordColor(style.HeadingColor))));
+
             var paragraph = new XElement(W + "p",
                 new XElement(W + "pPr",
                     new XElement(W + "ind", new XAttribute(W + "left", Math.Min(depth + 1, 5) * 360))),
-                CreateTextRun($"{marker} "));
+                markerRun);
             var firstParagraph = item.OfType<ParagraphBlock>().FirstOrDefault();
             if (firstParagraph is not null)
             {
@@ -370,7 +439,7 @@ public static class MarkdownDocxExporter
             return isChecked ? "[x]" : "[ ]";
         }
 
-        return list.IsOrdered ? $"{index}." : "-";
+        return list.IsOrdered ? $"{index}." : "•";
     }
 
     private static bool TryGetTaskListState(ListItemBlock item, out bool isChecked)
@@ -389,21 +458,55 @@ public static class MarkdownDocxExporter
     private static void AddCodeBlock(XElement body, CodeBlock code, MarkdownExportStyle style)
     {
         var lines = code.Lines.ToString().ReplaceLineEndings("\n").Split('\n');
-        foreach (var line in lines)
+        for (var i = 0; i < lines.Length; i++)
         {
-            var paragraph = CreateParagraph(line);
-            foreach (var run in paragraph.Elements(W + "r"))
-            {
-                AddRunProperty(run,
-                    CreateRunFonts(style.MonoFontFamily),
-                    new XElement(W + "color", new XAttribute(W + "val", CssColorToWordColor(style.CodeForegroundColor))),
-                    new XElement(W + "shd",
-                        new XAttribute(W + "val", "clear"),
-                        new XAttribute(W + "fill", CssColorToWordColor(style.CodeBackgroundColor))));
-            }
-
-            body.Add(paragraph);
+            body.Add(CreateCodeParagraph(line: lines[i], style, isFirst: i == 0, isLast: i == lines.Length - 1));
         }
+    }
+
+    private static XElement CreateCodeParagraph(string line, MarkdownExportStyle style, bool isFirst, bool isLast)
+    {
+        var paragraph = CreateParagraph(line);
+        paragraph.AddFirst(CreateCodeParagraphProperties(style, isFirst, isLast));
+        foreach (var run in paragraph.Elements(W + "r"))
+        {
+            AddRunProperty(run,
+                CreateRunFonts(style.MonoFontFamily),
+                new XElement(W + "color", new XAttribute(W + "val", CssColorToWordColor(style.CodeForegroundColor))));
+        }
+
+        return paragraph;
+    }
+
+    private static XElement CreateCodeParagraphProperties(MarkdownExportStyle style, bool isFirst, bool isLast)
+    {
+        var borders = new XElement(W + "pBdr");
+        if (isFirst)
+        {
+            borders.Add(CreateBorder("top", style.BorderColor));
+        }
+
+        borders.Add(CreateBorder("left", style.BorderColor));
+        if (isLast)
+        {
+            borders.Add(CreateBorder("bottom", style.BorderColor));
+        }
+
+        borders.Add(CreateBorder("right", style.BorderColor));
+
+        return new XElement(W + "pPr",
+            new XElement(W + "spacing",
+                new XAttribute(W + "before", isFirst ? "80" : "0"),
+                new XAttribute(W + "after", isLast ? "160" : "0"),
+                new XAttribute(W + "line", ToLineSpacing(style.LineHeightRatio)),
+                new XAttribute(W + "lineRule", "auto")),
+            new XElement(W + "ind",
+                new XAttribute(W + "left", "160"),
+                new XAttribute(W + "right", "160")),
+            borders,
+            new XElement(W + "shd",
+                new XAttribute(W + "val", "clear"),
+                new XAttribute(W + "fill", CssColorToWordColor(style.CodeBackgroundColor))));
     }
 
     private static XElement CreateHorizontalRule(MarkdownExportStyle style)

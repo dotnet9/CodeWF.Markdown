@@ -18,7 +18,9 @@
       "ImageFileNotFound": "檔案不存在：{0}",
       "CopySelectedText": "複製選取文字",
       "CopyRenderedText": "複製渲染文字",
-      "Copy": "複製"
+      "Copy": "複製",
+      "SocialCopyToolName": "Markdown 編輯器",
+      "SocialCopySuffixFormat": "本文使用 {0} 排版"
     }
   }
 }

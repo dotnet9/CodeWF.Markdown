@@ -178,16 +178,23 @@ public class MarkdownThemes : Styles
         string? typographySize,
         ThemeVariant? themeVariant = null)
     {
-        return MarkdownExportStyle.FromResources(
-            CreateTypographyResources(typographyTheme, typographySize),
-            themeVariant);
+        var exportResources = CreateExportResources();
+        ApplyTypographyResources(exportResources.Resources, typographyTheme, typographySize);
+        return MarkdownExportStyle.FromResources(exportResources, themeVariant);
     }
 
     public static MarkdownExportStyle CreateExportStyle(
         ResourceDictionary typographyResources,
         ThemeVariant? themeVariant = null)
     {
-        return MarkdownExportStyle.FromResources(typographyResources, themeVariant);
+        var exportResources = CreateExportResources();
+        ApplyTypographyResources(exportResources.Resources, typographyResources);
+        return MarkdownExportStyle.FromResources(exportResources, themeVariant);
+    }
+
+    private static MarkdownThemes CreateExportResources()
+    {
+        return new MarkdownThemes();
     }
 
     private static ResourceDictionary LoadTypographyResources(string? typographyTheme)

@@ -18,7 +18,9 @@
       "ImageFileNotFound": "File not found: {0}",
       "CopySelectedText": "Copy selected text",
       "CopyRenderedText": "Copy rendered text",
-      "Copy": "Copy"
+      "Copy": "Copy",
+      "SocialCopyToolName": "Markdown editor",
+      "SocialCopySuffixFormat": "Formatted with {0}"
     }
   }
 }

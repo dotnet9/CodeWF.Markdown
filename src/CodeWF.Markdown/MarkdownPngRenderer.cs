@@ -123,7 +123,7 @@ public sealed class MarkdownPngRenderer
         }
     }
 
-    private static TextBlock CreateHeading(HeadingBlock heading, MarkdownExportStyle style)
+    private static Control CreateHeading(HeadingBlock heading, MarkdownExportStyle style)
     {
         var fontSize = heading.Level switch
         {
@@ -135,8 +135,23 @@ public sealed class MarkdownPngRenderer
             _ => style.Heading6FontSize
         };
 
-        var textBlock = CreateTextBlock(fontSize, Brush(style.HeadingColor), FontWeight.SemiBold, new Thickness(0, heading.Level == 1 ? 0 : 18, 0, 10), style);
+        var textColor = heading.Level <= 2 ? style.HeadingColor : style.BodyColor;
+        var textBlock = CreateTextBlock(fontSize, Brush(textColor), FontWeight.Bold, new Thickness(), style);
         AppendInlines(textBlock.Inlines!, heading.Inline, style);
+        var margin = new Thickness(0, heading.Level == 1 ? 0 : 18, 0, 10);
+        if (heading.Level == 2)
+        {
+            return new Border
+            {
+                BorderBrush = Brush(style.HeadingColor),
+                BorderThickness = new Thickness(0, 0, 0, 2),
+                Padding = new Thickness(0, 0, 0, 6),
+                Margin = margin,
+                Child = textBlock
+            };
+        }
+
+        textBlock.Margin = margin;
         return textBlock;
     }
 
@@ -160,9 +175,11 @@ public sealed class MarkdownPngRenderer
         return new Border
         {
             Background = Brush(style.CodeBackgroundColor),
+            BorderBrush = Brush(style.BorderColor),
+            BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(16),
-            Margin = new Thickness(0, 4, 0, 18),
+            Padding = new Thickness(12),
+            Margin = new Thickness(0, 8, 0, 12),
             Child = new TextBlock
             {
                 Text = codeBlock.Lines.ToString(),
@@ -189,10 +206,11 @@ public sealed class MarkdownPngRenderer
 
         return new Border
         {
+            Background = Brush(style.QuoteBackgroundColor),
             BorderBrush = Brush(style.QuoteBorderColor),
             BorderThickness = new Thickness(4, 0, 0, 0),
-            Padding = new Thickness(14, 0, 0, 0),
-            Margin = new Thickness(0, 4, 0, 18),
+            Padding = new Thickness(12, 8),
+            Margin = new Thickness(0, 6, 0, 12),
             Child = stack
         };
     }
@@ -227,7 +245,7 @@ public sealed class MarkdownPngRenderer
             return isChecked ? "[x]" : "[ ]";
         }
 
-        return list.IsOrdered ? $"{index}." : "-";
+        return list.IsOrdered ? $"{index}." : "•";
     }
 
     private static bool TryGetTaskListState(ListItemBlock item, out bool isChecked)
@@ -254,7 +272,7 @@ public sealed class MarkdownPngRenderer
             }
         };
 
-        var markerBlock = CreateTextBlock(style.BodyFontSize, Brush(style.MutedColor), FontWeight.Normal, new Thickness(0, 0, 10, 0), style);
+        var markerBlock = CreateTextBlock(style.BodyFontSize, Brush(style.HeadingColor), FontWeight.Bold, new Thickness(0, 0, 10, 0), style);
         markerBlock.Text = marker;
         Grid.SetColumn(markerBlock, 0);
         grid.Children.Add(markerBlock);

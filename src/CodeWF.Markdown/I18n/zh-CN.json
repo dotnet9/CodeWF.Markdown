@@ -18,7 +18,9 @@
       "ImageFileNotFound": "文件不存在：{0}",
       "CopySelectedText": "复制选中文本",
       "CopyRenderedText": "复制渲染文本",
-      "Copy": "复制"
+      "Copy": "复制",
+      "SocialCopyToolName": "Markdown 编辑器",
+      "SocialCopySuffixFormat": "本文使用 {0} 排版"
     }
   }
 }
