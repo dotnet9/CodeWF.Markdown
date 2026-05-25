@@ -20,6 +20,19 @@
 
 `CodeWF.Markdown` 也提供可复用的 Markdown 图片工具，方便宿主应用把 Markdown 导出为可离线分发的文件。`MarkdownImageSourceLoader` 支持加载 `data:image`、本地路径、`file://` 和 HTTP(S) 图片，相对路径会按当前 Markdown 文档路径解析，并尝试 URL 解码后的文件名。`MarkdownImageRasterizer` 可把已加载的 SVG、GIF 首帧和其他位图格式转换为静态 PNG 字节，PDF、PNG、Word 或其他导出链路可以直接嵌入图片，不必重复实现预览控件里的图片加载逻辑。
 
+`MarkdownDocumentExporter` 为宿主应用提供一行调用的 PNG/PDF/Word 导出能力：
+
+```csharp
+var document = new MarkdownExportDocument(markdown, filePath, fileName);
+var style = MarkdownExportStyle.Resolve("Simple", "Normal");
+
+MarkdownDocumentExporter.ExportPng(document, "article.png", style);
+MarkdownDocumentExporter.ExportPdf(document, "article.pdf", style);
+MarkdownDocumentExporter.ExportWord(document, "article.docx", style);
+```
+
+内置 PNG/PDF/Word 导出器会复用公共图片加载与栅格化能力。Word 输出会把图片写入 `word/media`，图像型 PDF 会先用已解析图片渲染文档，再写入 PDF 页面。
+
 ## 富 HTML 剪贴板辅助能力
 
 `MarkdownHtmlClipboard` 为宿主应用提供可复用的富 HTML 剪贴板载荷，适合把 Markdown 渲染后的 HTML 复制到微信公众号、知乎、稀土掘金等网页编辑器。它会同时写入 `text/html`、macOS `public.html` 和 Windows `HTML Format`；Windows 载荷使用带正确片段偏移的 UTF-8 CF_HTML 字节，避免 Chromium 系编辑器把带样式 HTML 当作普通文本显示。

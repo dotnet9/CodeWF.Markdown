@@ -1,5 +1,11 @@
 # 更新日志
 
+## 12.0.3.10 - 2026-05-25
+
+- 😄[新增]-新增 `MarkdownDocumentExporter`、`MarkdownExportDocument` 和 `MarkdownExportStyle`，为宿主应用提供可复用的 PNG、图像型 PDF、Word `.docx` 一站式导出 API。
+- 🔨[优化]-将图像型 PDF/PNG 与 Word 导出实现下沉到 `CodeWF.Markdown`；Word 导出会把图片嵌入 `word/media`，并改用 SkiaSharp 读取图片尺寸，不再要求 Avalonia UI 平台初始化。
+- 🧪[测试]-补充 Word 导出测试，验证 Markdown 中的 `data:image` 图片会嵌入生成的 `.docx` 包。
+
 ## 12.0.3.9 - 2026-05-25
 
 - 😄[新增]-新增 `MarkdownHtmlClipboard` 富 HTML 剪贴板公共能力，统一生成 CF_HTML 字节偏移和 Windows 原生 `HTML Format` 字节数据，便于微信公众号、知乎、稀土掘金等编辑器按富文本粘贴。

@@ -1,5 +1,11 @@
 # Changelog
 
+## 12.0.3.10 - 2026-05-25
+
+- Added `MarkdownDocumentExporter`, `MarkdownExportDocument`, and `MarkdownExportStyle` as reusable PNG, image-based PDF, and Word `.docx` export APIs for host applications.
+- Moved the image-based PDF/PNG and Word export implementation into `CodeWF.Markdown`; Word export embeds images in `word/media` and uses SkiaSharp for image sizing without requiring Avalonia UI platform initialization.
+- Added a Word export test that verifies `data:image` Markdown images are embedded into the generated `.docx` package.
+
 ## 12.0.3.9 - 2026-05-25
 
 - Added `MarkdownHtmlClipboard` for reusable rich HTML clipboard payloads, including CF_HTML byte offsets and native Windows `HTML Format` bytes for WeChat Official Account, Zhihu, Juejin, and similar social editor paste targets.
