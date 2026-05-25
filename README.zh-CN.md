@@ -16,6 +16,10 @@
 - `CodeWF.Markdown`：完整 MarkdownViewer，支持常见 Markdown 元素、代码高亮、图片预览、SVG/图片、数学渲染扩展、多语言资源和增量渲染。
 - `CodeWF.Markdown.Themes`：`CodeWF.Markdown` 的默认控件模板和多套排版主题。
 
+## 图片加载与导出辅助能力
+
+`CodeWF.Markdown` 也提供可复用的 Markdown 图片工具，方便宿主应用把 Markdown 导出为可离线分发的文件。`MarkdownImageSourceLoader` 支持加载 `data:image`、本地路径、`file://` 和 HTTP(S) 图片，相对路径会按当前 Markdown 文档路径解析，并尝试 URL 解码后的文件名。`MarkdownImageRasterizer` 可把已加载的 SVG、GIF 首帧和其他位图格式转换为静态 PNG 字节，PDF、PNG、Word 或其他导出链路可以直接嵌入图片，不必重复实现预览控件里的图片加载逻辑。
+
 ## 安装
 
 ```powershell

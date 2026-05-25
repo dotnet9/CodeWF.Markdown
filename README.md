@@ -16,6 +16,10 @@ Changelog: [English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
 - `CodeWF.Markdown`: full Markdown viewer with common Markdown elements, code highlighting, image preview, SVG/image support, math rendering hooks, localization, and incremental rendering.
 - `CodeWF.Markdown.Themes`: default templates and typography themes for `CodeWF.Markdown`.
 
+## Image Loading And Export Helpers
+
+`CodeWF.Markdown` also exposes shared Markdown image utilities for host applications that export Markdown to offline files. `MarkdownImageSourceLoader` loads `data:image` URIs, local paths, `file://` URIs, and HTTP(S) images, resolving relative paths against the current Markdown document path and trying URL-decoded filenames. `MarkdownImageRasterizer` converts loaded SVG, GIF first frames, and other bitmap formats to static PNG bytes so PDF, PNG, Word, or other export pipelines can embed images without reimplementing viewer-specific loading logic.
+
 ## Installation
 
 ```powershell
