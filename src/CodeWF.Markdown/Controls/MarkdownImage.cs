@@ -1,8 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Net.Http;
-using System.Text;
 using System.Threading;
-using System.Xml.Linq;
 
 using AnimatedImage.Avalonia;
 using Avalonia;
@@ -17,8 +13,6 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Lang.Avalonia;
-using SkiaSharp;
-using Svg.Skia;
 
 namespace CodeWF.Markdown.Controls;
 
@@ -28,11 +22,9 @@ public class MarkdownImage : TemplatedControl
     private const string ContentHostPartName = "PART_ContentHost";
     private const double DefaultMaxImageWidth = 900;
     private const double DefaultMaxImageHeight = 520;
-    private const int MaxSvgRasterDimension = 4096;
     private const int MaxImageByteCacheSize = 64;
 
-    private static readonly HttpClient HttpClient = new();
-    private static readonly Dictionary<string, ImageLoadResult> ImageByteCache = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, MarkdownImageSource> ImageByteCache = new(StringComparer.Ordinal);
     private static readonly Queue<string> ImageByteCacheOrder = new();
     private static readonly object ImageByteCacheGate = new();
 
@@ -148,8 +140,8 @@ public class MarkdownImage : TemplatedControl
             token.ThrowIfCancellationRequested();
             var loadResult = await LoadBytesAsync(source, token);
             token.ThrowIfCancellationRequested();
-            var previewBytes = loadResult.IsSvg
-                ? RenderSvgToPngBytes(loadResult.Bytes)
+            var previewBytes = loadResult.IsSvg || loadResult.IsGif
+                ? MarkdownImageRasterizer.RenderToPngBytes(loadResult)
                 : loadResult.Bytes;
             token.ThrowIfCancellationRequested();
             using var stream = new MemoryStream(previewBytes);
@@ -212,58 +204,20 @@ public class MarkdownImage : TemplatedControl
         }
     }
 
-    private async Task<ImageLoadResult> LoadBytesAsync(string source, CancellationToken token)
+    private async Task<MarkdownImageSource> LoadBytesAsync(string source, CancellationToken token)
     {
-        var cacheKey = GetImageCacheKey(source);
+        var cacheKey = MarkdownImageSourceLoader.CreateCacheKey(source, ImageBasePath);
         if (TryGetCachedImageBytes(cacheKey, out var cached))
         {
             return cached;
         }
 
-        ImageLoadResult result;
-        if (TryReadDataUri(source, out var dataUriBytes, out var dataUriIsSvg, out var dataUriIsGif))
-        {
-            result = new ImageLoadResult(
-                dataUriBytes,
-                ResolveFileName(source),
-                dataUriIsSvg || IsSvgBytes(dataUriBytes),
-                dataUriIsGif || IsGifBytes(dataUriBytes));
-            AddImageBytesToCache(cacheKey, result);
-            return result;
-        }
-
-        if (Uri.TryCreate(source, UriKind.Absolute, out var uri))
-        {
-            if (uri.Scheme is "http" or "https")
-            {
-                using var response = await HttpClient.GetAsync(uri, token);
-                response.EnsureSuccessStatusCode();
-                token.ThrowIfCancellationRequested();
-                var bytes = await response.Content.ReadAsByteArrayAsync(token);
-                var mediaType = response.Content.Headers.ContentType?.MediaType;
-                result = new ImageLoadResult(
-                    bytes,
-                    ResolveFileName(source),
-                    IsSvgMediaType(mediaType) || IsSvgPath(uri.LocalPath) || IsSvgBytes(bytes),
-                    IsGifMediaType(mediaType) || IsGifPath(uri.LocalPath) || IsGifBytes(bytes));
-                AddImageBytesToCache(cacheKey, result);
-                return result;
-            }
-
-            if (uri.IsFile)
-            {
-                result = await LoadLocalBytesAsync(new LocalImagePath(uri.LocalPath, uri.LocalPath));
-                AddImageBytesToCache(cacheKey, result);
-                return result;
-            }
-        }
-
-        result = await LoadLocalBytesAsync(ResolveLocalPath(source));
+        var result = await MarkdownImageSourceLoader.LoadAsync(source, ImageBasePath, token);
         AddImageBytesToCache(cacheKey, result);
         return result;
     }
 
-    private static bool TryGetCachedImageBytes(string source, out ImageLoadResult result)
+    private static bool TryGetCachedImageBytes(string source, out MarkdownImageSource result)
     {
         lock (ImageByteCacheGate)
         {
@@ -271,7 +225,7 @@ public class MarkdownImage : TemplatedControl
         }
     }
 
-    private static void AddImageBytesToCache(string source, ImageLoadResult result)
+    private static void AddImageBytesToCache(string source, MarkdownImageSource result)
     {
         lock (ImageByteCacheGate)
         {
@@ -289,216 +243,6 @@ public class MarkdownImage : TemplatedControl
 
             ImageByteCache[source] = result;
             ImageByteCacheOrder.Enqueue(source);
-        }
-    }
-
-    private static async Task<ImageLoadResult> LoadLocalBytesAsync(LocalImagePath localPath)
-    {
-        if (!File.Exists(localPath.Path))
-        {
-            throw new FileNotFoundException("Markdown image file was not found.", localPath.DisplayPath);
-        }
-
-        var bytes = await File.ReadAllBytesAsync(localPath.Path);
-        return new ImageLoadResult(
-            bytes,
-            ResolveFileName(localPath.Path),
-            IsSvgPath(localPath.Path) || IsSvgBytes(bytes),
-            IsGifPath(localPath.Path) || IsGifBytes(bytes));
-    }
-
-    private LocalImagePath ResolveLocalPath(string source)
-    {
-        if (Path.IsPathRooted(source))
-        {
-            return new LocalImagePath(Path.GetFullPath(source), source);
-        }
-
-        var baseDirectory = ResolveImageBaseDirectory() ?? AppContext.BaseDirectory;
-        var path = Path.GetFullPath(Path.Combine(baseDirectory, source.Replace('/', Path.DirectorySeparatorChar)));
-        return new LocalImagePath(path, path);
-    }
-
-    private string GetImageCacheKey(string source)
-    {
-        if (IsDataUri(source) || Uri.TryCreate(source, UriKind.Absolute, out _) || Path.IsPathRooted(source))
-        {
-            return source;
-        }
-
-        return $"{ResolveImageBaseDirectory() ?? AppContext.BaseDirectory}|{source}";
-    }
-
-    private string? ResolveImageBaseDirectory()
-    {
-        var basePath = ImageBasePath?.Trim();
-        if (string.IsNullOrWhiteSpace(basePath))
-        {
-            return null;
-        }
-
-        try
-        {
-            if (Uri.TryCreate(basePath, UriKind.Absolute, out var uri) && uri.IsFile)
-            {
-                return ResolveExistingDirectory(uri.LocalPath);
-            }
-
-            return ResolveExistingDirectory(basePath);
-        }
-        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
-        {
-            return null;
-        }
-    }
-
-    private static string? ResolveExistingDirectory(string path)
-    {
-        var fullPath = Path.GetFullPath(path);
-        if (Directory.Exists(fullPath))
-        {
-            return fullPath;
-        }
-
-        var directory = Path.GetDirectoryName(fullPath);
-        return string.IsNullOrWhiteSpace(directory) ? null : directory;
-    }
-
-    private static bool TryReadDataUri(string source, out byte[] bytes, out bool isSvg, out bool isGif)
-    {
-        bytes = [];
-        isSvg = false;
-        isGif = false;
-
-        if (!source.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        var commaIndex = source.IndexOf(',');
-        if (commaIndex < 0)
-        {
-            return false;
-        }
-
-        var metadata = source[..commaIndex];
-        var payload = source[(commaIndex + 1)..];
-        isSvg = IsSvgMediaType(metadata);
-        isGif = IsGifMediaType(metadata);
-        bytes = metadata.Contains(";base64", StringComparison.OrdinalIgnoreCase)
-            ? Convert.FromBase64String(payload)
-            : Encoding.UTF8.GetBytes(Uri.UnescapeDataString(payload));
-        return true;
-    }
-
-    private static bool IsDataUri(string source)
-    {
-        return source.StartsWith("data:image", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsSvgMediaType(string? mediaType)
-    {
-        return mediaType?.Contains("image/svg+xml", StringComparison.OrdinalIgnoreCase) == true;
-    }
-
-    private static bool IsSvgPath(string path)
-    {
-        return string.Equals(Path.GetExtension(path), ".svg", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsGifMediaType(string? mediaType)
-    {
-        return mediaType?.Contains("image/gif", StringComparison.OrdinalIgnoreCase) == true;
-    }
-
-    private static bool IsGifPath(string path)
-    {
-        return string.Equals(Path.GetExtension(path), ".gif", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsSvgBytes(byte[] bytes)
-    {
-        var length = Math.Min(bytes.Length, 512);
-        var prefix = Encoding.UTF8.GetString(bytes, 0, length).TrimStart('\uFEFF', ' ', '\t', '\r', '\n');
-        return prefix.StartsWith("<svg", StringComparison.OrdinalIgnoreCase)
-               || prefix.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase)
-               && prefix.Contains("<svg", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsGifBytes(byte[] bytes)
-    {
-        return bytes.Length >= 6
-               && bytes[0] == 'G'
-               && bytes[1] == 'I'
-               && bytes[2] == 'F'
-               && bytes[3] == '8'
-               && (bytes[4] == '7' || bytes[4] == '9')
-               && bytes[5] == 'a';
-    }
-
-    [UnconditionalSuppressMessage(
-        "Trimming",
-        "IL2026",
-        Justification = "Markdown image sources are runtime content, so build-time SVG generation is not applicable here.")]
-    private static byte[] RenderSvgToPngBytes(byte[] svgBytes)
-    {
-        using var svg = new SKSvg();
-        using var svgStream = new MemoryStream(PrepareSvgForSkia(svgBytes));
-        var picture = svg.Load(svgStream) ?? svg.Picture;
-        if (picture is null)
-        {
-            throw new InvalidDataException("SVG picture could not be loaded.");
-        }
-
-        var bounds = picture.CullRect;
-        var width = Math.Max(1, (int)Math.Ceiling(bounds.Width));
-        var height = Math.Max(1, (int)Math.Ceiling(bounds.Height));
-        var scale = Math.Min(1d, MaxSvgRasterDimension / (double)Math.Max(width, height));
-        var scaledWidth = Math.Max(1, (int)Math.Ceiling(width * scale));
-        var scaledHeight = Math.Max(1, (int)Math.Ceiling(height * scale));
-
-        using var surface = SKSurface.Create(new SKImageInfo(scaledWidth, scaledHeight, SKColorType.Rgba8888, SKAlphaType.Premul));
-        if (surface is null)
-        {
-            throw new InvalidDataException("SVG rendering surface could not be created.");
-        }
-
-        var canvas = surface.Canvas;
-        canvas.Clear(SKColors.Transparent);
-        canvas.Scale((float)scale);
-        canvas.Translate(-bounds.Left, -bounds.Top);
-        canvas.DrawPicture(picture);
-        canvas.Flush();
-
-        using var image = surface.Snapshot();
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        return data?.ToArray() ?? throw new InvalidDataException("SVG picture could not be encoded.");
-    }
-
-    private static byte[] PrepareSvgForSkia(byte[] svgBytes)
-    {
-        try
-        {
-            var svgText = Encoding.UTF8.GetString(svgBytes);
-            var document = XDocument.Parse(svgText, LoadOptions.PreserveWhitespace);
-            var changed = false;
-
-            foreach (var attribute in document.Descendants()
-                         .SelectMany(element => element.Attributes())
-                         .Where(attribute => string.Equals(attribute.Name.LocalName, "filter", StringComparison.OrdinalIgnoreCase))
-                         .ToArray())
-            {
-                attribute.Remove();
-                changed = true;
-            }
-
-            return changed
-                ? Encoding.UTF8.GetBytes(document.ToString(SaveOptions.DisableFormatting))
-                : svgBytes;
-        }
-        catch
-        {
-            return svgBytes;
         }
     }
 
@@ -550,8 +294,13 @@ public class MarkdownImage : TemplatedControl
         Bitmap previewBitmap;
         try
         {
-            var previewBytes = _isSvg
-                ? RenderSvgToPngBytes(_imageBytes)
+            var previewBytes = _isSvg || _isGif
+                ? MarkdownImageRasterizer.RenderToPngBytes(new MarkdownImageSource(
+                    _imageBytes,
+                    _fileName ?? "markdown-image.png",
+                    _isSvg,
+                    _isGif,
+                    null))
                 : _imageBytes;
             using var previewStream = new MemoryStream(previewBytes);
             previewBitmap = new Bitmap(previewStream);
@@ -577,39 +326,6 @@ public class MarkdownImage : TemplatedControl
         {
             window.Show();
         }
-    }
-
-    private static string ResolveFileName(string source)
-    {
-        var fileName = "markdown-image";
-        if (IsDataUri(source))
-        {
-            fileName += ResolveDataUriExtension(source);
-        }
-        else if (Uri.TryCreate(source, UriKind.Absolute, out var uri))
-        {
-            fileName = Path.GetFileName(uri.IsFile ? uri.LocalPath : uri.LocalPath);
-        }
-        else
-        {
-            fileName = Path.GetFileName(source);
-        }
-
-        if (string.IsNullOrWhiteSpace(fileName))
-        {
-            fileName = "markdown-image.png";
-        }
-        else if (string.IsNullOrWhiteSpace(Path.GetExtension(fileName)))
-        {
-            fileName += ".png";
-        }
-
-        foreach (var invalidChar in Path.GetInvalidFileNameChars())
-        {
-            fileName = fileName.Replace(invalidChar, '_');
-        }
-
-        return fileName;
     }
 
     private Control CreateBitmapContent(Bitmap bitmap)
@@ -708,26 +424,6 @@ public class MarkdownImage : TemplatedControl
             RoutingStrategies.Bubble);
     }
 
-    private static string ResolveDataUriExtension(string source)
-    {
-        var separatorIndex = source.IndexOf(';');
-        if (separatorIndex <= "data:image/".Length)
-        {
-            return ".png";
-        }
-
-        return source["data:image/".Length..separatorIndex].ToLowerInvariant() switch
-        {
-            "svg+xml" => ".svg",
-            "jpeg" => ".jpg",
-            "jpg" => ".jpg",
-            "webp" => ".webp",
-            "bmp" => ".bmp",
-            "gif" => ".gif",
-            _ => ".png"
-        };
-    }
-
     private async Task ShowFallbackAsync(long version, string text)
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -765,10 +461,6 @@ public class MarkdownImage : TemplatedControl
             oldAnimatedStream?.Dispose();
         });
     }
-
-    private sealed record ImageLoadResult(byte[] Bytes, string FileName, bool IsSvg, bool IsGif);
-
-    private sealed record LocalImagePath(string Path, string DisplayPath);
 
     private void SetContent(Control? content)
     {
