@@ -23,12 +23,20 @@ Changelog: [English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
 `MarkdownDocumentExporter` provides one-call export helpers for host applications:
 
 ```csharp
-var document = new MarkdownExportDocument(markdown, filePath, fileName);
-var style = MarkdownExportStyle.Resolve("Simple", "Normal");
+MarkdownDocumentExporter.ExportMarkdown(
+    markdown,
+    ExportKind.Pdf,
+    "Simple",
+    "article.pdf");
 
-MarkdownDocumentExporter.ExportPng(document, "article.png", style);
-MarkdownDocumentExporter.ExportPdf(document, "article.pdf", style);
-MarkdownDocumentExporter.ExportWord(document, "article.docx", style);
+MarkdownDocumentExporter.ExportFile(
+    @"C:\docs\article.md",
+    ExportKind.Word,
+    MarkdownThemes.CreateExportStyle("Simple", "Normal"),
+    "article.docx");
+
+var document = new MarkdownExportDocument(markdown, filePath, fileName);
+MarkdownDocumentExporter.Export(document, ExportKind.Png, "article.png");
 ```
 
 The built-in PNG/PDF/Word exporters reuse the shared image loader and rasterizer. Word output embeds image parts under `word/media`, while image-based PDF output renders the document with resolved images before writing PDF pages.
@@ -77,6 +85,36 @@ Set `TypographyTheme` and `TypographySize` on `MarkdownThemes` for app defaults,
 ```
 
 The sample app shows live editing, file loading, theme switching, and incremental rendering stress scenarios.
+
+## Custom Typography Themes
+
+Built-in theme names stay as string constants such as `MarkdownTypographyThemes.Simple` instead of an enum because host applications can register their own theme keys. A custom theme can reuse the same resource keys used by the built-in themes:
+
+```csharp
+MarkdownTypographyThemeRegistry.Register(
+    "MyCompanyBlue",
+    () => new ResourceDictionary
+    {
+        [MarkdownStyleKeys.TextBrushResource] = new SolidColorBrush(Color.Parse("#1F2937")),
+        [MarkdownStyleKeys.MutedTextBrushResource] = new SolidColorBrush(Color.Parse("#64748B")),
+        [MarkdownStyleKeys.AccentBrushResource] = new SolidColorBrush(Color.Parse("#0E88EB")),
+        [MarkdownStyleKeys.BorderBrushResource] = new SolidColorBrush(Color.Parse("#BFDBFE")),
+        [MarkdownStyleKeys.ParagraphFontSizeResource] = 16d,
+        [MarkdownStyleKeys.ParagraphLineHeightResource] = 28d,
+        [MarkdownStyleKeys.Heading1FontSizeResource] = 32d,
+        [MarkdownStyleKeys.CodeBlockFontSizeResource] = 13d
+    });
+
+MarkdownThemes.OverrideTypographyResources(
+    Application.Current!,
+    "MyCompanyBlue",
+    MarkdownTypographySizes.Normal);
+
+var exportStyle = MarkdownThemes.CreateExportStyle("MyCompanyBlue");
+MarkdownDocumentExporter.ExportMarkdown(markdown, ExportKind.Pdf, exportStyle, "article.pdf");
+```
+
+Applications that need complete control can still build and pass a `MarkdownExportStyle` directly. Applications that keep custom XAML resource dictionaries can register `() => new MyCompanyMarkdownResources()` so preview, PNG/PDF/Word export, and social-copy HTML styling resolve from the same typography resources.
 
 ## Repository Layout
 

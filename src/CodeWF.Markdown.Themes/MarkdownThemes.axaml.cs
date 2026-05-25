@@ -19,35 +19,18 @@ namespace CodeWF.Markdown.Themes;
 /// </summary>
 public class MarkdownThemes : Styles
 {
-    private static readonly IReadOnlyDictionary<string, Func<ResourceDictionary>> ThemeResourceFactories =
-        new Dictionary<string, Func<ResourceDictionary>>(StringComparer.OrdinalIgnoreCase)
-    {
-        [MarkdownTypographyThemes.Basic] = static () => new BasicTypographyResources(),
-        [MarkdownTypographyThemes.OrangeHeart] = static () => new OrangeHeartTypographyResources(),
-        [MarkdownTypographyThemes.InkBlack] = static () => new InkBlackTypographyResources(),
-        [MarkdownTypographyThemes.ColorfulPurple] = static () => new ColorfulPurpleTypographyResources(),
-        [MarkdownTypographyThemes.TenderGreen] = static () => new TenderGreenTypographyResources(),
-        [MarkdownTypographyThemes.Verdant] = static () => new VerdantTypographyResources(),
-        [MarkdownTypographyThemes.RedScarlet] = static () => new RedScarletTypographyResources(),
-        [MarkdownTypographyThemes.BlueGlow] = static () => new BlueGlowTypographyResources(),
-        [MarkdownTypographyThemes.TechnologyBlue] = static () => new TechnologyBlueTypographyResources(),
-        [MarkdownTypographyThemes.LanQing] = static () => new LanQingTypographyResources(),
-        [MarkdownTypographyThemes.Yamabuki] = static () => new YamabukiTypographyResources(),
-        [MarkdownTypographyThemes.FrontendPeak] = static () => new FrontendPeakTypographyResources(),
-        [MarkdownTypographyThemes.GeekBlack] = static () => new GeekBlackTypographyResources(),
-        [MarkdownTypographyThemes.Simple] = static () => new SimpleTypographyResources(),
-        [MarkdownTypographyThemes.RosePurple] = static () => new RosePurpleTypographyResources(),
-        [MarkdownTypographyThemes.CuteGreen] = static () => new CuteGreenTypographyResources(),
-        [MarkdownTypographyThemes.FullStackBlue] = static () => new FullStackBlueTypographyResources(),
-    };
-
     private static readonly string[] TypographyResourceKeys =
     [
+        MarkdownStyleKeys.TextBrushResource,
+        MarkdownStyleKeys.MutedTextBrushResource,
+        MarkdownStyleKeys.BorderBrushResource,
         MarkdownStyleKeys.AccentBrushResource,
+        MarkdownStyleKeys.AccentForegroundBrushResource,
         MarkdownStyleKeys.QuoteBackgroundBrushResource,
         MarkdownStyleKeys.InlineCodeBackgroundBrushResource,
         MarkdownStyleKeys.TableHeaderBackgroundBrushResource,
         MarkdownStyleKeys.CodeBackgroundBrushResource,
+        MarkdownStyleKeys.CodeBlockFontSizeResource,
         MarkdownStyleKeys.ParagraphFontSizeResource,
         MarkdownStyleKeys.ParagraphLineHeightResource,
         MarkdownStyleKeys.Heading1FontSizeResource,
@@ -185,12 +168,31 @@ public class MarkdownThemes : Styles
         return CreateSizedTypographyResources(resources, typographySize, normalizedTheme);
     }
 
+    public static MarkdownExportStyle CreateExportStyle(string? typographyTheme)
+    {
+        return CreateExportStyle(typographyTheme, MarkdownTypographySizes.Normal);
+    }
+
+    public static MarkdownExportStyle CreateExportStyle(
+        string? typographyTheme,
+        string? typographySize,
+        ThemeVariant? themeVariant = null)
+    {
+        return MarkdownExportStyle.FromResources(
+            CreateTypographyResources(typographyTheme, typographySize),
+            themeVariant);
+    }
+
+    public static MarkdownExportStyle CreateExportStyle(
+        ResourceDictionary typographyResources,
+        ThemeVariant? themeVariant = null)
+    {
+        return MarkdownExportStyle.FromResources(typographyResources, themeVariant);
+    }
+
     private static ResourceDictionary LoadTypographyResources(string? typographyTheme)
     {
-        return !string.IsNullOrWhiteSpace(typographyTheme)
-               && ThemeResourceFactories.TryGetValue(typographyTheme.Trim(), out var factory)
-            ? factory()
-            : ThemeResourceFactories[MarkdownTypographyThemes.Basic]();
+        return MarkdownTypographyThemeRegistry.Create(typographyTheme);
     }
 
     private static void ApplyViewerTypographyResources(MarkdownViewer viewer)
@@ -302,10 +304,7 @@ public class MarkdownThemes : Styles
 
     private static string NormalizeTypographyTheme(string? typographyTheme)
     {
-        return !string.IsNullOrWhiteSpace(typographyTheme)
-            && ThemeResourceFactories.ContainsKey(typographyTheme.Trim())
-            ? typographyTheme.Trim()
-            : MarkdownTypographyThemes.Basic;
+        return MarkdownTypographyThemeRegistry.Normalize(typographyTheme);
     }
 
     private static string NormalizeTypographySize(string? typographySize)

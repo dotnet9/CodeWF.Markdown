@@ -23,12 +23,20 @@
 `MarkdownDocumentExporter` 为宿主应用提供一行调用的 PNG/PDF/Word 导出能力：
 
 ```csharp
-var document = new MarkdownExportDocument(markdown, filePath, fileName);
-var style = MarkdownExportStyle.Resolve("Simple", "Normal");
+MarkdownDocumentExporter.ExportMarkdown(
+    markdown,
+    ExportKind.Pdf,
+    "Simple",
+    "article.pdf");
 
-MarkdownDocumentExporter.ExportPng(document, "article.png", style);
-MarkdownDocumentExporter.ExportPdf(document, "article.pdf", style);
-MarkdownDocumentExporter.ExportWord(document, "article.docx", style);
+MarkdownDocumentExporter.ExportFile(
+    @"C:\docs\article.md",
+    ExportKind.Word,
+    MarkdownThemes.CreateExportStyle("Simple", "Normal"),
+    "article.docx");
+
+var document = new MarkdownExportDocument(markdown, filePath, fileName);
+MarkdownDocumentExporter.Export(document, ExportKind.Png, "article.png");
 ```
 
 内置 PNG/PDF/Word 导出器会复用公共图片加载与栅格化能力。Word 输出会把图片写入 `word/media`，图像型 PDF 会先用已解析图片渲染文档，再写入 PDF 页面。
@@ -77,6 +85,36 @@ Install-Package CodeWF.Markdown.Themes
 ```
 
 示例工程包含实时编辑、样例文档加载、排版主题切换和增量渲染压力测试。
+
+## 扩展个性化排版主题
+
+内置主题名继续使用 `MarkdownTypographyThemes.Simple` 这样的字符串常量，而不是改成 enum，是为了让宿主应用可以注册自己的主题 Key。自定义主题复用内置主题同一套资源 Key：
+
+```csharp
+MarkdownTypographyThemeRegistry.Register(
+    "MyCompanyBlue",
+    () => new ResourceDictionary
+    {
+        [MarkdownStyleKeys.TextBrushResource] = new SolidColorBrush(Color.Parse("#1F2937")),
+        [MarkdownStyleKeys.MutedTextBrushResource] = new SolidColorBrush(Color.Parse("#64748B")),
+        [MarkdownStyleKeys.AccentBrushResource] = new SolidColorBrush(Color.Parse("#0E88EB")),
+        [MarkdownStyleKeys.BorderBrushResource] = new SolidColorBrush(Color.Parse("#BFDBFE")),
+        [MarkdownStyleKeys.ParagraphFontSizeResource] = 16d,
+        [MarkdownStyleKeys.ParagraphLineHeightResource] = 28d,
+        [MarkdownStyleKeys.Heading1FontSizeResource] = 32d,
+        [MarkdownStyleKeys.CodeBlockFontSizeResource] = 13d
+    });
+
+MarkdownThemes.OverrideTypographyResources(
+    Application.Current!,
+    "MyCompanyBlue",
+    MarkdownTypographySizes.Normal);
+
+var exportStyle = MarkdownThemes.CreateExportStyle("MyCompanyBlue");
+MarkdownDocumentExporter.ExportMarkdown(markdown, ExportKind.Pdf, exportStyle, "article.pdf");
+```
+
+如果应用需要完全接管导出外观，也可以直接构造并传入 `MarkdownExportStyle`。如果应用已有自己的 XAML 资源字典，可以注册 `() => new MyCompanyMarkdownResources()`，让预览、PNG/PDF/Word 导出和自媒体复制 HTML 都从同一套排版资源解析样式。
 
 ## 仓库结构
 

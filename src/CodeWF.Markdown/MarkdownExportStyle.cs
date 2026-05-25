@@ -1,3 +1,8 @@
+using System.Globalization;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Styling;
+
 namespace CodeWF.Markdown;
 
 public sealed record MarkdownExportStyle(
@@ -64,9 +69,155 @@ public sealed record MarkdownExportStyle(
             palette.QuoteBorder);
     }
 
+    /// <summary>
+    /// Creates an export style from Markdown typography resources.
+    /// </summary>
+    public static MarkdownExportStyle FromResources(
+        IResourceNode resources,
+        ThemeVariant? themeVariant = null,
+        MarkdownExportStyle? fallback = null)
+    {
+        ArgumentNullException.ThrowIfNull(resources);
+
+        var resolvedFallback = fallback ?? Resolve(null, null);
+        var targetTheme = themeVariant ?? ThemeVariant.Light;
+        var bodyFontSize = GetDoubleResource(
+            resources,
+            MarkdownStyleKeys.ParagraphFontSizeResource,
+            targetTheme,
+            resolvedFallback.BodyFontSize);
+        var paragraphLineHeight = GetDoubleResource(
+            resources,
+            MarkdownStyleKeys.ParagraphLineHeightResource,
+            targetTheme,
+            bodyFontSize * resolvedFallback.LineHeightRatio);
+        var lineHeightRatio = bodyFontSize > 0
+            ? Math.Round(paragraphLineHeight / bodyFontSize, 3)
+            : resolvedFallback.LineHeightRatio;
+        var textColor = GetColorResource(
+            resources,
+            MarkdownStyleKeys.TextBrushResource,
+            targetTheme,
+            resolvedFallback.BodyColor);
+        var mutedColor = GetColorResource(
+            resources,
+            MarkdownStyleKeys.MutedTextBrushResource,
+            targetTheme,
+            resolvedFallback.MutedColor);
+        var accentColor = GetColorResource(
+            resources,
+            MarkdownStyleKeys.AccentBrushResource,
+            targetTheme,
+            resolvedFallback.LinkColor);
+        var borderColor = GetColorResource(
+            resources,
+            MarkdownStyleKeys.BorderBrushResource,
+            targetTheme,
+            resolvedFallback.BorderColor);
+
+        return new MarkdownExportStyle(
+            resolvedFallback.BodyFontFamily,
+            resolvedFallback.MonoFontFamily,
+            bodyFontSize,
+            GetDoubleResource(resources, MarkdownStyleKeys.Heading1FontSizeResource, targetTheme, resolvedFallback.Heading1FontSize),
+            GetDoubleResource(resources, MarkdownStyleKeys.Heading2FontSizeResource, targetTheme, resolvedFallback.Heading2FontSize),
+            GetDoubleResource(resources, MarkdownStyleKeys.Heading3FontSizeResource, targetTheme, resolvedFallback.Heading3FontSize),
+            GetDoubleResource(resources, MarkdownStyleKeys.Heading4FontSizeResource, targetTheme, resolvedFallback.Heading4FontSize),
+            GetDoubleResource(resources, MarkdownStyleKeys.Heading5FontSizeResource, targetTheme, resolvedFallback.Heading5FontSize),
+            GetDoubleResource(resources, MarkdownStyleKeys.Heading6FontSizeResource, targetTheme, resolvedFallback.Heading6FontSize),
+            GetDoubleResource(resources, MarkdownStyleKeys.CodeBlockFontSizeResource, targetTheme, resolvedFallback.CodeFontSize),
+            bodyFontSize,
+            lineHeightRatio,
+            resolvedFallback.PageBackgroundColor,
+            textColor,
+            accentColor,
+            mutedColor,
+            borderColor,
+            GetColorResource(resources, MarkdownStyleKeys.CodeBackgroundBrushResource, targetTheme, resolvedFallback.CodeBackgroundColor),
+            textColor,
+            GetColorResource(resources, MarkdownStyleKeys.InlineCodeBackgroundBrushResource, targetTheme, resolvedFallback.InlineCodeBackgroundColor),
+            accentColor,
+            accentColor,
+            GetColorResource(resources, MarkdownStyleKeys.TableHeaderBackgroundBrushResource, targetTheme, resolvedFallback.TableHeaderBackgroundColor),
+            accentColor);
+    }
+
     private static double Scale(double value, double scale)
     {
         return Math.Round(value * scale, 1);
+    }
+
+    private static double GetDoubleResource(
+        IResourceNode resources,
+        string key,
+        ThemeVariant themeVariant,
+        double fallback)
+    {
+        return resources.TryGetResource(key, themeVariant, out var value) && TryConvertToDouble(value, out var result)
+            ? result
+            : fallback;
+    }
+
+    private static bool TryConvertToDouble(object? value, out double result)
+    {
+        switch (value)
+        {
+            case double number:
+                result = number;
+                return true;
+            case float number:
+                result = number;
+                return true;
+            case int number:
+                result = number;
+                return true;
+            case decimal number:
+                result = (double)number;
+                return true;
+            case string text when double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed):
+                result = parsed;
+                return true;
+            default:
+                result = 0;
+                return false;
+        }
+    }
+
+    private static string GetColorResource(
+        IResourceNode resources,
+        string key,
+        ThemeVariant themeVariant,
+        string fallback)
+    {
+        return resources.TryGetResource(key, themeVariant, out var value) && TryConvertToColor(value, out var color)
+            ? ToCssColor(color)
+            : fallback;
+    }
+
+    private static bool TryConvertToColor(object? value, out Color color)
+    {
+        switch (value)
+        {
+            case Color resolvedColor:
+                color = resolvedColor;
+                return true;
+            case ISolidColorBrush brush:
+                color = brush.Color;
+                return true;
+            case string text when Color.TryParse(text, out var parsed):
+                color = parsed;
+                return true;
+            default:
+                color = default;
+                return false;
+        }
+    }
+
+    private static string ToCssColor(Color color)
+    {
+        return color.A == byte.MaxValue
+            ? $"#{color.R:X2}{color.G:X2}{color.B:X2}"
+            : $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
     }
 
     private static ExportPalette ResolvePalette(string? typographyTheme)

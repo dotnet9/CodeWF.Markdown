@@ -1,5 +1,11 @@
 # 更新日志
 
+## 12.0.3.11 - 2026-05-25
+
+- 😄[新增]-新增 `ExportKind` 以及更高层的 `MarkdownDocumentExporter.Export`、`ExportMarkdown`、`ExportFile` API，宿主应用可按导出类型一站式导出 Markdown 字符串或 Markdown 文件。
+- 😄[新增]-新增 `MarkdownTypographyThemeRegistry`，支持应用注册自定义排版主题；内置主题继续保持字符串常量，方便扩展第三方主题 Key。
+- 🔨[优化]-新增 `MarkdownExportStyle.FromResources` 与 `MarkdownThemes.CreateExportStyle`，导出、复制和预览可复用同一套排版资源字典，应用自定义主题也能参与导出样式解析。
+
 ## 12.0.3.10 - 2026-05-25
 
 - 😄[新增]-新增 `MarkdownDocumentExporter`、`MarkdownExportDocument` 和 `MarkdownExportStyle`，为宿主应用提供可复用的 PNG、图像型 PDF、Word `.docx` 一站式导出 API。

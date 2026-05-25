@@ -1,5 +1,11 @@
 # Changelog
 
+## 12.0.3.11 - 2026-05-25
+
+- Added `ExportKind` and higher-level `MarkdownDocumentExporter.Export`, `ExportMarkdown`, and `ExportFile` APIs so host applications can export Markdown strings or Markdown files through one target-kind based entry point.
+- Added `MarkdownTypographyThemeRegistry` for application-defined typography themes while keeping built-in theme names as string constants for extensibility.
+- Added `MarkdownExportStyle.FromResources` and `MarkdownThemes.CreateExportStyle` so export, social-copy, and viewer styling can share the same typography resource dictionaries, including custom application themes.
+
 ## 12.0.3.10 - 2026-05-25
 
 - Added `MarkdownDocumentExporter`, `MarkdownExportDocument`, and `MarkdownExportStyle` as reusable PNG, image-based PDF, and Word `.docx` export APIs for host applications.

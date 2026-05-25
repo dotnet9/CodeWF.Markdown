@@ -1,7 +1,8 @@
 namespace CodeWF.Markdown.Themes;
 
 /// <summary>
-/// Markdown 排版主题 Key 集合，运行时切换主题时直接使用这些常量。
+/// Markdown 内置排版主题 Key 集合。保持字符串常量是为了允许应用通过
+/// <see cref="MarkdownTypographyThemeRegistry" /> 注册自己的主题 Key。
 /// </summary>
 public static class MarkdownTypographyThemes
 {

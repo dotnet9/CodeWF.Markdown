@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Media;
 
 using CodeWF.Markdown.Controls;
 using CodeWF.Markdown.Themes;
@@ -31,5 +32,32 @@ public sealed class MarkdownThemesResourceTests
 
 		Assert.Null(exception);
 		Assert.NotEmpty(viewer.Resources.MergedDictionaries);
+	}
+
+	[Fact]
+	public void CreateExportStyle_WhenCustomThemeRegistered_UsesThemeResources()
+	{
+		var themeName = $"UnitTestTheme{Guid.NewGuid():N}";
+		MarkdownTypographyThemeRegistry.Register(
+			themeName,
+			() => new ResourceDictionary
+			{
+				[MarkdownStyleKeys.TextBrushResource] = new SolidColorBrush(Color.Parse("#123456")),
+				[MarkdownStyleKeys.AccentBrushResource] = new SolidColorBrush(Color.Parse("#0E88EB")),
+				[MarkdownStyleKeys.ParagraphFontSizeResource] = 18d,
+				[MarkdownStyleKeys.ParagraphLineHeightResource] = 30d,
+				[MarkdownStyleKeys.Heading1FontSizeResource] = 36d,
+				[MarkdownStyleKeys.CodeBlockFontSizeResource] = 14d
+			});
+
+		var style = MarkdownThemes.CreateExportStyle(themeName);
+
+		Assert.Contains(themeName, MarkdownTypographyThemeRegistry.ThemeNames);
+		Assert.Equal(18d, style.BodyFontSize);
+		Assert.Equal(36d, style.Heading1FontSize);
+		Assert.Equal(14d, style.CodeFontSize);
+		Assert.Equal(1.667d, style.LineHeightRatio);
+		Assert.Equal("#123456", style.BodyColor);
+		Assert.Equal("#0E88EB", style.LinkColor);
 	}
 }
