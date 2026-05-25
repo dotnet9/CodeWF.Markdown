@@ -1,10 +1,45 @@
 using System.IO.Compression;
+using System.Text;
 using Xunit;
 
 namespace CodeWF.Markdown.Tests.Export;
 
 public sealed class MarkdownDocumentExporterTests
 {
+	[Fact]
+	public void ExportPdf_WhenMarkdownContainsText_DoesNotEmbedWholePageImage()
+	{
+		var path = Path.Combine(Path.GetTempPath(), $"codewf-markdown-export-{Guid.NewGuid():N}.pdf");
+		try
+		{
+			MarkdownDocumentExporter.ExportMarkdown(
+				"""
+				# Selectable PDF
+
+				This text should stay selectable in the exported PDF.
+
+				- Copy this list item
+				- 复制这一行中文内容
+				""",
+				ExportKind.Pdf,
+				MarkdownExportStyle.Resolve(null, null),
+				path);
+
+			var pdf = Encoding.Latin1.GetString(File.ReadAllBytes(path));
+			Assert.StartsWith("%PDF-", pdf);
+			Assert.Contains("/Font", pdf);
+			Assert.Contains("/ToUnicode", pdf);
+			Assert.DoesNotContain("/Subtype /Image", pdf);
+		}
+		finally
+		{
+			if (File.Exists(path))
+			{
+				File.Delete(path);
+			}
+		}
+	}
+
 	[Fact]
 	public void ExportWord_WhenMarkdownContainsDataImage_EmbedsImagePart()
 	{
