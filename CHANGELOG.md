@@ -1,5 +1,12 @@
 # Changelog
 
+## 12.0.3.13 - 2026-05-25
+
+- Reworked PDF export so Markdown body text is written as selectable PDF text instead of flattening the entire page to bitmap slices.
+- PDF export now includes Unicode text maps for copy/paste, keeps document headers and footers, and embeds Markdown images as PDF image content.
+- Added a regression test that verifies text-only PDF export contains font and ToUnicode data and does not contain whole-page image objects.
+- Bumped package version to 12.0.3.13 and verified Vex consumes the locally packed `CodeWF.Markdown` and `CodeWF.Markdown.Themes` packages.
+
 ## 12.0.3.12 - 2026-05-25
 
 - Added `CopyKind`, `MarkdownSocialCopyRenderer`, `MarkdownSocialCopyProfiles`, and `MarkdownSocialCopyProfile` so WeChat Official Account, Zhihu, Juejin, and future publishing targets can share the same Markdown-to-inline-HTML rendering pipeline.

@@ -39,7 +39,7 @@ var document = new MarkdownExportDocument(markdown, filePath, fileName);
 MarkdownDocumentExporter.Export(document, ExportKind.Png, "article.png");
 ```
 
-The built-in PNG/PDF/Word exporters reuse the shared image loader and rasterizer. Word output embeds image parts under `word/media`, while image-based PDF output renders the document with resolved images before writing PDF pages.
+The built-in PNG/PDF/Word exporters reuse the shared image loader and rasterizer. Word output embeds image parts under `word/media`. PDF output now writes selectable text, includes Unicode text maps for copy/paste, and embeds Markdown images as PDF image content instead of flattening the whole page into one bitmap.
 
 ## Rich HTML Clipboard Helpers
 

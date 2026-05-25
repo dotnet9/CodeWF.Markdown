@@ -1,5 +1,12 @@
 # 更新日志
 
+## 12.0.3.13 - 2026-05-25
+
+- 🔨[优化]-PDF 导出改为写入可选择的 PDF 文本，不再把整页 Markdown 压平成位图切片写入 PDF。
+- 🔨[优化]-PDF 导出会包含用于复制粘贴的 Unicode 文本映射，保留页眉页脚，并把 Markdown 图片作为 PDF 图片内容嵌入。
+- 🧪[测试]-补充 PDF 回归测试，验证纯文本 PDF 包含字体和 ToUnicode 数据，并且不包含整页图片对象。
+- 🧪[测试]-包版本提升到 12.0.3.13，并验证 Vex 可消费本地打包的 `CodeWF.Markdown` 与 `CodeWF.Markdown.Themes` 包。
+
 ## 12.0.3.12 - 2026-05-25
 
 - 😄[新增]-新增 `CopyKind`、`MarkdownSocialCopyRenderer`、`MarkdownSocialCopyProfiles` 和 `MarkdownSocialCopyProfile`，微信公众号、知乎、稀土掘金以及后续发布目标可复用同一套 Markdown 到 inline HTML 的渲染链路。

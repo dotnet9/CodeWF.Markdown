@@ -39,7 +39,7 @@ var document = new MarkdownExportDocument(markdown, filePath, fileName);
 MarkdownDocumentExporter.Export(document, ExportKind.Png, "article.png");
 ```
 
-内置 PNG/PDF/Word 导出器会复用公共图片加载与栅格化能力。Word 输出会把图片写入 `word/media`，图像型 PDF 会先用已解析图片渲染文档，再写入 PDF 页面。
+内置 PNG/PDF/Word 导出器会复用公共图片加载与栅格化能力。Word 输出会把图片写入 `word/media`；PDF 输出会写入可选择文本，包含用于复制粘贴的 Unicode 文本映射，并把 Markdown 图片作为 PDF 图片内容嵌入，不再把整页压平成单张位图。
 
 ## 富 HTML 剪贴板辅助能力
 
