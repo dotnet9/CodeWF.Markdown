@@ -1,105 +1,105 @@
-# Changelog
+# 更新日志
 
 ## 12.0.3.14 - 2026-05-27
 
-- Added `MarkdownHtmlConverter` and `MarkdownHtmlClipboard.Html2Markdown(string htmlContent)` so host editors can convert copied web-page HTML into Markdown before pasting.
-- The built-in HTML-to-Markdown path supports common article structures including headings, paragraphs, links, images, lists, block quotes, fenced code blocks, and tables without adding a third-party package dependency.
-- Added converter regression tests for regular HTML, tables/images, CF_HTML fragment markers, and UTF-8 Windows clipboard offsets.
+- 😄[新增]-新增 `MarkdownHtmlConverter` 和 `MarkdownHtmlClipboard.Html2Markdown(string htmlContent)`，宿主编辑器可在粘贴前把网页复制得到的 HTML 转为 Markdown。
+- 🔨[优化]-内置 HTML 转 Markdown 覆盖标题、段落、链接、图片、列表、引用、代码块和表格等常见文章结构，不额外引入第三方包。
+- 🧪[测试]-补充普通 HTML、表格/图片、CF_HTML 片段标记和 Windows 剪贴板 UTF-8 偏移的转换回归测试。
 
 ## 12.0.3.13 - 2026-05-25
 
-- Reworked PDF export so Markdown body text is written as selectable PDF text instead of flattening the entire page to bitmap slices.
-- PDF export now includes Unicode text maps for copy/paste, keeps document headers and footers, and embeds Markdown images as PDF image content.
-- Added a regression test that verifies text-only PDF export contains font and ToUnicode data and does not contain whole-page image objects.
-- Bumped package version to 12.0.3.13 and verified Vex consumes the locally packed `CodeWF.Markdown` and `CodeWF.Markdown.Themes` packages.
+- 🔨[优化]-PDF 导出改为写入可选择的 PDF 文本，不再把整页 Markdown 压平成位图切片写入 PDF。
+- 🔨[优化]-PDF 导出会包含用于复制粘贴的 Unicode 文本映射，保留页眉页脚，并把 Markdown 图片作为 PDF 图片内容嵌入。
+- 🧪[测试]-补充 PDF 回归测试，验证纯文本 PDF 包含字体和 ToUnicode 数据，并且不包含整页图片对象。
+- 🧪[测试]-包版本提升到 12.0.3.13，并验证 Vex 可消费本地打包的 `CodeWF.Markdown` 与 `CodeWF.Markdown.Themes` 包。
 
 ## 12.0.3.12 - 2026-05-25
 
-- Added `CopyKind`, `MarkdownSocialCopyRenderer`, `MarkdownSocialCopyProfiles`, and `MarkdownSocialCopyProfile` so WeChat Official Account, Zhihu, Juejin, and future publishing targets can share the same Markdown-to-inline-HTML rendering pipeline.
-- Added `MarkdownHtmlClipboardExtensions` for simple Avalonia clipboard calls such as `TrySetMarkdownHtmlAsync(markdown, themeName, targetName, typographySize)`, keeping host applications responsible only for the Markdown text, active typography theme, and target platform.
-- Social-copy HTML now embeds local images, resolves built-in theme names through `MarkdownExportStyle.Resolve`, writes CF_HTML through the shared clipboard helper, and keeps target suffix/tool-name text in localization resources.
-- Bumped package version to 12.0.3.12 and verified 41 `CodeWF.Markdown.Tests` pass before consuming the local NuGet packages from Vex.
+- 😄[新增]-新增 `CopyKind`、`MarkdownSocialCopyRenderer`、`MarkdownSocialCopyProfiles` 和 `MarkdownSocialCopyProfile`，微信公众号、知乎、稀土掘金以及后续发布目标可复用同一套 Markdown 到 inline HTML 的渲染链路。
+- 😄[新增]-新增 `MarkdownHtmlClipboardExtensions`，Avalonia 应用可直接调用 `TrySetMarkdownHtmlAsync(markdown, themeName, targetName, typographySize)`，宿主侧只需要传当前 Markdown、排版主题和目标平台。
+- 🔨[优化]-自媒体复制 HTML 现在会嵌入本地图片，内置主题名通过 `MarkdownExportStyle.Resolve` 解析，CF_HTML 继续复用公共剪贴板写入能力，目标尾注和工具名文案改为读取多语言资源。
+- 🧪[测试]-包版本提升到 12.0.3.12，并在 Vex 使用本地 NuGet 包消费前验证 `CodeWF.Markdown.Tests` 41 项通过。
 
 ## 12.0.3.11 - 2026-05-25
 
-- Added `ExportKind` and higher-level `MarkdownDocumentExporter.Export`, `ExportMarkdown`, and `ExportFile` APIs so host applications can export Markdown strings or Markdown files through one target-kind based entry point.
-- Added `MarkdownTypographyThemeRegistry` for application-defined typography themes while keeping built-in theme names as string constants for extensibility.
-- Added `MarkdownExportStyle.FromResources` and `MarkdownThemes.CreateExportStyle` so export and custom social-copy styling can share the same typography resource dictionaries, including application-defined themes.
+- 😄[新增]-新增 `ExportKind` 以及更高层的 `MarkdownDocumentExporter.Export`、`ExportMarkdown`、`ExportFile` API，宿主应用可按导出类型一站式导出 Markdown 字符串或 Markdown 文件。
+- 😄[新增]-新增 `MarkdownTypographyThemeRegistry`，支持应用注册自定义排版主题；内置主题继续保持字符串常量，方便扩展第三方主题 Key。
+- 🔨[优化]-新增 `MarkdownExportStyle.FromResources` 与 `MarkdownThemes.CreateExportStyle`，导出和自定义自媒体复制样式可复用同一套排版资源字典，应用自定义主题也能参与样式解析。
 
 ## 12.0.3.10 - 2026-05-25
 
-- Added `MarkdownDocumentExporter`, `MarkdownExportDocument`, and `MarkdownExportStyle` as reusable PNG, image-based PDF, and Word `.docx` export APIs for host applications.
-- Moved the image-based PDF/PNG and Word export implementation into `CodeWF.Markdown`; Word export embeds images in `word/media` and uses SkiaSharp for image sizing without requiring Avalonia UI platform initialization.
-- Added a Word export test that verifies `data:image` Markdown images are embedded into the generated `.docx` package.
+- 😄[新增]-新增 `MarkdownDocumentExporter`、`MarkdownExportDocument` 和 `MarkdownExportStyle`，为宿主应用提供可复用的 PNG、图像型 PDF、Word `.docx` 一站式导出 API。
+- 🔨[优化]-将图像型 PDF/PNG 与 Word 导出实现下沉到 `CodeWF.Markdown`；Word 导出会把图片嵌入 `word/media`，并改用 SkiaSharp 读取图片尺寸，不再要求 Avalonia UI 平台初始化。
+- 🧪[测试]-补充 Word 导出测试，验证 Markdown 中的 `data:image` 图片会嵌入生成的 `.docx` 包。
 
 ## 12.0.3.9 - 2026-05-25
 
-- Added `MarkdownHtmlClipboard` for reusable rich HTML clipboard payloads, including CF_HTML byte offsets and native Windows `HTML Format` bytes for WeChat Official Account, Zhihu, Juejin, and similar social editor paste targets.
-- Added tests for fragment marker normalization and UTF-8 CF_HTML offsets.
+- 😄[新增]-新增 `MarkdownHtmlClipboard` 富 HTML 剪贴板公共能力，统一生成 CF_HTML 字节偏移和 Windows 原生 `HTML Format` 字节数据，便于微信公众号、知乎、稀土掘金等编辑器按富文本粘贴。
+- 🧪[测试]-补充片段标记规范化和 UTF-8 CF_HTML 偏移测试。
 
 ## 12.0.3.8 - 2026-05-25
 
-- Added shared Markdown image source loading for data URIs, local paths, file URIs, and HTTP(S) URLs, including URL-decoded relative path fallback against `ImageBasePath`.
-- Added reusable image rasterization helpers for SVG previews, static GIF first-frame output, and bitmap-to-PNG normalization, so export pipelines can embed images without duplicating viewer-specific loading code.
-- Updated the full `MarkdownImage` control to reuse the shared image loader and rasterizer while preserving animated GIF playback in the live viewer.
-- Added tests for data image URIs, URL-encoded relative local images, HTTP image loading, SVG rasterization, and GIF first-frame PNG output.
+- 😄[新增]-新增 Markdown 图片源公共加载能力，支持 `data:image`、本地路径、`file://` 与 HTTP(S) URL，并按 `ImageBasePath` 处理 URL 解码后的相对路径回退。
+- 😄[新增]-新增可复用的图片栅格化辅助能力，统一处理 SVG 预览、GIF 首帧静态 PNG 输出和位图转 PNG 规范化，便于导出链路嵌入图片而不重复维护预览控件逻辑。
+- 🔨[优化]-完整版 `MarkdownImage` 控件改为复用公共图片加载与栅格化能力，同时保留实时预览中的 GIF 动画播放。
+- 🔨[优化]-补充 `data:image`、URL 编码相对本地图、HTTP 图片加载、SVG 栅格化和 GIF 首帧 PNG 输出测试。
 
 ## 12.0.3.6 - 2026-05-23
 
-- Added animated GIF rendering for Markdown image blocks, inline images, and the image preview window through `AnimatedImage.Avalonia`.
-- Added `MarkdownViewer.ImageBasePath` so relative Markdown image URLs resolve against the current document path instead of the application base directory.
-- Kept animated SVG rendering on the native SVG control path while preserving the existing raster fallback for sizing and preview safety.
-- Updated trimming roots and third-party audit notes for the new GIF animation dependency.
+- 😄[新增]-通过 `AnimatedImage.Avalonia` 支持 Markdown 图片块、行内图片和图片预览窗口中的 GIF 动画播放。
+- 😄[新增]-`MarkdownViewer.ImageBasePath` 支持把相对图片路径按当前文档路径解析，不再落到程序基目录。
+- 🔨[优化]-保留 SVG 动画控件路径，并继续使用栅格兜底计算尺寸与预览安全回退。
+- 🔨[优化]-补充 GIF 动画依赖的裁剪保留配置和第三方开源审计说明。
 
 ## 12.0.3.2 - 2026-05-20
 
-- Merged the latest upstream `12.0.3.1` release updates before applying the local dependency changes.
-- Replaced the sample app's `Semi.Avalonia.AvaloniaEdit` package with the source-open `Avalonia.AvaloniaEdit` package.
-- Removed `AvaloniaEditSemiTheme` from the full sample app so it no longer depends on the Semi AvaloniaEdit theme package.
-- Updated test dependencies to the latest stable versions: `Microsoft.NET.Test.Sdk 18.5.1`, `xunit 2.9.3`, and `xunit.runner.visualstudio 3.1.5`.
-- Updated the English and Simplified Chinese open-source dependency audit notes.
+- 🔨[优化]-先合并远端最新 `12.0.3.1` 发布更新，再应用本地依赖调整。
+- 🔨[优化]-示例应用将 `Semi.Avalonia.AvaloniaEdit` 替换为源码开放的 `Avalonia.AvaloniaEdit`。
+- 🔨[优化]-移除完整版示例应用中的 `AvaloniaEditSemiTheme`，避免继续依赖 Semi AvaloniaEdit 主题包。
+- 🔨[优化]-测试依赖升级到最新稳定版：`Microsoft.NET.Test.Sdk 18.5.1`、`xunit 2.9.3`、`xunit.runner.visualstudio 3.1.5`。
+- 🔨[优化]-同步更新英文和简体中文开源依赖审计说明。
 
 ## 12.0.3.1 - 2026-05-16
 
-- Added an internal `MarkdownMathView` for formula rendering so math foreground color follows the active Markdown theme.
-- Updated the sample carousel Markdown in both full and Lite sample apps to use CodeWF screenshots.
-- Added sample trimming roots for the Markdown, theme, SVG, and related assemblies used by trimmed publishing.
-- Updated `publishbase.bat` to publish into a deterministic runtime/project output folder and fail when the expected executable is missing.
-- Bumped the shared package version to `12.0.3.1` and centralized Markdown package versioning through the root build props.
-- Updated SVG and runtime helper package baselines, including `Svg.Controls.Skia.Avalonia`, `Svg.Skia`, and `YY-Thunks`.
+- 😄[新增]-新增内部 `MarkdownMathView` 用于公式渲染，使数学公式前景色跟随当前 Markdown 主题。
+- 🔨[优化]-更新完整版和 Lite 示例应用中的横向滑动图片 Markdown，改用 CodeWF 截图示例。
+- 🔨[优化]-为示例应用补充 Markdown、主题、SVG 及相关程序集的裁剪保留配置，改善裁剪发布兼容性。
+- 🔨[优化]-更新 `publishbase.bat`，按运行时和项目名输出到稳定发布目录，并在缺少预期可执行文件时失败退出。
+- 🔨[优化]-将共享包版本提升到 `12.0.3.1`，并通过根构建属性统一 Markdown 包版本配置。
+- 🔨[优化]-更新 SVG 与运行时辅助依赖基线，包括 `Svg.Controls.Skia.Avalonia`、`Svg.Skia` 和 `YY-Thunks`。
 
 ## 12.0.2.7 - 2026-05-13
 
-- Added `CodeWF.Markdown.Lite`, a basic Markdown viewer package with only direct `Avalonia` and `Markdig` package references.
-- Added Lite rendering support for common headings, paragraphs, lists, task lists, quotes, tables, bitmap images, plain-text code blocks, and copy buttons.
-- Added `CodeWF.Markdown.Lite.Themes` with the same template and typography resources as `CodeWF.Markdown.Themes`, except for referencing the Lite viewer assembly.
-- Added `CodeWF.Markdown.Lite.Sample`, mirroring the editor preview and multi-viewer theme demos in Simplified Chinese without localization switching or AvaloniaEdit.
-- Fixed Lite inline text inheritance so heading typography resources are applied correctly.
-- Fixed full-viewer incremental rendering so per-block theme bindings are released when Markdown files are switched repeatedly.
-- Improved full and Lite image cleanup by cancelling in-flight image loads and disposing replaced or detached bitmaps.
-- Updated full image preview windows to own their preview bitmap so Markdown switches can release the viewer image safely.
-- Verified the full and Lite sample apps with repeated Markdown file switching and scrolling stress runs; no out-of-memory failure or CPU spike was observed after cleanup.
-- Updated solution, packing, and publishing scripts to include the Lite package line.
-- Removed project-level `CHANGELOG.md` files; root changelogs are now the single release-note source for all projects.
+- 😄[新增]-新增 `CodeWF.Markdown.Lite`，提供基础 Markdown Viewer，直接包引用仅包含 `Avalonia` 和 `Markdig`。
+- 🔨[优化]-Lite 渲染支持常用标题、段落、列表、任务列表、引用、表格、位图图片、纯文本代码块和复制按钮。
+- 😄[新增]-新增 `CodeWF.Markdown.Lite.Themes`，模板和排版主题资源与 `CodeWF.Markdown.Themes` 保持一致，仅引用 Lite Viewer 程序集。
+- 😄[新增]-新增 `CodeWF.Markdown.Lite.Sample`，以简体中文保留编辑预览和多预览主题演示，移除多语言切换和 AvaloniaEdit 依赖。
+- 🔴[修复]-修复 Lite 行内文本继承问题，标题字号等排版资源现在可正确生效。
+- 🔴[修复]-修复完整版增量渲染中块级主题绑定未及时释放的问题，连续切换 Markdown 文件时旧控件引用可正常清理。
+- 🔨[优化]-改进完整版与 Lite 的图片清理逻辑，图片被替换或控件离开可视树时会取消未完成加载并释放位图。
+- 🔨[优化]-调整完整版图片预览窗口，使预览窗口独立持有位图，Markdown 切换时 Viewer 图片资源可安全释放。
+- 🔨[优化]-已对完整版和 Lite 示例应用执行重复 Markdown 切换与滚动压力测试，清理后未发现内存溢出或 CPU 飙高。
+- 🔨[优化]-更新解决方案、打包脚本和发布脚本，纳入 Lite 包线。
+- 🔨[优化]-删除各工程目录下的 `CHANGELOG.md`，后续统一维护根目录更新日志。
 
 ## 12.0.2.6 - 2026-05-12
 
-- 😄[Added]-Added `MarkdownViewer.TypographyTheme` and `MarkdownViewer.TypographySize` for per-viewer typography overrides.
-- 😄[Added]-Added `MarkdownThemes.TypographySize` and compact typography resources for smaller font sizes, line heights, and spacing.
-- 🔨[优化]-Refined the sample app into a tabbed editor preview and multi-viewer typography demo with global and per-viewer settings.
-- 🔴[修复]-Fixed inherited typography resource application to avoid reusing a `ResourceDictionary` that already has a parent.
-- 🔨[优化]-Updated Markdown package version and dependency baselines for the new typography release.
+- 😄[新增]-`MarkdownViewer` 新增 `TypographyTheme` 与 `TypographySize`，支持单个 Viewer 独立覆盖排版主题和尺寸。
+- 😄[新增]-`MarkdownThemes` 新增 `TypographySize`，并提供紧凑型排版资源，用于收紧字号、行高和块间距。
+- 🔨[优化]-示例应用调整为 Tab 结构，新增多 Viewer 排版演示，支持全局设置和单个 Viewer 设置联动。
+- 🔴[修复]-修复继承排版资源时复用已有父级 `ResourceDictionary` 导致的运行期异常。
+- 🔨[优化]-更新 Markdown 包版本和依赖基线，配合新的排版配置能力发布。
 
 ## 12.0.2.5 - 2026-05-09
 
-- 🔨[优化]-Replaced `Lang.Avalonia.Resx` localization with `Lang.Avalonia.Json` resources for the Markdown package and sample app.
-- 🔨[优化]-Copied JSON language resources to the `I18n` output folder and package content files so AOT builds can switch languages normally.
-- 🔨[优化]-Updated generated localization key templates and sample startup registration to use JSON resources.
+- 🔨[优化]-将 Markdown 包和示例应用的多语言资源从 `Lang.Avalonia.Resx` 替换为 `Lang.Avalonia.Json`。
+- 🔨[优化]-JSON 语言资源复制到输出目录 `I18n` 并随 NuGet content files 分发，AOT 发布后语言切换可正常工作。
+- 🔨[优化]-更新强类型语言键生成模板和示例启动注册，统一使用 JSON 语言资源。
 
 ## 12.0.2.4 - 2026-05-08
 
-- 🔨[优化]-Split CodeWF.Markdown packages and samples into an independent repository.
-- 🔨[优化]-Kept the Markdown, theme, sample, and test projects from the original CodeWF.AvaloniaControls repository.
-- 🔨[优化]-Removed the obsolete reduced-dependency package, matching themes, and sample app.
-- 🔨[优化]-Updated the solution, packaging scripts, publish scripts, README files, and repository guidelines to reference only the full Markdown package line.
-- 😄[新增]-Added a Simplified Chinese changelog for repository-level release notes.
+- 🔨[优化]-将 CodeWF.Markdown 包和示例从原 `CodeWF.AvaloniaControls` 仓库拆分为独立仓库。
+- 🔨[优化]-保留完整 Markdown 控件、主题、示例和测试项目。
+- 🔨[优化]-移除已废弃的低依赖版本包、配套主题和示例应用。
+- 🔨[优化]-更新解决方案、打包脚本、发布脚本、README 文件和仓库协作说明，仅保留完整 Markdown 包线。
+- 😄[新增]-新增简体中文更新日志，用于记录仓库级发布变更。
