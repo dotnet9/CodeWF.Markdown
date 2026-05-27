@@ -1,5 +1,11 @@
 # 更新日志
 
+## 12.0.3.14 - 2026-05-27
+
+- 😄[新增]-新增 `MarkdownHtmlConverter` 和 `MarkdownHtmlClipboard.Html2Markdown(string htmlContent)`，宿主编辑器可在粘贴前把网页复制得到的 HTML 转为 Markdown。
+- 🔨[优化]-内置 HTML 转 Markdown 覆盖标题、段落、链接、图片、列表、引用、代码块和表格等常见文章结构，不额外引入第三方包。
+- 🧪[测试]-补充普通 HTML、表格/图片、CF_HTML 片段标记和 Windows 剪贴板 UTF-8 偏移的转换回归测试。
+
 ## 12.0.3.13 - 2026-05-25
 
 - 🔨[优化]-PDF 导出改为写入可选择的 PDF 文本，不再把整页 Markdown 压平成位图切片写入 PDF。

@@ -1,5 +1,11 @@
 # Changelog
 
+## 12.0.3.14 - 2026-05-27
+
+- Added `MarkdownHtmlConverter` and `MarkdownHtmlClipboard.Html2Markdown(string htmlContent)` so host editors can convert copied web-page HTML into Markdown before pasting.
+- The built-in HTML-to-Markdown path supports common article structures including headings, paragraphs, links, images, lists, block quotes, fenced code blocks, and tables without adding a third-party package dependency.
+- Added converter regression tests for regular HTML, tables/images, CF_HTML fragment markers, and UTF-8 Windows clipboard offsets.
+
 ## 12.0.3.13 - 2026-05-25
 
 - Reworked PDF export so Markdown body text is written as selectable PDF text instead of flattening the entire page to bitmap slices.

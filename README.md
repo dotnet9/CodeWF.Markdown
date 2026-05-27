@@ -62,6 +62,12 @@ await clipboard.SetMarkdownHtmlAsync(
 
 Built-in targets are `CopyKind.Wechat`, `CopyKind.Zhihu`, and `CopyKind.Juejin`; string target names are resolved by `MarkdownSocialCopyProfiles` so host applications can keep lightweight menu command parameters. Markdown string copy resolves relative images from the current working directory. File-based content creation can resolve relative images from the Markdown file path. Applications can pass a custom `MarkdownSocialCopyProfile` for new publishing targets while still reusing the same CF_HTML clipboard writer.
 
+For paste workflows, `MarkdownHtmlClipboard.Html2Markdown(htmlContent)` converts HTML copied from a web page into Markdown, including headings, paragraphs, links, images, lists, block quotes, code blocks, and tables. The converter is built into `CodeWF.Markdown` and does not add a third-party package dependency.
+
+```csharp
+var markdown = MarkdownHtmlClipboard.Html2Markdown(htmlContent);
+```
+
 ## Installation
 
 ```powershell

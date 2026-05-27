@@ -62,6 +62,12 @@ await clipboard.SetMarkdownHtmlAsync(
 
 内置目标包括 `CopyKind.Wechat`、`CopyKind.Zhihu` 和 `CopyKind.Juejin`；字符串目标名由 `MarkdownSocialCopyProfiles` 解析，方便宿主应用直接复用菜单命令参数。基于 Markdown 字符串复制时，相对图片按当前工作目录解析；基于 Markdown 文件生成内容时，相对图片可按文件路径解析。后续新增发布平台时，应用可传入自定义 `MarkdownSocialCopyProfile`，继续复用同一套 CF_HTML 剪贴板写入能力。
 
+粘贴方向可使用 `MarkdownHtmlClipboard.Html2Markdown(htmlContent)`，把从网页复制到剪贴板的 HTML 转为 Markdown，覆盖标题、段落、链接、图片、列表、引用、代码块和表格等常见结构。转换器内置在 `CodeWF.Markdown` 中，不额外引入第三方包。
+
+```csharp
+var markdown = MarkdownHtmlClipboard.Html2Markdown(htmlContent);
+```
+
 ## 安装
 
 ```powershell

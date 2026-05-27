@@ -43,6 +43,14 @@ public static class MarkdownHtmlClipboard
 		return SetHtmlAsync(clipboard, content.Html, content.Text);
 	}
 
+	/// <summary>
+	/// Converts HTML copied from a web page into Markdown text.
+	/// </summary>
+	public static string Html2Markdown(string htmlContent)
+	{
+		return MarkdownHtmlConverter.Html2Markdown(htmlContent);
+	}
+
 	public static Task SetHtmlAsync(string markdown, CopyKind kind)
 	{
 		return SetHtmlAsync(ResolveClipboard(), markdown, kind, (MarkdownExportStyle?)null);
