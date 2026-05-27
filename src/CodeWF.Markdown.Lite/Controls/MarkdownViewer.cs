@@ -842,13 +842,15 @@ public class MarkdownViewer : TemplatedControl
 	private Span CreateEmphasis(EmphasisInline emphasis)
 	{
 		var span = new Span();
+		FontWeight? fontWeight = null;
+		FontStyle? fontStyle = null;
 		if (emphasis.DelimiterCount >= 2)
 		{
-			span.FontWeight = FontWeight.SemiBold;
+			fontWeight = FontWeight.SemiBold;
 		}
 		else
 		{
-			span.FontStyle = FontStyle.Italic;
+			fontStyle = FontStyle.Italic;
 		}
 
 		foreach (var child in ConvertInlines(emphasis))
@@ -856,7 +858,36 @@ public class MarkdownViewer : TemplatedControl
 			span.Inlines.Add(child);
 		}
 
+		foreach (var child in span.Inlines)
+		{
+			ApplyInlineTextStyle(child, fontWeight, fontStyle);
+		}
+
 		return span;
+	}
+
+	private static void ApplyInlineTextStyle(
+		AvaloniaInline inline,
+		FontWeight? fontWeight,
+		FontStyle? fontStyle)
+	{
+		if (fontWeight.HasValue)
+		{
+			inline.FontWeight = fontWeight.Value;
+		}
+
+		if (fontStyle.HasValue)
+		{
+			inline.FontStyle = fontStyle.Value;
+		}
+
+		if (inline is Span span)
+		{
+			foreach (var child in span.Inlines)
+			{
+				ApplyInlineTextStyle(child, fontWeight, fontStyle);
+			}
+		}
 	}
 
 	private Span CreateLink(LinkInline link)

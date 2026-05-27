@@ -1,5 +1,11 @@
 # 更新日志
 
+## 12.0.3.15 - 2026-05-27
+
+- 🐛[修复]-修复 `MarkdownViewer` 同一行内混合加粗、斜体、删除线时强调样式没有稳定应用到对应文本片段的问题，避免整行样式只跟随首个字符或行内强调不生效。
+- 🐛[修复]-同步修复 `CodeWF.Markdown.Lite` 的强调样式下沉逻辑，保持主控件与 Lite 控件行内样式行为一致。
+- 🧪[测试]-新增行内样式回归测试，覆盖同一段落中普通文本与加粗、斜体、删除线混排场景。
+
 ## 12.0.3.14 - 2026-05-27
 
 - 😄[新增]-新增 `MarkdownHtmlConverter` 和 `MarkdownHtmlClipboard.Html2Markdown(string htmlContent)`，宿主编辑器可在粘贴前把网页复制得到的 HTML 转为 Markdown。

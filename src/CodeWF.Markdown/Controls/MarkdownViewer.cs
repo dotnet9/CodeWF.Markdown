@@ -2633,22 +2633,23 @@ public class MarkdownViewer : TemplatedControl
         TextDecorationCollection? textDecorations = null;
         if (emphasis.DelimiterCount >= 2 && emphasis.DelimiterChar is '*' or '_')
         {
-            span.FontWeight = FontWeight.Bold;
             fontWeight = FontWeight.Bold;
         }
         else if (emphasis.DelimiterChar is '*' or '_')
         {
-            span.FontStyle = FontStyle.Italic;
             fontStyle = FontStyle.Italic;
         }
 
         if (emphasis.DelimiterChar == '~')
         {
-            span.TextDecorations = TextDecorations.Strikethrough;
             textDecorations = TextDecorations.Strikethrough;
         }
 
-        ApplyInlineTextStyle(span, fontWeight, fontStyle, textDecorations);
+        foreach (var child in span.Inlines)
+        {
+            ApplyInlineTextStyle(child, fontWeight, fontStyle, textDecorations);
+        }
+
         return span;
     }
 
