@@ -6,16 +6,19 @@ pushd "%~dp0"
 set "CONFIGURATION=Release"
 set "ARTIFACTS_DIR=%CD%\artifacts"
 set "PACKAGES_DIR=%ARTIFACTS_DIR%\packages"
+set "NUGET_PACKAGES=%ARTIFACTS_DIR%\.nuget\packages-%RANDOM%%RANDOM%"
+set "MSBUILDDISABLENODEREUSE=1"
 
 if exist "%PACKAGES_DIR%" rmdir /s /q "%PACKAGES_DIR%"
 mkdir "%PACKAGES_DIR%"
 
 echo [1/3] Restoring solution...
-dotnet restore CodeWF.Markdown.slnx
+echo Using NuGet cache: %NUGET_PACKAGES%
+dotnet restore CodeWF.Markdown.slnx --no-cache --force-evaluate /p:MSBuildNodeReuse=false
 if errorlevel 1 goto :error
 
 echo [2/3] Building solution...
-dotnet build CodeWF.Markdown.slnx -c %CONFIGURATION% --no-restore
+dotnet build CodeWF.Markdown.slnx -c %CONFIGURATION% --no-restore /p:MSBuildNodeReuse=false
 if errorlevel 1 goto :error
 
 echo [3/3] Packing libraries...
@@ -25,7 +28,7 @@ for %%P in (
     "src\CodeWF.Markdown.Lite\CodeWF.Markdown.Lite.csproj"
     "src\CodeWF.Markdown.Lite.Themes\CodeWF.Markdown.Lite.Themes.csproj"
 ) do (
-    dotnet pack %%~P -c %CONFIGURATION% --no-build -o "%PACKAGES_DIR%"
+    dotnet pack %%~P -c %CONFIGURATION% --no-build -o "%PACKAGES_DIR%" /p:MSBuildNodeReuse=false
     if errorlevel 1 goto :error
 )
 
