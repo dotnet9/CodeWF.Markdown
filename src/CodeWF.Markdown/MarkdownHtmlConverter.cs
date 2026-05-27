@@ -82,6 +82,134 @@ public static class MarkdownHtmlConverter
 		"title"
 	};
 
+	private static readonly HashSet<string> KnownHtmlElements = new(StringComparer.OrdinalIgnoreCase)
+	{
+		"a",
+		"abbr",
+		"address",
+		"article",
+		"area",
+		"aside",
+		"audio",
+		"b",
+		"bdi",
+		"bdo",
+		"blockquote",
+		"body",
+		"br",
+		"button",
+		"canvas",
+		"caption",
+		"center",
+		"cite",
+		"code",
+		"col",
+		"colgroup",
+		"dd",
+		"del",
+		"details",
+		"dfn",
+		"div",
+		"dl",
+		"dt",
+		"em",
+		"figcaption",
+		"figure",
+		"font",
+		"footer",
+		"form",
+		"h1",
+		"h2",
+		"h3",
+		"h4",
+		"h5",
+		"h6",
+		"header",
+		"hr",
+		"html",
+		"i",
+		"iframe",
+		"img",
+		"input",
+		"ins",
+		"kbd",
+		"label",
+		"legend",
+		"li",
+		"main",
+		"mark",
+		"menu",
+		"meter",
+		"nav",
+		"ol",
+		"option",
+		"p",
+		"pre",
+		"q",
+		"rp",
+		"rt",
+		"ruby",
+		"s",
+		"samp",
+		"section",
+		"select",
+		"small",
+		"span",
+		"strike",
+		"strong",
+		"sub",
+		"summary",
+		"sup",
+		"table",
+		"tbody",
+		"td",
+		"textarea",
+		"tfoot",
+		"th",
+		"thead",
+		"time",
+		"tr",
+		"u",
+		"ul",
+		"var",
+		"video",
+		"wbr"
+	};
+
+	private static readonly HashSet<string> RichMarkdownElements = new(StringComparer.OrdinalIgnoreCase)
+	{
+		"a",
+		"b",
+		"blockquote",
+		"code",
+		"del",
+		"em",
+		"h1",
+		"h2",
+		"h3",
+		"h4",
+		"h5",
+		"h6",
+		"hr",
+		"i",
+		"img",
+		"input",
+		"li",
+		"ol",
+		"pre",
+		"s",
+		"strike",
+		"strong",
+		"table",
+		"tbody",
+		"td",
+		"tfoot",
+		"th",
+		"thead",
+		"tr",
+		"ul"
+	};
+
 	/// <summary>
 	/// Converts an HTML fragment or document into Markdown.
 	/// </summary>
@@ -89,30 +217,45 @@ public static class MarkdownHtmlConverter
 	{
 		ArgumentNullException.ThrowIfNull(htmlContent);
 
-		var fragment = ExtractClipboardFragment(htmlContent);
+		var fragment = ExtractClipboardFragment(htmlContent, out var isClipboardHtml);
 		if (string.IsNullOrWhiteSpace(fragment))
 		{
 			return string.Empty;
 		}
 
 		var root = HtmlParser.Parse(fragment);
+		if (!HasElement(root, KnownHtmlElements))
+		{
+			return NormalizePlainText(isClipboardHtml ? WebUtility.HtmlDecode(fragment) : htmlContent);
+		}
+
+		// Editors often copy code as layout-only HTML; keep those fragments as text so indentation survives.
+		var plainText = NormalizePlainText(ExtractPlainText(root));
+		if (plainText.Length > 0 && !HasElement(root, RichMarkdownElements) && LooksLikePlainCode(plainText))
+		{
+			return plainText;
+		}
+
 		var markdown = HasBlockChild(root)
 			? ConvertBlocks(root.Children, 0)
 			: ConvertInlineChildren(root.Children);
 		return NormalizeMarkdown(markdown);
 	}
 
-	private static string ExtractClipboardFragment(string htmlContent)
+	private static string ExtractClipboardFragment(string htmlContent, out bool isClipboardHtml)
 	{
+		isClipboardHtml = false;
 		var start = htmlContent.IndexOf(MarkdownHtmlClipboard.StartFragmentMarker, StringComparison.Ordinal);
 		var end = htmlContent.IndexOf(MarkdownHtmlClipboard.EndFragmentMarker, StringComparison.Ordinal);
 		if (start >= 0 && end > start)
 		{
+			isClipboardHtml = true;
 			return htmlContent[(start + MarkdownHtmlClipboard.StartFragmentMarker.Length)..end];
 		}
 
 		if (TryExtractWindowsClipboardFragment(htmlContent, out var fragment))
 		{
+			isClipboardHtml = true;
 			return fragment;
 		}
 
@@ -607,6 +750,172 @@ public static class MarkdownHtmlConverter
 		return node.Children.Any(child => !child.IsText && BlockElements.Contains(child.Name));
 	}
 
+	private static bool HasElement(HtmlNode node, ISet<string> names)
+	{
+		if (!node.IsText && names.Contains(node.Name))
+		{
+			return true;
+		}
+
+		foreach (var child in node.Children)
+		{
+			if (HasElement(child, names))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static string ExtractPlainText(HtmlNode node)
+	{
+		var builder = new StringBuilder();
+		AppendPlainText(node, builder);
+		return builder.ToString();
+	}
+
+	private static void AppendPlainText(HtmlNode node, StringBuilder builder)
+	{
+		if (node.IsText)
+		{
+			var text = DecodePlainText(node.Text);
+			if (!IsMarkupPaddingText(node.Text, text))
+			{
+				builder.Append(text);
+			}
+
+			return;
+		}
+
+		if (IgnoredElements.Contains(node.Name))
+		{
+			return;
+		}
+
+		if (node.Name.Equals("br", StringComparison.OrdinalIgnoreCase))
+		{
+			builder.Append('\n');
+			return;
+		}
+
+		var isBlock = BlockElements.Contains(node.Name);
+		if (isBlock)
+		{
+			EnsurePlainTextLineBreak(builder);
+		}
+
+		foreach (var child in node.Children)
+		{
+			AppendPlainText(child, builder);
+		}
+
+		if (isBlock)
+		{
+			EnsurePlainTextLineBreak(builder);
+		}
+	}
+
+	private static string DecodePlainText(string text)
+	{
+		return WebUtility.HtmlDecode(text).Replace('\u00a0', ' ');
+	}
+
+	private static bool IsMarkupPaddingText(string source, string decoded)
+	{
+		return decoded.Length > 0
+		       && decoded.All(char.IsWhiteSpace)
+		       && (source.Contains('\r') || source.Contains('\n'));
+	}
+
+	private static void EnsurePlainTextLineBreak(StringBuilder builder)
+	{
+		if (builder.Length > 0 && builder[^1] != '\n')
+		{
+			builder.Append('\n');
+		}
+	}
+
+	private static bool LooksLikePlainCode(string text)
+	{
+		var lines = text
+			.Replace("\r\n", "\n", StringComparison.Ordinal)
+			.Replace('\r', '\n')
+			.Split('\n');
+		var nonEmptyLines = lines
+			.Select(line => line.Trim())
+			.Where(line => line.Length > 0)
+			.ToArray();
+		if (nonEmptyLines.Length == 0)
+		{
+			return false;
+		}
+
+		if (LooksLikeDiff(nonEmptyLines) || LooksLikeXmlOrMarkup(nonEmptyLines))
+		{
+			return true;
+		}
+
+		if (nonEmptyLines.Length < 2)
+		{
+			return false;
+		}
+
+		var indentedLineCount = lines.Count(line => line.StartsWith(' ') || line.StartsWith('\t'));
+		var codeLikeLineCount = nonEmptyLines.Count(IsCodeLikeLine);
+		return (indentedLineCount > 0 && codeLikeLineCount >= 2)
+		       || (nonEmptyLines.Length >= 3 && codeLikeLineCount >= Math.Max(2, nonEmptyLines.Length / 2));
+	}
+
+	private static bool LooksLikeDiff(IReadOnlyList<string> lines)
+	{
+		if (lines[0].StartsWith("diff --git ", StringComparison.Ordinal))
+		{
+			return true;
+		}
+
+		var hasHunk = lines.Any(line => line.StartsWith("@@ ", StringComparison.Ordinal));
+		var hasOldFile = lines.Any(line => line.StartsWith("--- ", StringComparison.Ordinal));
+		var hasNewFile = lines.Any(line => line.StartsWith("+++ ", StringComparison.Ordinal));
+		var changedLineCount = lines.Count(line =>
+			line.StartsWith("+", StringComparison.Ordinal) || line.StartsWith("-", StringComparison.Ordinal));
+		return (hasHunk || (hasOldFile && hasNewFile)) && changedLineCount >= 2;
+	}
+
+	private static bool LooksLikeXmlOrMarkup(IReadOnlyList<string> lines)
+	{
+		var tagLineCount = lines.Count(line =>
+			line.StartsWith("<", StringComparison.Ordinal)
+			&& line.Contains('>')
+			&& !line.StartsWith("<!--", StringComparison.Ordinal));
+		return tagLineCount >= Math.Min(2, lines.Count)
+		       && lines.Any(line => line.StartsWith("</", StringComparison.Ordinal) || line.Contains("</", StringComparison.Ordinal));
+	}
+
+	private static bool IsCodeLikeLine(string line)
+	{
+		return line.Contains(';')
+		       || line.Contains('{')
+		       || line.Contains('}')
+		       || line.Contains("=>", StringComparison.Ordinal)
+		       || line.Contains(" = ", StringComparison.Ordinal)
+		       || line.Contains("==", StringComparison.Ordinal)
+		       || line.StartsWith("#include", StringComparison.Ordinal)
+		       || line.StartsWith("class ", StringComparison.Ordinal)
+		       || line.StartsWith("const ", StringComparison.Ordinal)
+		       || line.StartsWith("export ", StringComparison.Ordinal)
+		       || line.StartsWith("function ", StringComparison.Ordinal)
+		       || line.StartsWith("import ", StringComparison.Ordinal)
+		       || line.StartsWith("let ", StringComparison.Ordinal)
+		       || line.StartsWith("module.exports", StringComparison.Ordinal)
+		       || line.StartsWith("namespace ", StringComparison.Ordinal)
+		       || line.StartsWith("private ", StringComparison.Ordinal)
+		       || line.StartsWith("protected ", StringComparison.Ordinal)
+		       || line.StartsWith("public ", StringComparison.Ordinal)
+		       || line.StartsWith("using ", StringComparison.Ordinal)
+		       || line.StartsWith("var ", StringComparison.Ordinal);
+	}
+
 	private static string CollapseInlineWhitespace(string text)
 	{
 		if (string.IsNullOrEmpty(text))
@@ -641,6 +950,15 @@ public static class MarkdownHtmlConverter
 		return text
 			.Replace(" \n", "\n", StringComparison.Ordinal)
 			.Replace("\n ", "\n", StringComparison.Ordinal);
+	}
+
+	private static string NormalizePlainText(string text)
+	{
+		return text
+			.Replace("\r\n", "\n", StringComparison.Ordinal)
+			.Replace('\r', '\n')
+			.Replace('\u00a0', ' ')
+			.Trim('\r', '\n');
 	}
 
 	private static string NormalizeMarkdown(string markdown)

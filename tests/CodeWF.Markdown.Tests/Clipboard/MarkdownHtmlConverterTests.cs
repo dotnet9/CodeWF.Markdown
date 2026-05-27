@@ -82,4 +82,80 @@ public sealed class MarkdownHtmlConverterTests
 
 		Assert.Equal("未命名", markdown);
 	}
+
+	[Fact]
+	public void Html2Markdown_WhenInputIsPlainDiff_PreservesText()
+	{
+		var diff =
+			"""
+			diff --git a/demo.js b/demo.js
+			index 2d3f110..78a2bc9 100644
+			--- a/demo.js
+			+++ b/demo.js
+			@@ -2,8 +2,9 @@
+			function sayHello() {
+			-  console.log("Hello");
+			+  console.log("Hello World");
+			+  console.log("Git Diff Test");
+			}
+
+			const num = 10;
+			- const str = "old text";
+			+ const str = "new text";
+
+			module.exports = { sayHello };
+			""";
+
+		var markdown = MarkdownHtmlConverter.Html2Markdown(diff);
+
+		Assert.Equal(diff, markdown);
+	}
+
+	[Fact]
+	public void Html2Markdown_WhenInputIsPlainXml_PreservesText()
+	{
+		var xml = "<Project>\n\t<PropertyGroup>\n\t\t<Version>12.0.3.16</Version>\n\t\t<Authors>沙漠尽头的狼</Authors>\n\t</PropertyGroup>\n</Project>";
+
+		var markdown = MarkdownHtmlConverter.Html2Markdown(xml);
+
+		Assert.Equal(xml, markdown);
+	}
+
+	[Fact]
+	public void Html2Markdown_WhenLayoutHtmlContainsEscapedCode_PreservesPlainTextShape()
+	{
+		var markdown = MarkdownHtmlConverter.Html2Markdown(
+			"""
+			<div>&lt;Project&gt;</div>
+			<div>&nbsp;&nbsp;&lt;PropertyGroup&gt;</div>
+			<div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;Version&gt;12.0.3.16&lt;/Version&gt;</div>
+			<div>&nbsp;&nbsp;&lt;/PropertyGroup&gt;</div>
+			<div>&lt;/Project&gt;</div>
+			""");
+
+		Assert.Equal(
+			"<Project>\n  <PropertyGroup>\n    <Version>12.0.3.16</Version>\n  </PropertyGroup>\n</Project>",
+			markdown);
+	}
+
+	[Fact]
+	public void Html2Markdown_WhenLayoutHtmlContainsDiff_PreservesPlainTextShape()
+	{
+		var markdown = MarkdownHtmlConverter.Html2Markdown(
+			"""
+			<div>diff --git a/demo.js b/demo.js</div>
+			<div>index 2d3f110..78a2bc9 100644</div>
+			<div>--- a/demo.js</div>
+			<div>+++ b/demo.js</div>
+			<div>@@ -2,8 +2,9 @@</div>
+			<div>function sayHello() {</div>
+			<div>-&nbsp;&nbsp;console.log(&quot;Hello&quot;);</div>
+			<div>+&nbsp;&nbsp;console.log(&quot;Hello World&quot;);</div>
+			<div>}</div>
+			""");
+
+		Assert.Equal(
+			"diff --git a/demo.js b/demo.js\nindex 2d3f110..78a2bc9 100644\n--- a/demo.js\n+++ b/demo.js\n@@ -2,8 +2,9 @@\nfunction sayHello() {\n-  console.log(\"Hello\");\n+  console.log(\"Hello World\");\n}",
+			markdown);
+	}
 }
