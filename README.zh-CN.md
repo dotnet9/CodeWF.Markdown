@@ -4,7 +4,7 @@
 
 [English](README.md) | 简体中文
 
-更新日志：[English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
+更新日志：[CHANGELOG.md](CHANGELOG.md)
 
 | 名称 | NuGet | 下载量 |
 | --- | --- | --- |

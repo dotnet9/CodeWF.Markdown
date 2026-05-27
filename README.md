@@ -4,7 +4,7 @@ Avalonia Markdown viewer controls, typography themes, and a runnable sample app 
 
 [简体中文](README.zh-CN.md) | English
 
-Changelog: [English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
+Changelog: [CHANGELOG.md](CHANGELOG.md)
 
 | Package | NuGet | Downloads |
 | --- | --- | --- |

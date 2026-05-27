@@ -2,7 +2,6 @@
   <Folder Name="/solution/">
     <File Path=".gitignore" />
     <File Path="CHANGELOG.md" />
-    <File Path="CHANGELOG.zh-CN.md" />
     <File Path="codewf.png" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />

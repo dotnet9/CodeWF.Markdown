@@ -159,8 +159,11 @@ public class MarkdownViewer : TemplatedControl
     public static readonly StyledProperty<Thickness> HeadingMarginProperty =
         AvaloniaProperty.Register<MarkdownViewer, Thickness>(nameof(HeadingMargin), new Thickness(0, 18, 0, 10));
 
+    private static readonly FontFamily DefaultContentFontFamily =
+        new("Inter, Microsoft YaHei UI, Microsoft YaHei, Segoe UI, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, Noto Sans SC, sans-serif");
+
     public static readonly StyledProperty<FontFamily> ContentFontFamilyProperty =
-        AvaloniaProperty.Register<MarkdownViewer, FontFamily>(nameof(ContentFontFamily), FontFamily.Default);
+        AvaloniaProperty.Register<MarkdownViewer, FontFamily>(nameof(ContentFontFamily), DefaultContentFontFamily);
 
     public static readonly StyledProperty<FontFamily> CodeFontFamilyProperty =
         AvaloniaProperty.Register<MarkdownViewer, FontFamily>(

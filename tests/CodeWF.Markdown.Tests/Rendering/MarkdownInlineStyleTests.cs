@@ -25,6 +25,22 @@ public sealed class MarkdownInlineStyleTests
 	[Theory]
 	[InlineData(false)]
 	[InlineData(true)]
+	public void MarkdownViewer_DefaultContentFontFamily_IncludesCjkFallbacks(bool useLiteViewer)
+	{
+		var viewer = CreateViewer(useLiteViewer);
+		var viewerType = viewer.GetType();
+		var defaultFamily = useLiteViewer
+			? LiteMarkdownViewer.ContentFontFamilyProperty.GetMetadata(viewerType).DefaultValue
+			: FullMarkdownViewer.ContentFontFamilyProperty.GetMetadata(viewerType).DefaultValue;
+		var familyName = defaultFamily.ToString();
+
+		Assert.Contains("Microsoft YaHei", familyName);
+		Assert.Contains("Noto Sans CJK SC", familyName);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
 	public void ConvertInlines_WhenParagraphHasMixedEmphasis_KeepsStylesScopedToInlineRuns(bool useLiteViewer)
 	{
 		var viewer = CreateViewer(useLiteViewer);
