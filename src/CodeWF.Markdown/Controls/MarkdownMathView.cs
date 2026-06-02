@@ -4,7 +4,6 @@ using Avalonia.Media;
 
 using CSharpMath.Atom;
 using CSharpMath.Avalonia;
-using CSharpMath.Rendering.FrontEnd;
 
 namespace CodeWF.Markdown.Controls;
 

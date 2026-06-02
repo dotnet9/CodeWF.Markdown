@@ -1,5 +1,3 @@
-using System.Threading;
-
 using AnimatedImage.Avalonia;
 using Avalonia;
 using Avalonia.Controls;
@@ -11,7 +9,6 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using Lang.Avalonia;
 
 namespace CodeWF.Markdown.Controls;

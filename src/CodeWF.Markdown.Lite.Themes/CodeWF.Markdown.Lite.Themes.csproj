@@ -11,7 +11,7 @@
 		<PackageId>CodeWF.Markdown.Lite.Themes</PackageId>
 		<AssemblyName>CodeWF.Markdown.Lite.Themes</AssemblyName>
 		<RootNamespace>CodeWF.Markdown.Lite.Themes</RootNamespace>
-		<PackageIcon>codewf.png</PackageIcon>
+		<PackageIcon>logo.png</PackageIcon>
 		<PackageTags>avalonia ui,markdown,themes,typography,lite,codewf</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -25,5 +25,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\CodeWF.Markdown.Lite\CodeWF.Markdown.Lite.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\CodeWF.Markdown.Shared\Themes\*.cs" Link="%(Filename)%(Extension)" />
+		<AvaloniaResource Include="..\CodeWF.Markdown.Shared\Themes\**\*.axaml" Link="Themes\%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 </Project>

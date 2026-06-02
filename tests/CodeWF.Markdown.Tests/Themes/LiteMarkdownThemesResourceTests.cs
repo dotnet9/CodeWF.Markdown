@@ -1,10 +1,14 @@
+extern alias LiteThemes;
+
 using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Styling;
 
 using Xunit;
 
-using LiteMarkdownThemes = CodeWF.Markdown.Lite.Themes.MarkdownThemes;
-using LiteMarkdownTypographySizes = CodeWF.Markdown.Lite.Themes.MarkdownTypographySizes;
-using LiteMarkdownTypographyThemes = CodeWF.Markdown.Lite.Themes.MarkdownTypographyThemes;
+using LiteMarkdownThemes = LiteThemes::CodeWF.Markdown.Lite.Themes.MarkdownThemes;
+using LiteMarkdownTypographySizes = LiteThemes::CodeWF.Markdown.Themes.MarkdownTypographySizes;
+using LiteMarkdownTypographyThemes = LiteThemes::CodeWF.Markdown.Themes.MarkdownTypographyThemes;
 using LiteMarkdownViewer = CodeWF.Markdown.Lite.Controls.MarkdownViewer;
 
 namespace CodeWF.Markdown.Tests.Themes;
@@ -33,6 +37,45 @@ public sealed class LiteMarkdownThemesResourceTests
 
 		Assert.Null(exception);
 		Assert.NotEmpty(viewer.Resources.MergedDictionaries);
+	}
+
+	[Fact]
+	public void OverrideTypographyResources_WhenAppliedToLiteContainer_DoesNotExposeSemiPaletteKeys()
+	{
+		var parent = new Border();
+
+		LiteMarkdownThemes.OverrideTypographyResources(parent, LiteMarkdownTypographyThemes.GeekBlack, LiteMarkdownTypographySizes.Normal);
+
+		Assert.True(parent.Resources.TryGetResource(CodeWF.Markdown.Lite.MarkdownStyleKeys.TypographyBaseResourcesResource, ThemeVariant.Light, out _));
+		Assert.True(parent.Resources.TryGetResource(CodeWF.Markdown.Lite.MarkdownStyleKeys.ParagraphFontSizeResource, ThemeVariant.Light, out _));
+		Assert.False(parent.Resources.TryGetResource(CodeWF.Markdown.Lite.MarkdownStyleKeys.AccentBrushResource, ThemeVariant.Light, out _));
+		Assert.False(parent.Resources.TryGetResource(CodeWF.Markdown.Lite.MarkdownStyleKeys.QuoteBackgroundBrushResource, ThemeVariant.Light, out _));
+	}
+
+	[Fact]
+	public void OverrideTypographyResources_WhenAppliedToLiteContainer_KeepsPaletteOnViewerOnly()
+	{
+		var parent = new Border();
+		var viewer = new LiteMarkdownViewer();
+		parent.Child = viewer;
+
+		LiteMarkdownThemes.OverrideTypographyResources(parent, LiteMarkdownTypographyThemes.GeekBlack, LiteMarkdownTypographySizes.Normal);
+
+		Assert.False(parent.Resources.TryGetResource(CodeWF.Markdown.Lite.MarkdownStyleKeys.AccentBrushResource, ThemeVariant.Light, out _));
+		Assert.True(viewer.Resources.TryGetResource(CodeWF.Markdown.Lite.MarkdownStyleKeys.AccentBrushResource, ThemeVariant.Light, out var accentBrush));
+		Assert.IsType<SolidColorBrush>(accentBrush);
+	}
+
+	[Fact]
+	public void ApplyTypographyResources_WhenWeChatFormatTheme_RegistersLiteResources()
+	{
+		var resources = new ResourceDictionary();
+
+		var exception = Record.Exception(() =>
+			LiteMarkdownThemes.ApplyTypographyResources(resources, LiteMarkdownTypographyThemes.WeChatFormat));
+
+		Assert.Null(exception);
+		Assert.NotEmpty(resources.MergedDictionaries);
 	}
 
 	[Fact]

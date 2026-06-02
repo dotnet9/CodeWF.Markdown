@@ -1,0 +1,24 @@
+<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="CodeWF.Markdown.Themes.CuteGreenTypographyResources">
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#48B378" />
+            <SolidColorBrush x:Key="BorderCardBackground" Color="#F1FCEB" />
+            <SolidColorBrush x:Key="TextBoxDefaultBackground" Color="#F1FCEB" />
+            <SolidColorBrush x:Key="ButtonDefaultBackground" Color="#DFF7D4" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#86E9B2" />
+            <SolidColorBrush x:Key="BorderCardBackground" Color="#183A21" />
+            <SolidColorBrush x:Key="TextBoxDefaultBackground" Color="#183A21" />
+            <SolidColorBrush x:Key="ButtonDefaultBackground" Color="#214D2D" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="/Themes/Shared/CuteGreen.axaml" />
+    </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

@@ -7,6 +7,7 @@
       "SampleL": {
         "WindowTitle": "CodeWF.Markdown 示例",
         "AppTheme": "应用主题",
+        "MarkdownSample": "Markdown 示例",
         "TypographyTheme": "排版主题",
         "TypographyThemeFollowUnifiedSettings": "跟随统一设置",
         "TypographySizeNormalName": "正常",
@@ -26,6 +27,7 @@
         "TypographyThemeCuteGreenName": "萌绿",
         "TypographyThemeBlueGlowName": "蓝莹",
         "TypographyThemeRosePurpleName": "蔷薇紫",
+        "TypographyThemeWeChatFormatName": "微信公众号",
         "TypographyThemeSampleInkGreenName": "示例：青墨绿",
         "CompactLayout": "紧凑布局",
         "Language": "语言",

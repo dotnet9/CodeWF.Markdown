@@ -3,10 +3,18 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:codewf="https://codewf.com"
+    xmlns:semi="https://irihi.tech/semi"
     RequestedThemeVariant="Light">
     <Application.Styles>
         <FluentTheme />
+        <semi:SemiTheme />
 		<codewf:MarkdownThemes />
+        <Style Selector="Window">
+            <Setter Property="Background" Value="{DynamicResource WindowDefaultBackground}" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}" />
+        </Style>
         <Style Selector="ScrollViewer">
             <Setter Property="AllowAutoHide" Value="False" />
         </Style>

@@ -4,19 +4,19 @@
     x:Class="CodeWF.Markdown.Sample.Themes.SampleTypographyThemeResources">
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#0F766E" />
-            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#ECFDF5" />
-            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#ECFDF5" />
-            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#CCFBF1" />
-            <SolidColorBrush x:Key="CodeWFMarkdownCodeBackgroundBrush" Color="#F1F5F9" />
+            <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#0F766E" />
+            <SolidColorBrush x:Key="BorderCardBackground" Color="#ECFDF5" />
+            <SolidColorBrush x:Key="TextBoxDefaultBackground" Color="#ECFDF5" />
+            <SolidColorBrush x:Key="ButtonDefaultBackground" Color="#CCFBF1" />
+            <SolidColorBrush x:Key="TextBlockCodeBackground" Color="#F1F5F9" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
-            <SolidColorBrush x:Key="CodeWFMarkdownAccentBrush" Color="#5EEAD4" />
-            <SolidColorBrush x:Key="CodeWFMarkdownQuoteBackgroundBrush" Color="#12312D" />
-            <SolidColorBrush x:Key="CodeWFMarkdownInlineCodeBackgroundBrush" Color="#12312D" />
-            <SolidColorBrush x:Key="CodeWFMarkdownTableHeaderBackgroundBrush" Color="#17413B" />
-            <SolidColorBrush x:Key="CodeWFMarkdownCodeBackgroundBrush" Color="#0B1719" />
+            <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#5EEAD4" />
+            <SolidColorBrush x:Key="BorderCardBackground" Color="#12312D" />
+            <SolidColorBrush x:Key="TextBoxDefaultBackground" Color="#12312D" />
+            <SolidColorBrush x:Key="ButtonDefaultBackground" Color="#17413B" />
+            <SolidColorBrush x:Key="TextBlockCodeBackground" Color="#0B1719" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 

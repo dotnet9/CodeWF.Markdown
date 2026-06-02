@@ -135,7 +135,7 @@ public sealed record MarkdownExportStyle(
             lineHeightRatio,
             resolvedFallback.PageBackgroundColor,
             textColor,
-            accentColor,
+            textColor,
             mutedColor,
             borderColor,
             GetColorResource(resources, MarkdownStyleKeys.CodeBackgroundBrushResource, targetTheme, resolvedFallback.CodeBackgroundColor),
@@ -144,7 +144,7 @@ public sealed record MarkdownExportStyle(
             accentColor,
             accentColor,
             GetColorResource(resources, MarkdownStyleKeys.TableHeaderBackgroundBrushResource, targetTheme, resolvedFallback.TableHeaderBackgroundColor),
-            accentColor)
+            borderColor)
         {
             QuoteBackgroundColor = GetColorResource(
                 resources,
@@ -411,8 +411,8 @@ public sealed record MarkdownExportStyle(
                 "#333333",
                 "#4b5563",
                 "#dfe2e5",
+                "#F6F8FA",
                 "#111827",
-                "#f9fafb",
                 "#efefef",
                 "#e46918",
                 "#3e64ff",

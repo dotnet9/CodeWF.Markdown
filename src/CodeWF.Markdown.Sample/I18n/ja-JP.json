@@ -7,6 +7,7 @@
       "SampleL": {
         "WindowTitle": "CodeWF.Markdown サンプル",
         "AppTheme": "アプリテーマ",
+        "MarkdownSample": "Markdown サンプル",
         "TypographyTheme": "タイポグラフィテーマ",
         "TypographyThemeFollowUnifiedSettings": "共通設定に従う",
         "TypographySizeNormalName": "標準",
@@ -26,6 +27,7 @@
         "TypographyThemeCuteGreenName": "萌緑",
         "TypographyThemeBlueGlowName": "ブルーグロー",
         "TypographyThemeRosePurpleName": "ローズパープル",
+        "TypographyThemeWeChatFormatName": "WeChat 公式アカウント",
         "TypographyThemeSampleInkGreenName": "サンプル：青墨緑",
         "CompactLayout": "コンパクト表示",
         "Language": "言語",

@@ -58,11 +58,16 @@ public static class MarkdownStyleKeys
 	public const string ImagePreviewContent = "MdImagePreviewContent";
 	public const string Link = "MdLink";
 
-	public const string AccentBrushResource = "CodeWFMarkdownAccentBrush";
-	public const string QuoteBackgroundBrushResource = "CodeWFMarkdownQuoteBackgroundBrush";
-	public const string InlineCodeBackgroundBrushResource = "CodeWFMarkdownInlineCodeBackgroundBrush";
-	public const string TableHeaderBackgroundBrushResource = "CodeWFMarkdownTableHeaderBackgroundBrush";
-	public const string CodeBackgroundBrushResource = "CodeWFMarkdownCodeBackgroundBrush";
+	public const string TextBrushResource = "TextBlockDefaultForeground";
+	public const string MutedTextBrushResource = "TextBlockDisabledForeground";
+	public const string BorderBrushResource = "BorderCardBorderBrush";
+	public const string AccentBrushResource = "ButtonSolidPrimaryBackground";
+	public const string AccentForegroundBrushResource = "ButtonSolidForeground";
+	public const string QuoteBackgroundBrushResource = "BorderCardBackground";
+	public const string InlineCodeBackgroundBrushResource = "TextBoxDefaultBackground";
+	public const string TableHeaderBackgroundBrushResource = "ButtonDefaultBackground";
+	public const string CodeBackgroundBrushResource = "TextBlockCodeBackground";
+	public const string SelectedBlockBrushResource = "TextBlockSelectionBackground";
 	public const string ParagraphFontSizeResource = "CodeWFMarkdownParagraphFontSize";
 	public const string ParagraphLineHeightResource = "CodeWFMarkdownParagraphLineHeight";
 	public const string Heading1FontSizeResource = "CodeWFMarkdownHeading1FontSize";

@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -7,10 +5,9 @@ using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
-
-using CodeWF.Markdown;
 using CodeWF.Markdown.Controls;
-using CodeWF.Markdown.Themes.Themes;
+using CodeWF.Markdown.Themes;
+using System.Runtime.CompilerServices;
 
 namespace CodeWF.Markdown.Themes;
 
@@ -21,15 +18,6 @@ public class MarkdownThemes : Styles
 {
     private static readonly string[] TypographyResourceKeys =
     [
-        MarkdownStyleKeys.TextBrushResource,
-        MarkdownStyleKeys.MutedTextBrushResource,
-        MarkdownStyleKeys.BorderBrushResource,
-        MarkdownStyleKeys.AccentBrushResource,
-        MarkdownStyleKeys.AccentForegroundBrushResource,
-        MarkdownStyleKeys.QuoteBackgroundBrushResource,
-        MarkdownStyleKeys.InlineCodeBackgroundBrushResource,
-        MarkdownStyleKeys.TableHeaderBackgroundBrushResource,
-        MarkdownStyleKeys.CodeBackgroundBrushResource,
         MarkdownStyleKeys.CodeBlockFontSizeResource,
         MarkdownStyleKeys.ParagraphFontSizeResource,
         MarkdownStyleKeys.ParagraphLineHeightResource,
@@ -42,6 +30,20 @@ public class MarkdownThemes : Styles
         MarkdownStyleKeys.TypographyThemeResource,
         MarkdownStyleKeys.TypographySizeResource,
         MarkdownStyleKeys.TypographyBaseResourcesResource,
+    ];
+
+    private static readonly HashSet<string> PaletteResourceKeys =
+    [
+        MarkdownStyleKeys.TextBrushResource,
+        MarkdownStyleKeys.MutedTextBrushResource,
+        MarkdownStyleKeys.BorderBrushResource,
+        MarkdownStyleKeys.AccentBrushResource,
+        MarkdownStyleKeys.AccentForegroundBrushResource,
+        MarkdownStyleKeys.QuoteBackgroundBrushResource,
+        MarkdownStyleKeys.InlineCodeBackgroundBrushResource,
+        MarkdownStyleKeys.TableHeaderBackgroundBrushResource,
+        MarkdownStyleKeys.CodeBackgroundBrushResource,
+        MarkdownStyleKeys.SelectedBlockBrushResource
     ];
 
     private static readonly ConditionalWeakTable<IResourceDictionary, AppliedTypographyResources> AppliedResources = new();
@@ -58,7 +60,7 @@ public class MarkdownThemes : Styles
     public MarkdownThemes()
     {
         AvaloniaXamlLoader.Load(this);
-        ApplyTypographyResources(Resources, _typographyTheme, _typographySize);
+        ApplyDefaultTypographyResources();
     }
 
     /// <summary>
@@ -70,7 +72,7 @@ public class MarkdownThemes : Styles
         set
         {
             _typographyTheme = value;
-            ApplyTypographyResources(Resources, value, _typographySize);
+            ApplyDefaultTypographyResources();
         }
     }
 
@@ -83,7 +85,7 @@ public class MarkdownThemes : Styles
         set
         {
             _typographySize = value;
-            ApplyTypographyResources(Resources, _typographyTheme, value);
+            ApplyDefaultTypographyResources();
         }
     }
 
@@ -97,7 +99,9 @@ public class MarkdownThemes : Styles
 
     public static void OverrideTypographyResources(Application application, string? typographyTheme, string? typographySize)
     {
-        ApplyTypographyResources(application.Resources, typographyTheme, typographySize);
+        ApplyTypographyResources(
+            application.Resources,
+            CreateTypographyResources(typographyTheme, typographySize, includePalette: false));
         RefreshMarkdownViewerTypographyResources(application);
     }
 
@@ -111,7 +115,9 @@ public class MarkdownThemes : Styles
 
     public static void OverrideTypographyResources(StyledElement element, string? typographyTheme, string? typographySize)
     {
-        ApplyTypographyResources(element.Resources, typographyTheme, typographySize);
+        ApplyTypographyResources(
+            element.Resources,
+            CreateTypographyResources(typographyTheme, typographySize, includePalette: false));
         RefreshMarkdownViewerTypographyResources(element);
     }
 
@@ -122,7 +128,9 @@ public class MarkdownThemes : Styles
 
     public static void OverrideTypographyResources(Application application, ResourceDictionary typographyResources, string? typographySize)
     {
-        ApplyTypographyResources(application.Resources, CreateSizedTypographyResources(typographyResources, typographySize));
+        ApplyTypographyResources(
+            application.Resources,
+            CreateSizedTypographyResources(typographyResources, typographySize, null, includePalette: false));
         RefreshMarkdownViewerTypographyResources(application);
     }
 
@@ -133,18 +141,24 @@ public class MarkdownThemes : Styles
 
     public static void OverrideTypographyResources(StyledElement element, ResourceDictionary typographyResources, string? typographySize)
     {
-        ApplyTypographyResources(element.Resources, CreateSizedTypographyResources(typographyResources, typographySize));
+        ApplyTypographyResources(
+            element.Resources,
+            CreateSizedTypographyResources(typographyResources, typographySize, null, includePalette: false));
         RefreshMarkdownViewerTypographyResources(element);
     }
 
     public static void ApplyTypographyResources(IResourceDictionary targetResources, string? typographyTheme)
     {
-        ApplyTypographyResources(targetResources, CreateTypographyResources(typographyTheme));
+        ApplyTypographyResources(
+            targetResources,
+            CreateTypographyResources(typographyTheme, MarkdownTypographySizes.Normal, includePalette: false));
     }
 
     public static void ApplyTypographyResources(IResourceDictionary targetResources, string? typographyTheme, string? typographySize)
     {
-        ApplyTypographyResources(targetResources, CreateTypographyResources(typographyTheme, typographySize));
+        ApplyTypographyResources(
+            targetResources,
+            CreateTypographyResources(typographyTheme, typographySize, includePalette: false));
     }
 
     public static void ApplyTypographyResources(IResourceDictionary targetResources, ResourceDictionary typographyResources)
@@ -163,9 +177,17 @@ public class MarkdownThemes : Styles
 
     public static ResourceDictionary CreateTypographyResources(string? typographyTheme, string? typographySize)
     {
+        return CreateTypographyResources(typographyTheme, typographySize, includePalette: true);
+    }
+
+    private static ResourceDictionary CreateTypographyResources(
+        string? typographyTheme,
+        string? typographySize,
+        bool includePalette)
+    {
         var normalizedTheme = NormalizeTypographyTheme(typographyTheme);
         var resources = LoadTypographyResources(normalizedTheme);
-        return CreateSizedTypographyResources(resources, typographySize, normalizedTheme);
+        return CreateSizedTypographyResources(resources, typographySize, normalizedTheme, includePalette);
     }
 
     public static MarkdownExportStyle CreateExportStyle(string? typographyTheme)
@@ -179,7 +201,9 @@ public class MarkdownThemes : Styles
         ThemeVariant? themeVariant = null)
     {
         var exportResources = CreateExportResources();
-        ApplyTypographyResources(exportResources.Resources, typographyTheme, typographySize);
+        ApplyTypographyResources(
+            exportResources.Resources,
+            CreateTypographyResources(typographyTheme, typographySize, includePalette: true));
         return MarkdownExportStyle.FromResources(exportResources, themeVariant);
     }
 
@@ -188,7 +212,13 @@ public class MarkdownThemes : Styles
         ThemeVariant? themeVariant = null)
     {
         var exportResources = CreateExportResources();
-        ApplyTypographyResources(exportResources.Resources, typographyResources);
+        ApplyTypographyResources(
+            exportResources.Resources,
+            CreateSizedTypographyResources(
+                typographyResources,
+                MarkdownTypographySizes.Normal,
+                null,
+                includePalette: true));
         return MarkdownExportStyle.FromResources(exportResources, themeVariant);
     }
 
@@ -202,6 +232,13 @@ public class MarkdownThemes : Styles
         return MarkdownTypographyThemeRegistry.Create(typographyTheme);
     }
 
+    private void ApplyDefaultTypographyResources()
+    {
+        ApplyTypographyResources(
+            Resources,
+            CreateTypographyResources(_typographyTheme, _typographySize, includePalette: false));
+    }
+
     private static void ApplyViewerTypographyResources(MarkdownViewer viewer)
     {
         var typographyTheme = GetConfiguredTypographyTheme(viewer);
@@ -209,18 +246,47 @@ public class MarkdownThemes : Styles
 
         RemoveTypographyResources(viewer.Resources);
 
-        if (typographyTheme is null && typographySize is null)
+        var inheritedSize = GetInheritedTypographySize(viewer);
+        var targetSize = typographySize ?? inheritedSize;
+        var typographyResources = CreateViewerTypographyResources(viewer, typographyTheme, targetSize);
+
+        if (typographyResources is null)
         {
+            viewer.Rerender();
             return;
         }
 
-        var inheritedSize = GetInheritedTypographySize(viewer);
-        var targetSize = typographySize ?? inheritedSize;
-        var typographyResources = typographyTheme is null
-            ? CreateInheritedSizeResources(viewer, targetSize)
-            : CreateTypographyResources(typographyTheme, targetSize);
-
         ApplyTypographyResources(viewer.Resources, typographyResources);
+        viewer.Rerender();
+    }
+
+    private static ResourceDictionary? CreateViewerTypographyResources(
+        MarkdownViewer viewer,
+        string? typographyTheme,
+        string typographySize)
+    {
+        if (typographyTheme is not null)
+        {
+            return CreateTypographyResources(typographyTheme, typographySize, includePalette: true);
+        }
+
+        if (TryGetInheritedTypographyBaseResources(viewer, out var baseResources))
+        {
+            if (GetInheritedTypographyTheme(viewer) is { } inheritedTheme)
+            {
+                return CreateTypographyResources(inheritedTheme, typographySize, includePalette: true);
+            }
+
+            return CreateSizedTypographyResources(
+                CloneResourceDictionary(baseResources),
+                typographySize,
+                null,
+                includePalette: true);
+        }
+
+        return IsSmallTypographySize(typographySize)
+            ? CreateInheritedSizeResources(viewer, typographySize)
+            : null;
     }
 
     private static string? GetConfiguredTypographyTheme(MarkdownViewer viewer)
@@ -284,6 +350,11 @@ public class MarkdownThemes : Styles
             ?? MarkdownTypographySizes.Normal;
     }
 
+    private static string? GetInheritedTypographyTheme(StyledElement element)
+    {
+        return TryFindStringResource(element, MarkdownStyleKeys.TypographyThemeResource);
+    }
+
     private static string? TryFindStringResource(StyledElement element, string key)
     {
         return element.TryFindResource(key, element.ActualThemeVariant, out var value)
@@ -328,18 +399,21 @@ public class MarkdownThemes : Styles
 
     private static ResourceDictionary CreateSizedTypographyResources(ResourceDictionary typographyResources, string? typographySize)
     {
-        return CreateSizedTypographyResources(typographyResources, typographySize, null);
+        return CreateSizedTypographyResources(typographyResources, typographySize, null, includePalette: false);
     }
 
     private static ResourceDictionary CreateSizedTypographyResources(
         ResourceDictionary typographyResources,
         string? typographySize,
-        string? typographyTheme)
+        string? typographyTheme,
+        bool includePalette)
     {
         var normalizedSize = NormalizeTypographySize(typographySize);
         var sizedResources = new ResourceDictionary();
         sizedResources.MergedDictionaries.Add(new CommonTypographyResources());
-        sizedResources.MergedDictionaries.Add(typographyResources);
+        sizedResources.MergedDictionaries.Add(includePalette
+            ? typographyResources
+            : CreateLayoutOnlyResources(typographyResources));
 
         if (IsSmallTypographySize(normalizedSize))
         {
@@ -354,6 +428,89 @@ public class MarkdownThemes : Styles
         sizedResources[MarkdownStyleKeys.TypographyBaseResourcesResource] = typographyResources;
 
         return sizedResources;
+    }
+
+    private static ResourceDictionary CreateLayoutOnlyResources(ResourceDictionary source)
+    {
+        var target = new ResourceDictionary();
+
+        foreach (var resource in source)
+        {
+            if (!IsPaletteResourceKey(resource.Key))
+            {
+                target[resource.Key] = resource.Value;
+            }
+        }
+
+        foreach (var themeDictionary in source.ThemeDictionaries)
+        {
+            if (themeDictionary.Value is not ResourceDictionary resourceDictionary)
+            {
+                target.ThemeDictionaries[themeDictionary.Key] = themeDictionary.Value;
+                continue;
+            }
+
+            var filtered = CreateLayoutOnlyResources(resourceDictionary);
+            if (HasResources(filtered))
+            {
+                target.ThemeDictionaries[themeDictionary.Key] = filtered;
+            }
+        }
+
+        foreach (var mergedDictionary in source.MergedDictionaries)
+        {
+            if (mergedDictionary is not ResourceDictionary resourceDictionary)
+            {
+                target.MergedDictionaries.Add(mergedDictionary);
+                continue;
+            }
+
+            var filtered = CreateLayoutOnlyResources(resourceDictionary);
+            if (HasResources(filtered))
+            {
+                target.MergedDictionaries.Add(filtered);
+            }
+        }
+
+        return target;
+    }
+
+    private static ResourceDictionary CloneResourceDictionary(ResourceDictionary source)
+    {
+        var target = new ResourceDictionary();
+
+        foreach (var resource in source)
+        {
+            target[resource.Key] = resource.Value;
+        }
+
+        foreach (var themeDictionary in source.ThemeDictionaries)
+        {
+            target.ThemeDictionaries[themeDictionary.Key] = themeDictionary.Value is ResourceDictionary resourceDictionary
+                ? CloneResourceDictionary(resourceDictionary)
+                : themeDictionary.Value;
+        }
+
+        foreach (var mergedDictionary in source.MergedDictionaries)
+        {
+            target.MergedDictionaries.Add(mergedDictionary is ResourceDictionary resourceDictionary
+                ? CloneResourceDictionary(resourceDictionary)
+                : mergedDictionary);
+        }
+
+        return target;
+    }
+
+    private static bool IsPaletteResourceKey(object? key)
+    {
+        return key is string resourceKey && PaletteResourceKeys.Contains(resourceKey);
+    }
+
+    private static bool HasResources(ResourceDictionary resources)
+    {
+        return resources.Any()
+               || resources.ThemeDictionaries.Count > 0
+               || resources.MergedDictionaries.Count > 0;
     }
 
     private static void CopyTypographySizeResources(

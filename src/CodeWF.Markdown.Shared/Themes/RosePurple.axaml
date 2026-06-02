@@ -1,0 +1,20 @@
+<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="CodeWF.Markdown.Themes.RosePurpleTypographyResources">
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#DEC6FB" />
+            <SolidColorBrush x:Key="BorderCardBackground" Color="#FCF8FF" />
+            <SolidColorBrush x:Key="TextBoxDefaultBackground" Color="#FCF8FF" />
+            <SolidColorBrush x:Key="ButtonDefaultBackground" Color="#F1E6FF" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#E9D5FF" />
+            <SolidColorBrush x:Key="BorderCardBackground" Color="#3C1B2A" />
+            <SolidColorBrush x:Key="TextBoxDefaultBackground" Color="#3C1B2A" />
+            <SolidColorBrush x:Key="ButtonDefaultBackground" Color="#52253A" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

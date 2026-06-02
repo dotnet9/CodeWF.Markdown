@@ -5,12 +5,20 @@ using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Styling;
 
-using CodeWF.Markdown.Lite.Themes;
+using CodeWF.Markdown.Lite.Sample.Themes;
+using CodeWF.Markdown.Themes;
+
+using Semi.Avalonia;
 
 namespace CodeWF.Markdown.Lite.Sample.ViewModels;
 
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
+	private const string SampleTypographyThemeKey = "SampleInkGreen";
+	private const string AppThemeEnvironmentVariable = "CODEWF_MARKDOWN_SAMPLE_APP_THEME";
+	private const string TypographyThemeEnvironmentVariable = "CODEWF_MARKDOWN_SAMPLE_TYPOGRAPHY";
+	private const string MarkdownSampleEnvironmentVariable = "CODEWF_MARKDOWN_SAMPLE_FILE";
+
 	private MarkdownSampleFile? _selectedFile;
 	private TypographyThemeChoice? _selectedTypographyTheme;
 	private ThemeVariantOption? _selectedThemeVariant;
@@ -38,39 +46,40 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 		new("萌绿", MarkdownTypographyThemes.CuteGreen),
 		new("蓝莹", MarkdownTypographyThemes.BlueGlow),
 		new("蔷薇紫", MarkdownTypographyThemes.RosePurple),
+		new("微信公众号", MarkdownTypographyThemes.WeChatFormat),
 	];
 
 	public MainWindowViewModel()
 	{
+		MarkdownTypographyThemeRegistry.Register(SampleTypographyThemeKey, static () => new SampleTypographyThemeResources());
+
 		ThemeVariants =
 		[
-			new("浅色", ThemeVariant.Light),
-			new("深色", ThemeVariant.Dark)
+			new("浅色", "light", ThemeVariant.Light),
+			new("深色", "dark", ThemeVariant.Dark),
+			new("水生", "aquatic", SemiTheme.Aquatic),
+			new("沙漠", "desert", SemiTheme.Desert),
+			new("暮色", "dusk", SemiTheme.Dusk),
+			new("夜空", "night-sky", SemiTheme.NightSky)
 		];
-		TypographyThemes = new ObservableCollection<TypographyThemeChoice>(BuiltInTypographyThemes);
-		ViewerTypographyThemeChoices = new ObservableCollection<TypographyThemeChoice>(
-		[
-			new("跟随统一设置", null),
-			.. BuiltInTypographyThemes
-		]);
-		ViewerCompactLayoutChoices = new ObservableCollection<CompactLayoutChoice>(
-		[
-			new("跟随统一设置", null),
-			new("正常", MarkdownTypographySizes.Normal),
-			new("紧凑", MarkdownTypographySizes.Small)
-		]);
+		TypographyThemes = new ObservableCollection<TypographyThemeChoice>(CreateTypographyThemes());
+		ViewerTypographyThemeChoices = new ObservableCollection<TypographyThemeChoice>(CreateViewerTypographyThemeChoices());
+		ViewerCompactLayoutChoices = new ObservableCollection<CompactLayoutChoice>(CreateCompactLayoutChoices());
 		MarkdownFiles = new ObservableCollection<MarkdownSampleFile>(LoadMarkdownFiles());
 
-		SelectedThemeVariant = ThemeVariants[0];
-		SelectedTypographyTheme = TypographyThemes.FirstOrDefault(theme => theme.Key == MarkdownTypographyThemes.OrangeHeart)
+		SelectedThemeVariant = FindThemeVariantOption(GetEnvironmentValue(AppThemeEnvironmentVariable))
+							   ?? ThemeVariants[0];
+		SelectedTypographyTheme = FindTypographyThemeChoice(TypographyThemes, GetEnvironmentValue(TypographyThemeEnvironmentVariable))
+								  ?? TypographyThemes.FirstOrDefault(theme => theme.Key == MarkdownTypographyThemes.OrangeHeart)
 								  ?? TypographyThemes.FirstOrDefault();
 		FirstViewerSelectedTypographyTheme = ViewerTypographyThemeChoices.FirstOrDefault();
 		FirstViewerSelectedCompactLayout = ViewerCompactLayoutChoices.FirstOrDefault();
-		SecondViewerSelectedTypographyTheme = ViewerTypographyThemeChoices.FirstOrDefault(theme => theme.Key == MarkdownTypographyThemes.Simple)
+		SecondViewerSelectedTypographyTheme = ViewerTypographyThemeChoices.FirstOrDefault(theme => theme.Key == SampleTypographyThemeKey)
 											 ?? ViewerTypographyThemeChoices.FirstOrDefault();
 		SecondViewerSelectedCompactLayout = ViewerCompactLayoutChoices.FirstOrDefault(layout => layout.Size == MarkdownTypographySizes.Small)
 											?? ViewerCompactLayoutChoices.FirstOrDefault();
-		SelectedFile = MarkdownFiles.FirstOrDefault();
+		SelectedFile = FindMarkdownSampleFile(GetEnvironmentValue(MarkdownSampleEnvironmentVariable))
+					   ?? MarkdownFiles.FirstOrDefault();
 	}
 
 	public event PropertyChangedEventHandler? PropertyChanged;
@@ -93,6 +102,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 			if (SetProperty(ref _isCompactLayout, value))
 			{
 				OnPropertyChanged(nameof(CurrentTypographySize));
+				OnPropertyChanged(nameof(FirstViewerTypographySize));
+				OnPropertyChanged(nameof(SecondViewerTypographySize));
 			}
 		}
 	}
@@ -145,13 +156,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 		}
 	}
 
-	public string? FirstViewerTypographyTheme => FirstViewerSelectedTypographyTheme?.Key;
+	public string? FirstViewerTypographyTheme => FirstViewerSelectedTypographyTheme?.Key ?? CurrentTypographyTheme;
 
-	public string? FirstViewerTypographySize => FirstViewerSelectedCompactLayout?.Size;
+	public string? FirstViewerTypographySize => FirstViewerSelectedCompactLayout?.Size ?? CurrentTypographySize;
 
-	public string? SecondViewerTypographyTheme => SecondViewerSelectedTypographyTheme?.Key;
+	public string? SecondViewerTypographyTheme => SecondViewerSelectedTypographyTheme?.Key ?? CurrentTypographyTheme;
 
-	public string? SecondViewerTypographySize => SecondViewerSelectedCompactLayout?.Size;
+	public string? SecondViewerTypographySize => SecondViewerSelectedCompactLayout?.Size ?? CurrentTypographySize;
+
+	public string? CurrentTypographyTheme => SelectedTypographyTheme?.Key;
 
 	public string CurrentTypographySize => IsCompactLayout
 		? MarkdownTypographySizes.Small
@@ -162,34 +175,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 		get => _markdown;
 		set => SetProperty(ref _markdown, value ?? string.Empty);
 	}
-
-	public string FirstViewerMarkdown { get; } = """
-		# 方案摘要
-
-		这一份预览默认跟随上方统一排版设置。切换应用主题、排版主题或紧凑布局时，如果本预览区的主题或尺寸选项保持“跟随统一设置”，这里会同步变化。
-
-		## 重点
-
-		- Lite 控件保留标题、段落、列表、引用、表格、图片和代码块等常用 Markdown 渲染。
-		- 代码块使用纯文本显示，不依赖 TextMateSharp。
-		- SVG、数学公式和多语言文案不在 Lite 包内，避免引入额外依赖。
-
-		```csharp
-		markdownViewer.TypographySize = MarkdownTypographySizes.Small;
-		```
-		""";
-
-	public string SecondViewerMarkdown { get; } = """
-		# 局部覆盖
-
-		这一份预览初始使用自己的排版主题和紧凑尺寸，适合和全局预览做对比。
-
-		> 局部排版资源会写入当前 MarkdownViewer 的资源范围，不会污染同级预览区，也不需要引用完整版 Markdown 包。
-
-		1. 为任意预览区选择不同主题。
-		2. 切换上方紧凑布局。
-		3. 确认浅色和深色主题下基础 Markdown 都保持可读。
-		""";
 
 	public MarkdownSampleFile? SelectedFile
 	{
@@ -206,7 +191,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 	public TypographyThemeChoice? SelectedTypographyTheme
 	{
 		get => _selectedTypographyTheme;
-		set => SetProperty(ref _selectedTypographyTheme, value);
+		set
+		{
+			if (SetProperty(ref _selectedTypographyTheme, value))
+			{
+				OnPropertyChanged(nameof(CurrentTypographyTheme));
+				OnPropertyChanged(nameof(FirstViewerTypographyTheme));
+				OnPropertyChanged(nameof(SecondViewerTypographyTheme));
+			}
+		}
 	}
 
 	public ThemeVariantOption? SelectedThemeVariant
@@ -219,11 +212,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 				app.RequestedThemeVariant = value.ThemeVariant;
 			}
 		}
-	}
-
-	public void ApplyTypographyResourcesTo(StyledElement element)
-	{
-		MarkdownThemes.OverrideTypographyResources(element, SelectedTypographyTheme?.Key, CurrentTypographySize);
 	}
 
 	private void LoadMarkdown()
@@ -259,8 +247,52 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 			return outputPath;
 		}
 
-		var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "MarkdownSamples"));
+		var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "docs", "MarkdownSamples"));
 		return Directory.Exists(sourcePath) ? sourcePath : outputPath;
+	}
+
+	private ThemeVariantOption? FindThemeVariantOption(string? key) =>
+		ThemeVariants.FirstOrDefault(theme => string.Equals(theme.Key, key, StringComparison.OrdinalIgnoreCase));
+
+	private static IReadOnlyList<TypographyThemeChoice> CreateTypographyThemes() =>
+	[
+		.. BuiltInTypographyThemes,
+		new("示例：青墨绿", SampleTypographyThemeKey)
+	];
+
+	private static IReadOnlyList<TypographyThemeChoice> CreateViewerTypographyThemeChoices() =>
+	[
+		new("跟随统一设置", null),
+		.. CreateTypographyThemes()
+	];
+
+	private static IReadOnlyList<CompactLayoutChoice> CreateCompactLayoutChoices() =>
+	[
+		new("跟随统一设置", null),
+		new("正常", MarkdownTypographySizes.Normal),
+		new("紧凑", MarkdownTypographySizes.Small)
+	];
+
+	private static TypographyThemeChoice? FindTypographyThemeChoice(IEnumerable<TypographyThemeChoice> choices, string? key) =>
+		choices.FirstOrDefault(choice => string.Equals(choice.Key, key, StringComparison.OrdinalIgnoreCase));
+
+	private MarkdownSampleFile? FindMarkdownSampleFile(string? nameOrPath)
+	{
+		if (string.IsNullOrWhiteSpace(nameOrPath))
+		{
+			return null;
+		}
+
+		return MarkdownFiles.FirstOrDefault(file =>
+			string.Equals(file.Name, nameOrPath, StringComparison.OrdinalIgnoreCase)
+			|| string.Equals(Path.GetFileName(file.Path), nameOrPath, StringComparison.OrdinalIgnoreCase)
+			|| string.Equals(file.Path, nameOrPath, StringComparison.OrdinalIgnoreCase));
+	}
+
+	private static string? GetEnvironmentValue(string variableName)
+	{
+		var value = Environment.GetEnvironmentVariable(variableName);
+		return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 	}
 
 	private bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
@@ -281,7 +313,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 	}
 }
 
-public sealed record ThemeVariantOption(string Name, ThemeVariant ThemeVariant);
+public sealed record ThemeVariantOption(string Name, string Key, ThemeVariant ThemeVariant);
 
 public sealed record TypographyThemeChoice(string Name, string? Key);
 

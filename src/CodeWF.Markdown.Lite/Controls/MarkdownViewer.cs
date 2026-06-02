@@ -8,8 +8,8 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Markdig;
-using Markdig.Extensions.TaskLists;
 using Markdig.Extensions.Tables;
+using Markdig.Extensions.TaskLists;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using System.Text;
@@ -398,6 +398,32 @@ public class MarkdownViewer : TemplatedControl
 		RenderDocument();
 	}
 
+	protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+	{
+		base.OnAttachedToVisualTree(e);
+		if (Application.Current is { } app)
+		{
+			app.ActualThemeVariantChanged += OnActualThemeVariantChanged;
+		}
+
+		QueueRenderDocument();
+	}
+
+	protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+	{
+		if (Application.Current is { } app)
+		{
+			app.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
+		}
+
+		base.OnDetachedFromVisualTree(e);
+	}
+
+	private void OnActualThemeVariantChanged(object? sender, EventArgs e)
+	{
+		QueueRenderDocument();
+	}
+
 	private void QueueRenderDocument()
 	{
 		if (_documentHost is null || _isRenderQueued)
@@ -466,7 +492,7 @@ public class MarkdownViewer : TemplatedControl
 			MarkdownStyleKeys.Heading,
 			MarkdownStyleKeys.GetHeadingClass(heading.Level));
 		textBlock.FontWeight = FontWeight.Bold;
-		BindTheme(textBlock, TextBlock.ForegroundProperty, heading.Level <= 2 ? AccentBrushProperty : TextBrushProperty);
+		BindTheme(textBlock, TextBlock.ForegroundProperty, TextBrushProperty);
 		BindTheme(textBlock, TextElement.FontFamilyProperty, ContentFontFamilyProperty);
 		BindTheme(textBlock, TextElement.FontSizeProperty, GetHeadingFontSizeProperty(heading.Level));
 		foreach (var inline in ConvertInlines(heading.Inline))
@@ -671,7 +697,7 @@ public class MarkdownViewer : TemplatedControl
 		};
 		AddMarkdownClass(border, MarkdownStyleKeys.Quote);
 		BindTheme(border, Border.BackgroundProperty, QuoteBackgroundBrushProperty);
-		BindTheme(border, Border.BorderBrushProperty, AccentBrushProperty);
+		BindTheme(border, Border.BorderBrushProperty, BorderLineBrushProperty);
 		return border;
 	}
 

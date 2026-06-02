@@ -1,20 +1,14 @@
-using System.Globalization;
-
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
-
-using CodeWF.Markdown;
-
 using Lang.Avalonia;
-
+using System.Globalization;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
-
 using AvaloniaFontStyle = Avalonia.Media.FontStyle;
 using TextMateFontStyle = TextMateSharp.Themes.FontStyle;
 

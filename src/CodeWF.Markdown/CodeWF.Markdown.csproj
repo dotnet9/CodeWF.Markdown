@@ -11,7 +11,7 @@
 		<PackageId>CodeWF.Markdown</PackageId>
 		<AssemblyName>CodeWF.Markdown</AssemblyName>
 		<RootNamespace>CodeWF.Markdown</RootNamespace>
-		<PackageIcon>codewf.png</PackageIcon>
+		<PackageIcon>logo.png</PackageIcon>
 		<PackageTags>avalonia ui,markdown,viewer,controls,codewf</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>

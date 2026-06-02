@@ -1,6 +1,3 @@
-using System.Text;
-using System.Text.RegularExpressions;
-
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -14,21 +11,19 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-
 using CodeWF.Markdown.Helpers;
 using CodeWF.Markdown.Rendering;
 using CodeWF.Markdown.Shared.Rendering;
-
 using Lang.Avalonia;
-
 using Markdig;
 using Markdig.Extensions.Footnotes;
 using Markdig.Extensions.Mathematics;
-using Markdig.Extensions.TaskLists;
 using Markdig.Extensions.Tables;
+using Markdig.Extensions.TaskLists;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
-
+using System.Text;
+using System.Text.RegularExpressions;
 using Inline = Avalonia.Controls.Documents.Inline;
 
 namespace CodeWF.Markdown.Controls;
@@ -1460,7 +1455,7 @@ public class MarkdownViewer : TemplatedControl
 
         var textBlock = CreateSelectableText(MarkdownStyleKeys.Heading, MarkdownStyleKeys.GetHeadingClass(heading.Level));
         textBlock.FontWeight = FontWeight.Bold;
-        BindTheme(textBlock, SelectableTextBlock.ForegroundProperty, heading.Level <= 2 ? AccentBrushProperty : TextBrushProperty);
+        BindTheme(textBlock, SelectableTextBlock.ForegroundProperty, TextBrushProperty);
         BindTheme(textBlock, SelectableTextBlock.FontFamilyProperty, ContentFontFamilyProperty);
         BindTheme(textBlock, SelectableTextBlock.FontSizeProperty, GetHeadingFontSizeProperty(heading.Level));
 
@@ -1663,7 +1658,7 @@ public class MarkdownViewer : TemplatedControl
     {
         var border = new Border();
         AddMarkdownClass(border, MarkdownStyleKeys.Quote);
-        BindTheme(border, Border.BorderBrushProperty, AccentBrushProperty);
+        BindTheme(border, Border.BorderBrushProperty, BorderLineBrushProperty);
         BindTheme(border, Border.BackgroundProperty, QuoteBackgroundBrushProperty);
 
         var stack = new StackPanel { Orientation = Orientation.Vertical };

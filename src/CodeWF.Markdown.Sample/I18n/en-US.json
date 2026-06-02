@@ -7,6 +7,7 @@
       "SampleL": {
         "WindowTitle": "CodeWF.Markdown Sample",
         "AppTheme": "App Theme",
+        "MarkdownSample": "Markdown Sample",
         "TypographyTheme": "Typography Theme",
         "TypographyThemeFollowUnifiedSettings": "Follow Unified Settings",
         "TypographySizeNormalName": "Normal",
@@ -26,6 +27,7 @@
         "TypographyThemeCuteGreenName": "Cute Green",
         "TypographyThemeBlueGlowName": "Blue Glow",
         "TypographyThemeRosePurpleName": "Rose Purple",
+        "TypographyThemeWeChatFormatName": "WeChat Format",
         "TypographyThemeSampleInkGreenName": "Sample: Ink Green",
         "CompactLayout": "Compact Layout",
         "Language": "Language",

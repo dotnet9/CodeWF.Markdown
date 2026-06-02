@@ -1,10 +1,17 @@
+extern alias FullThemes;
+
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Styling;
 
 using CodeWF.Markdown.Controls;
-using CodeWF.Markdown.Themes;
 
 using Xunit;
+
+using MarkdownThemes = FullThemes::CodeWF.Markdown.Themes.MarkdownThemes;
+using MarkdownTypographySizes = FullThemes::CodeWF.Markdown.Themes.MarkdownTypographySizes;
+using MarkdownTypographyThemeRegistry = FullThemes::CodeWF.Markdown.Themes.MarkdownTypographyThemeRegistry;
+using MarkdownTypographyThemes = FullThemes::CodeWF.Markdown.Themes.MarkdownTypographyThemes;
 
 namespace CodeWF.Markdown.Tests.Themes;
 
@@ -34,6 +41,33 @@ public sealed class MarkdownThemesResourceTests
 		Assert.NotEmpty(viewer.Resources.MergedDictionaries);
 	}
 
+	[Fact]
+	public void OverrideTypographyResources_WhenAppliedToContainer_DoesNotExposeSemiPaletteKeys()
+	{
+		var parent = new Border();
+
+		MarkdownThemes.OverrideTypographyResources(parent, MarkdownTypographyThemes.GeekBlack, MarkdownTypographySizes.Normal);
+
+		Assert.True(parent.Resources.TryGetResource(MarkdownStyleKeys.TypographyBaseResourcesResource, ThemeVariant.Light, out _));
+		Assert.True(parent.Resources.TryGetResource(MarkdownStyleKeys.ParagraphFontSizeResource, ThemeVariant.Light, out _));
+		Assert.False(parent.Resources.TryGetResource(MarkdownStyleKeys.AccentBrushResource, ThemeVariant.Light, out _));
+		Assert.False(parent.Resources.TryGetResource(MarkdownStyleKeys.QuoteBackgroundBrushResource, ThemeVariant.Light, out _));
+	}
+
+	[Fact]
+	public void OverrideTypographyResources_WhenAppliedToContainer_KeepsPaletteOnViewerOnly()
+	{
+		var parent = new Border();
+		var viewer = new MarkdownViewer();
+		parent.Child = viewer;
+
+		MarkdownThemes.OverrideTypographyResources(parent, MarkdownTypographyThemes.GeekBlack, MarkdownTypographySizes.Normal);
+
+		Assert.False(parent.Resources.TryGetResource(MarkdownStyleKeys.AccentBrushResource, ThemeVariant.Light, out _));
+		Assert.True(viewer.Resources.TryGetResource(MarkdownStyleKeys.AccentBrushResource, ThemeVariant.Light, out var accentBrush));
+		Assert.IsType<SolidColorBrush>(accentBrush);
+	}
+
 	[Theory]
 	[InlineData(MarkdownTypographyThemes.Simple, "#3E64FF", "#F6F8FA", "#F6F7F9", "#F6F7F9")]
 	[InlineData(MarkdownTypographyThemes.OrangeHeart, "#EF7060", "#F6F8FA", "#FFF3F0", "#FFF3F0")]
@@ -50,6 +84,21 @@ public sealed class MarkdownThemesResourceTests
 		Assert.Equal(codeBackgroundColor, style.CodeBackgroundColor);
 		Assert.Equal(inlineCodeBackgroundColor, style.InlineCodeBackgroundColor);
 		Assert.Equal(quoteBackgroundColor, style.QuoteBackgroundColor);
+	}
+
+	[Fact]
+	public void CreateExportStyle_WhenWeChatFormatTheme_ResolvesDocumentPalette()
+	{
+		var style = MarkdownThemes.CreateExportStyle(MarkdownTypographyThemes.WeChatFormat);
+
+		Assert.Contains(MarkdownTypographyThemes.WeChatFormat, MarkdownTypographyThemeRegistry.ThemeNames);
+		Assert.Equal("#3F3F3F", style.BodyColor);
+		Assert.Equal("#3F3F3F", style.HeadingColor);
+		Assert.Equal("#FF3502", style.LinkColor);
+		Assert.Equal("#F8F5EC", style.InlineCodeBackgroundColor);
+		Assert.Equal("#9E9E9E", style.QuoteBorderColor);
+		Assert.Equal("#1A9E9E9E", style.QuoteBackgroundColor);
+		Assert.Equal(1.625d, style.LineHeightRatio);
 	}
 
 	[Fact]

@@ -27,6 +27,8 @@ namespace CodeWF.Markdown
 
         public static readonly string AppTheme = "CodeWF.Markdown.SampleL.AppTheme";
 
+        public static readonly string MarkdownSample = "CodeWF.Markdown.SampleL.MarkdownSample";
+
         public static readonly string TypographyTheme = "CodeWF.Markdown.SampleL.TypographyTheme";
 
         public static readonly string TypographyThemeFollowUnifiedSettings = "CodeWF.Markdown.SampleL.TypographyThemeFollowUnifiedSettings";
@@ -64,6 +66,8 @@ namespace CodeWF.Markdown
         public static readonly string TypographyThemeBlueGlowName = "CodeWF.Markdown.SampleL.TypographyThemeBlueGlowName";
 
         public static readonly string TypographyThemeRosePurpleName = "CodeWF.Markdown.SampleL.TypographyThemeRosePurpleName";
+
+        public static readonly string TypographyThemeWeChatFormatName = "CodeWF.Markdown.SampleL.TypographyThemeWeChatFormatName";
 
         public static readonly string TypographyThemeSampleInkGreenName = "CodeWF.Markdown.SampleL.TypographyThemeSampleInkGreenName";
 

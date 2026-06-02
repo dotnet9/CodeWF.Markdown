@@ -10,7 +10,7 @@
 		<None Include="$(MSBuildThisFileDirectory)CHANGELOG.md" Pack="true" PackagePath="" Link="CHANGELOG.md" Visible="false" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(IsPackable)' == 'true' and '$(PackageIcon)' == 'codewf.png'">
-		<None Include="$(MSBuildThisFileDirectory)codewf.png" Pack="true" PackagePath="" Link="codewf.png" Visible="false" />
+	<ItemGroup Condition="'$(IsPackable)' == 'true' and '$(PackageIcon)' == 'logo.png'">
+		<None Include="$(MSBuildThisFileDirectory)logo.png" Pack="true" PackagePath="" Link="logo.png" Visible="false" />
 	</ItemGroup>
 </Project>

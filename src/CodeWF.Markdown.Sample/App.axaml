@@ -10,6 +10,12 @@
         <semi:SemiTheme />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
         <markdownThemes:MarkdownThemes />
+        <Style Selector="Window">
+            <Setter Property="Background" Value="{DynamicResource WindowDefaultBackground}" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}" />
+        </Style>
         <Style Selector="ScrollViewer">
             <Setter Property="AllowAutoHide" Value="False" />
         </Style>

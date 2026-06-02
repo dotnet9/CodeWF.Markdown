@@ -8,7 +8,7 @@
 		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-		<ApplicationIcon>Assets\logo.ico</ApplicationIcon>
+		<ApplicationIcon>..\..\logo.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,6 +16,7 @@
 		<PackageReference Include="Avalonia.Desktop" />
 		<PackageReference Include="Avalonia.Fonts.Inter" />
 		<PackageReference Include="Avalonia.Themes.Fluent" />
+		<PackageReference Include="Semi.Avalonia" />
 		<PackageReference Include="VC-LTL" />
 		<PackageReference Include="YY-Thunks" Condition="'$(TargetFramework)' == 'net11.0-windows'" />
 	</ItemGroup>
@@ -25,12 +26,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<AvaloniaResource Include="Assets\**" />
-		<None Include="Assets\codewf.png" CopyToOutputDirectory="PreserveNewest" />
-		<None Include="MarkdownSamples\**\*.md" CopyToOutputDirectory="PreserveNewest" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Include="Assets\logo.ico" />
+		<AvaloniaResource Include="..\..\logo.ico" Link="Assets\logo.ico" />
+		<AvaloniaResource Include="..\..\logo.png" Link="Assets\logo.png" />
+		<AvaloniaResource Include="..\..\logo.svg" Link="Assets\logo.svg" />
+		<None Include="..\..\logo.png" Link="Assets\logo.png" CopyToOutputDirectory="PreserveNewest" TargetPath="Assets\logo.png" />
+		<None Include="..\..\logo.svg" Link="Assets\logo.svg" CopyToOutputDirectory="PreserveNewest" TargetPath="Assets\logo.svg" />
+		<None Include="..\..\docs\MarkdownSamples\**\*.md" CopyToOutputDirectory="PreserveNewest">
+			<Link>MarkdownSamples\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<TargetPath>MarkdownSamples\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+		</None>
+		<None Include="..\..\docs\MarkdownStyles\**\*.txt" CopyToOutputDirectory="PreserveNewest">
+			<Link>MarkdownStyles\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<TargetPath>MarkdownStyles\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+		</None>
 	</ItemGroup>
 </Project>

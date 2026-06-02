@@ -24,15 +24,17 @@
 
     <Window.Styles>
         <Style Selector="Border.toolbar-shell">
+            <Setter Property="Background" Value="{DynamicResource WindowDefaultBackground}" />
             <Setter Property="Padding" Value="14 10" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
             <Setter Property="BorderThickness" Value="0 0 0 1" />
         </Style>
         <Style Selector="Border.toolbar-group">
+            <Setter Property="Background" Value="{DynamicResource BorderCardBackground}" />
             <Setter Property="MinHeight" Value="42" />
             <Setter Property="Margin" Value="0 0 10 0" />
             <Setter Property="Padding" Value="10 6" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
         </Style>
@@ -40,10 +42,15 @@
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource MenuItemInputGestureTextForeground}" />
             <Setter Property="Opacity" Value="0.72" />
         </Style>
         <Style Selector="ComboBox.toolbar-combo">
             <Setter Property="MinWidth" Value="150" />
+            <Setter Property="Height" Value="30" />
+        </Style>
+        <Style Selector="ComboBox.sample-combo">
+            <Setter Property="MinWidth" Value="260" />
             <Setter Property="Height" Value="30" />
         </Style>
         <Style Selector="ComboBox.typography-combo">
@@ -75,7 +82,7 @@
         <DataTemplate x:Key="LanguageSelectionTemplate" x:DataType="sample:SampleLanguage">
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" />
-                <TextBlock Foreground="#64748B" Text="{Binding DisplayTag}" />
+                <TextBlock Foreground="{DynamicResource MenuItemInputGestureTextForeground}" Text="{Binding DisplayTag}" />
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
@@ -95,6 +102,17 @@
                                 DisplayMemberBinding="{Binding Name}"
                                 ItemsSource="{Binding ThemeVariants}"
                                 SelectedItem="{Binding SelectedThemeVariant}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="toolbar-group">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.MarkdownSample}}" />
+                            <ComboBox
+                                Classes="sample-combo"
+                                DisplayMemberBinding="{Binding Name}"
+                                ItemsSource="{Binding MarkdownFiles}"
+                                SelectedItem="{Binding SelectedFile}" />
                         </StackPanel>
                     </Border>
 
