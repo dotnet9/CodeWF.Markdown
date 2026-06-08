@@ -1,15 +1,20 @@
 <Project>
-	<PropertyGroup>
-		<Version>12.0.4.1</Version>
-		<Authors>沙漠尽头的狼</Authors>
-		<RepositoryUrl>https://github.com/dotnet9/CodeWF.Markdown</RepositoryUrl>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageProjectUrl>https://github.com/dotnet9/CodeWF.Markdown</PackageProjectUrl>
-		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-		<RepositoryType>git</RepositoryType>
-		<Copyright>https://codewf.com</Copyright>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-		<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-	</PropertyGroup>
+  <PropertyGroup>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <DebugType>portable</DebugType>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <IncludeSymbols>true</IncludeSymbols>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <Version>12.0.4.3</Version>
+    <Authors>沙漠尽头的狼</Authors>
+    <RepositoryUrl>https://github.com/dotnet9/CodeWF.Markdown</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/dotnet9/CodeWF.Markdown</PackageProjectUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>https://codewf.com</Copyright>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
 </Project>

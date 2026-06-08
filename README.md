@@ -1,26 +1,32 @@
 # CodeWF.Markdown
 
-Avalonia Markdown viewer controls, typography themes, and a runnable sample app split from `CodeWF.AvaloniaControls` into a standalone repository.
+基于 Avalonia 12 的 Markdown 渲染控件、排版主题和可运行示例。该仓库从 `CodeWF.AvaloniaControls` 拆分而来，只保留 Markdown 相关代码与文档。
 
-[简体中文](README.zh-CN.md) | English
 
-Changelog: [CHANGELOG.md](CHANGELOG.md)
+更新日志：[UpdateLog.md](UpdateLog.md)
 
-| Package | NuGet | Downloads |
+| 名称 | NuGet | 下载量 |
 | --- | --- | --- |
 | CodeWF.Markdown | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.svg)](https://www.nuget.org/packages/CodeWF.Markdown/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.svg)](https://www.nuget.org/packages/CodeWF.Markdown/) |
 | CodeWF.Markdown.Themes | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Themes/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Themes/) |
 
-## Packages
+## 仓库规范
 
-- `CodeWF.Markdown`: full Markdown viewer with common Markdown elements, code highlighting, image preview, SVG/image support, math rendering hooks, localization, and incremental rendering.
-- `CodeWF.Markdown.Themes`: default templates and typography themes for `CodeWF.Markdown`.
+- 当前版本：`12.0.4.3`，版本号统一维护在根目录 `Directory.Build.props` 的 `<Version>` 节点。
+- NuGet 包项目统一支持 `net8.0;net10.0`；Demo、App、测试与内部应用项目统一使用 `net11.0` / `net11.0-windows`。
+- 根目录 `logo.svg`、`logo.png`、`logo.ico` 是唯一图标源，子工程只通过 MSBuild `Link` 引用，不维护图标副本。
+- 运行时帮助、Markdown 示例、内置备忘录、设计说明等业务文档按功能保留；仓库级入口文档使用根目录 `README.md` 和 `UpdateLog.md`。
 
-## Image Loading And Export Helpers
+## 包线说明
 
-`CodeWF.Markdown` also exposes shared Markdown image utilities for host applications that export Markdown to offline files. `MarkdownImageSourceLoader` loads `data:image` URIs, local paths, `file://` URIs, and HTTP(S) images, resolving relative paths against the current Markdown document path and trying URL-decoded filenames. `MarkdownImageRasterizer` converts loaded SVG, GIF first frames, and other bitmap formats to static PNG bytes so PDF, PNG, Word, or other export pipelines can embed images without reimplementing viewer-specific loading logic.
+- `CodeWF.Markdown`：完整 MarkdownViewer，支持常见 Markdown 元素、代码高亮、图片预览、SVG/图片、数学渲染扩展、多语言资源和增量渲染。
+- `CodeWF.Markdown.Themes`：`CodeWF.Markdown` 的默认控件模板和多套排版主题。
 
-`MarkdownDocumentExporter` provides one-call export helpers for host applications:
+## 图片加载与导出辅助能力
+
+`CodeWF.Markdown` 也提供可复用的 Markdown 图片工具，方便宿主应用把 Markdown 导出为可离线分发的文件。`MarkdownImageSourceLoader` 支持加载 `data:image`、本地路径、`file://` 和 HTTP(S) 图片，相对路径会按当前 Markdown 文档路径解析，并尝试 URL 解码后的文件名。`MarkdownImageRasterizer` 可把已加载的 SVG、GIF 首帧和其他位图格式转换为静态 PNG 字节，PDF、PNG、Word 或其他导出链路可以直接嵌入图片，不必重复实现预览控件里的图片加载逻辑。
+
+`MarkdownDocumentExporter` 为宿主应用提供一行调用的 PNG/PDF/Word 导出能力：
 
 ```csharp
 MarkdownDocumentExporter.ExportMarkdown(
@@ -39,13 +45,13 @@ var document = new MarkdownExportDocument(markdown, filePath, fileName);
 MarkdownDocumentExporter.Export(document, ExportKind.Png, "article.png");
 ```
 
-The built-in PNG/PDF/Word exporters reuse the shared image loader and rasterizer. Word output embeds image parts under `word/media`. PDF output now writes selectable text, includes Unicode text maps for copy/paste, and embeds Markdown images as PDF image content instead of flattening the whole page into one bitmap.
+内置 PNG/PDF/Word 导出器会复用公共图片加载与栅格化能力。Word 输出会把图片写入 `word/media`；PDF 输出会写入可选择文本，包含用于复制粘贴的 Unicode 文本映射，并把 Markdown 图片作为 PDF 图片内容嵌入，不再把整页压平成单张位图。
 
-## Rich HTML Clipboard Helpers
+## 富 HTML 剪贴板辅助能力
 
-`MarkdownHtmlClipboard` and `MarkdownHtmlClipboardExtensions` create reusable rich HTML clipboard payloads for host applications that copy Markdown-rendered HTML into web editors such as WeChat Official Account, Zhihu, and Juejin. They write `text/plain`, `text/html`, macOS `public.html`, and Windows `HTML Format` data; the Windows payload is UTF-8 CF_HTML bytes with correct fragment offsets, so Chromium-based editors can paste styled HTML instead of showing the raw markup as plain text.
+`MarkdownHtmlClipboard` 和 `MarkdownHtmlClipboardExtensions` 为宿主应用提供可复用的富 HTML 剪贴板载荷，适合把 Markdown 渲染后的 HTML 复制到微信公众号、知乎、稀土掘金等网页编辑器。它会同时写入 `text/plain`、`text/html`、macOS `public.html` 和 Windows `HTML Format`；Windows 载荷使用带正确片段偏移的 UTF-8 CF_HTML 字节，避免 Chromium 系编辑器把带样式 HTML 当作普通文本显示。
 
-The simple Avalonia clipboard path only needs the Markdown text, active typography theme, and target platform:
+Avalonia 剪贴板扩展的简单调用只需要当前 Markdown、排版主题和目标平台：
 
 ```csharp
 await clipboard.TrySetMarkdownHtmlAsync(
@@ -60,24 +66,24 @@ await clipboard.SetMarkdownHtmlAsync(
     CopyKind.Zhihu);
 ```
 
-Built-in targets are `CopyKind.Wechat`, `CopyKind.Zhihu`, and `CopyKind.Juejin`; string target names are resolved by `MarkdownSocialCopyProfiles` so host applications can keep lightweight menu command parameters. Markdown string copy resolves relative images from the current working directory. File-based content creation can resolve relative images from the Markdown file path. Applications can pass a custom `MarkdownSocialCopyProfile` for new publishing targets while still reusing the same CF_HTML clipboard writer.
+内置目标包括 `CopyKind.Wechat`、`CopyKind.Zhihu` 和 `CopyKind.Juejin`；字符串目标名由 `MarkdownSocialCopyProfiles` 解析，方便宿主应用直接复用菜单命令参数。基于 Markdown 字符串复制时，相对图片按当前工作目录解析；基于 Markdown 文件生成内容时，相对图片可按文件路径解析。后续新增发布平台时，应用可传入自定义 `MarkdownSocialCopyProfile`，继续复用同一套 CF_HTML 剪贴板写入能力。
 
-For paste workflows, `MarkdownHtmlClipboard.Html2Markdown(htmlContent)` converts HTML copied from a web page into Markdown, including headings, paragraphs, links, images, lists, block quotes, code blocks, and tables. The converter is built into `CodeWF.Markdown` and does not add a third-party package dependency.
+粘贴方向可使用 `MarkdownHtmlClipboard.Html2Markdown(htmlContent)`，把从网页复制到剪贴板的 HTML 转为 Markdown，覆盖标题、段落、链接、图片、列表、引用、代码块和表格等常见结构。转换器内置在 `CodeWF.Markdown` 中，不额外引入第三方包。
 
 ```csharp
 var markdown = MarkdownHtmlClipboard.Html2Markdown(htmlContent);
 ```
 
-## Installation
+## 安装
 
 ```powershell
 Install-Package CodeWF.Markdown
 Install-Package CodeWF.Markdown.Themes
 ```
 
-## Usage
+## 使用方式
 
-Add the theme package in `App.axaml`:
+在 `App.axaml` 引入主题包：
 
 ```xml
 <Application
@@ -90,7 +96,7 @@ Add the theme package in `App.axaml`:
 </Application>
 ```
 
-Set `TypographyTheme` and `TypographySize` on `MarkdownThemes` for app defaults, or on `MarkdownViewer` for per-viewer overrides. Omitted values default to `Basic` and `Normal`.
+可以在 `MarkdownThemes` 上设置全局默认，也可以在 `MarkdownViewer` 上设置单个 Viewer 覆盖。`TypographyTheme` 和 `TypographySize` 可不填，默认是 `Basic` 和 `Normal`。
 
 ```xml
 <UserControl
@@ -107,11 +113,11 @@ Set `TypographyTheme` and `TypographySize` on `MarkdownThemes` for app defaults,
 </UserControl>
 ```
 
-The sample app shows live editing, file loading, theme switching, and incremental rendering stress scenarios.
+示例工程包含实时编辑、样例文档加载、排版主题切换和增量渲染压力测试。
 
-## Custom Typography Themes
+## 扩展个性化排版主题
 
-Built-in theme names stay as string constants such as `MarkdownTypographyThemes.Simple` instead of an enum because host applications can register their own theme keys. A custom theme can reuse the same resource keys used by the built-in themes:
+内置主题名继续使用 `MarkdownTypographyThemes.Simple` 这样的字符串常量，而不是改成 enum，是为了让宿主应用可以注册自己的主题 Key。自定义主题复用内置主题同一套资源 Key：
 
 ```csharp
 MarkdownTypographyThemeRegistry.Register(
@@ -137,63 +143,63 @@ var exportStyle = MarkdownThemes.CreateExportStyle("MyCompanyBlue");
 MarkdownDocumentExporter.ExportMarkdown(markdown, ExportKind.Pdf, exportStyle, "article.pdf");
 ```
 
-The simplest export and social-copy APIs resolve built-in theme names through `MarkdownExportStyle.Resolve`, including typography size. Applications that need complete control can still build and pass a `MarkdownExportStyle` directly. Applications that keep custom XAML resource dictionaries can register `() => new MyCompanyMarkdownResources()` and create an export style with `MarkdownThemes.CreateExportStyle(...)` when they want preview, PNG/PDF/Word export, and social-copy HTML styling to share the same custom resource dictionary.
+最简单的导出和自媒体复制 API 会通过 `MarkdownExportStyle.Resolve` 解析内置主题名和排版尺寸。如果应用需要完全接管导出外观，也可以直接构造并传入 `MarkdownExportStyle`。如果应用已有自己的 XAML 资源字典，可以注册 `() => new MyCompanyMarkdownResources()`，并在需要共享自定义资源时通过 `MarkdownThemes.CreateExportStyle(...)` 生成导出样式，让预览、PNG/PDF/Word 导出和自媒体复制 HTML 都从同一套排版资源解析样式。
 
-## Repository Layout
+## 仓库结构
 
-- `src/CodeWF.Markdown`: full Markdown viewer package
-- `src/CodeWF.Markdown.Themes`: full viewer templates and typography themes
-- `src/CodeWF.Markdown.Sample`: full viewer sample app
-- `tests/CodeWF.Markdown.Tests`: rendering and diff service tests
-- `CodeWF.Markdown.slnx`: solution view for Markdown projects, sample, and tests
+- `src/CodeWF.Markdown`：完整 MarkdownViewer 类库
+- `src/CodeWF.Markdown.Themes`：完整版本控件模板和排版主题
+- `src/CodeWF.Markdown.Sample`：完整版本示例工程
+- `tests/CodeWF.Markdown.Tests`：渲染和差异服务测试
+- `CodeWF.Markdown.slnx`：Markdown 类库、示例和测试的解决方案视图
 
-## Build
+## 构建
 
 ```powershell
 dotnet restore CodeWF.Markdown.slnx
 dotnet build CodeWF.Markdown.slnx --no-restore
 ```
 
-To create NuGet packages:
+打包 NuGet：
 
 ```powershell
 .\pack.bat
 ```
 
-To publish the sample app for `win-x64` and `linux-x64`:
+发布示例工程到 `win-x64` 和 `linux-x64`：
 
 ```powershell
 .\publish_Markdown.bat
 ```
 
-## License
+## 许可证
 
-MIT. See [LICENSE](LICENSE).
+MIT，详见 [LICENSE](LICENSE)。
 
-## Third-Party Open Source Audit
+## 第三方开源组件审计
 
-Checked on 2026-05-23 with NuGet metadata, restored `project.assets.json`, and upstream source/license links. MIT / Apache-2.0 / BSD are preferred.
+检查时间：2026-05-23。检查范围包括 NuGet 元数据、恢复后的 `project.assets.json`、NuGet.org 信息以及上游源码/许可证链接。优先接受 MIT / Apache-2.0 / BSD。
 
-Remediation:
+本次整改：
 
-- Replaced `Semi.Avalonia.AvaloniaEdit` with the open-source `Avalonia.AvaloniaEdit` package.
-- Removed `AvaloniaEditSemiTheme` from the full sample app; editor rendering now relies on the open AvaloniaEdit control and the repository's own Markdown themes.
+- 将 `Semi.Avalonia.AvaloniaEdit` 替换为开源 `Avalonia.AvaloniaEdit`。
+- 示例工程移除 `AvaloniaEditSemiTheme`，编辑器渲染改为使用开源 AvaloniaEdit 控件和本仓库自己的 Markdown 主题。
 
-| Package | License | Source | Status |
+| 包 | 协议 | 源码/项目地址 | 结论 |
 | --- | --- | --- | --- |
-| `AnimatedImage.Avalonia` | Apache-2.0 | https://github.com/whistyun/AnimatedImage | Approved |
-| `Avalonia` / `Avalonia.Desktop` / `Avalonia.Fonts.Inter` / `Avalonia.Themes.Fluent` | MIT | https://github.com/AvaloniaUI/Avalonia | Approved |
-| `Avalonia.AvaloniaEdit` | MIT | https://github.com/AvaloniaUI/AvaloniaEdit | Approved |
-| `CommunityToolkit.Mvvm` | MIT | https://github.com/CommunityToolkit/dotnet | Approved |
-| `Lang.Avalonia.Json` | MIT | https://github.com/dotnet9/Lang.Avalonia | Approved |
-| `Markdig` | BSD-2-Clause | https://github.com/xoofx/markdig | Approved |
-| `Semi.Avalonia` | MIT | https://github.com/irihitech/Semi.Avalonia | Approved, only the open core package is used by the sample |
-| `Svg.Controls.Skia.Avalonia` / `Svg.Skia` | MIT | https://github.com/wieslawsoltes/Svg.Skia | Approved |
-| `Sylinko.CSharpMath.Avalonia` | MIT | https://github.com/Sylinko/CSharpMath.Avalonia | Approved |
-| `TextMateSharp` / `TextMateSharp.Grammars` | MIT | https://github.com/danipen/TextMateSharp | Approved |
-| `VC-LTL` | EPL-2.0 | https://github.com/Chuyu-Team/VC-LTL5 | Source-open; approved under the source-traceable non-preferred license rule |
-| `YY-Thunks` | MIT | https://github.com/Chuyu-Team/YY-Thunks | Approved |
-| `Microsoft.NET.Test.Sdk` | MIT | https://github.com/microsoft/vstest | Approved, test-only |
-| `xunit` / `xunit.runner.visualstudio` | Apache-2.0 | https://github.com/xunit/xunit | Approved, test-only |
+| `AnimatedImage.Avalonia` | Apache-2.0 | https://github.com/whistyun/AnimatedImage | 通过 |
+| `Avalonia` / `Avalonia.Desktop` / `Avalonia.Fonts.Inter` / `Avalonia.Themes.Fluent` | MIT | https://github.com/AvaloniaUI/Avalonia | 通过 |
+| `Avalonia.AvaloniaEdit` | MIT | https://github.com/AvaloniaUI/AvaloniaEdit | 通过 |
+| `CommunityToolkit.Mvvm` | MIT | https://github.com/CommunityToolkit/dotnet | 通过 |
+| `Lang.Avalonia.Json` | MIT | https://github.com/dotnet9/Lang.Avalonia | 自研开源包 |
+| `Markdig` | BSD-2-Clause | https://github.com/xoofx/markdig | 通过 |
+| `Semi.Avalonia` | MIT | https://github.com/irihitech/Semi.Avalonia | 通过，仅示例使用开源主体包 |
+| `Svg.Controls.Skia.Avalonia` / `Svg.Skia` | MIT | https://github.com/wieslawsoltes/Svg.Skia | 通过 |
+| `Sylinko.CSharpMath.Avalonia` | MIT | https://github.com/Sylinko/CSharpMath.Avalonia | 通过 |
+| `TextMateSharp` / `TextMateSharp.Grammars` | MIT | https://github.com/danipen/TextMateSharp | 通过 |
+| `VC-LTL` | EPL-2.0 | https://github.com/Chuyu-Team/VC-LTL5 | 源码开放，按“非优先但可追溯”规则通过 |
+| `YY-Thunks` | MIT | https://github.com/Chuyu-Team/YY-Thunks | 通过 |
+| `Microsoft.NET.Test.Sdk` | MIT | https://github.com/microsoft/vstest | 测试依赖，通过 |
+| `xunit` / `xunit.runner.visualstudio` | Apache-2.0 | https://github.com/xunit/xunit | 测试依赖，通过 |
 
-Transitive dependencies from Avalonia, AnimatedImage, SkiaSharp, Svg.Skia, CSharpMath, and TextMateSharp were checked and are source-open under MIT/BSD-style licenses. Active project files no longer contain `Semi.Avalonia.AvaloniaEdit`.
+传递依赖检查结论：Avalonia、AnimatedImage、SkiaSharp、Svg.Skia、CSharpMath、TextMateSharp 等链路均有公开源码，许可证为 MIT 或 BSD-style。有效项目文件中不再包含 `Semi.Avalonia.AvaloniaEdit`。

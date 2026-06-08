@@ -7,7 +7,7 @@
 
 	<ItemGroup Condition="'$(IsPackable)' == 'true' and '$(PackageReadmeFile)' == 'README.md'">
 		<None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="" Link="README.md" Visible="false" />
-		<None Include="$(MSBuildThisFileDirectory)CHANGELOG.md" Pack="true" PackagePath="" Link="CHANGELOG.md" Visible="false" />
+		<None Include="$(MSBuildThisFileDirectory)UpdateLog.md" Pack="true" PackagePath="" Link="UpdateLog.md" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(IsPackable)' == 'true' and '$(PackageIcon)' == 'logo.png'">
