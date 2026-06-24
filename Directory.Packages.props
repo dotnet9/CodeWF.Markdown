@@ -1,7 +1,8 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AvaloniaVersion>12.0.4</AvaloniaVersion>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <AvaloniaVersion>12.0.5</AvaloniaVersion>
     <SemiAvaloniaVersion>12.0.3</SemiAvaloniaVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -11,13 +12,13 @@
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="AnimatedImage.Avalonia" Version="2.1.4" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageVersion Include="Lang.Avalonia.Json" Version="12.0.3.3" />
-    <PackageVersion Include="Markdig" Version="1.2.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+    <PackageVersion Include="Lang.Avalonia.Json" Version="12.0.4.1" />
+    <PackageVersion Include="Markdig" Version="1.3.2" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
     <PackageVersion Include="Semi.Avalonia" Version="$(SemiAvaloniaVersion)" />
     <PackageVersion Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
-    <PackageVersion Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.11" />
-    <PackageVersion Include="Svg.Skia" Version="5.0.0" />
+    <PackageVersion Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.13" />
+    <PackageVersion Include="Svg.Skia" Version="5.1.1" />
     <PackageVersion Include="Sylinko.CSharpMath.Avalonia" Version="12.0.0" />
     <PackageVersion Include="TextMateSharp" Version="2.0.4" />
     <PackageVersion Include="TextMateSharp.Grammars" Version="2.0.4" />
