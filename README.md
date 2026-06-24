@@ -203,3 +203,6 @@ MIT，详见 [LICENSE](LICENSE)。
 | `xunit` / `xunit.runner.visualstudio` | Apache-2.0 | https://github.com/xunit/xunit | 测试依赖，通过 |
 
 传递依赖检查结论：Avalonia、AnimatedImage、SkiaSharp、Svg.Skia、CSharpMath、TextMateSharp 等链路均有公开源码，许可证为 MIT 或 BSD-style。有效项目文件中不再包含 `Semi.Avalonia.AvaloniaEdit`。
+## Package Versioning Convention
+
+Keep NuGet package versions and Central Package Management settings in `Directory.Packages.props`, including shared version properties such as `AvaloniaVersion`. Keep `Directory.Build.props` focused on build, compiler, and NuGet package metadata. When referenced, `VC-LTL` and `YY-Thunks` should use their latest prerelease versions for OS platform compatibility.
