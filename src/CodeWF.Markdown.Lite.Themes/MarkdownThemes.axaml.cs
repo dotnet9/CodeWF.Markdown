@@ -7,7 +7,6 @@ using Avalonia.Styling;
 using Avalonia.VisualTree;
 using CodeWF.Markdown.Lite.Controls;
 using CodeWF.Markdown.Themes;
-using CodeWF.Markdown.Themes;
 using System.Runtime.CompilerServices;
 
 namespace CodeWF.Markdown.Lite.Themes;

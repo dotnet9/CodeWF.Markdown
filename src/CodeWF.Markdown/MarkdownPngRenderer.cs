@@ -51,7 +51,7 @@ public sealed class MarkdownPngRenderer
 
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".");
         using var bitmap = Render(document, exportStyle);
-        bitmap.Save(path);
+        bitmap.Save(path, PngBitmapEncoderOptions.Default);
     }
 
     private static Border BuildVisual(MarkdownExportDocument document, MarkdownExportStyle style)

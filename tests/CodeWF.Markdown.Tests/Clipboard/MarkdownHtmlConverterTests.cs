@@ -108,7 +108,8 @@ public sealed class MarkdownHtmlConverterTests
 
 		var markdown = MarkdownHtmlConverter.Html2Markdown(diff);
 
-		Assert.Equal(diff, markdown);
+		// 转换器会统一输出 LF，测试也显式按该契约比较，避免测试结果受源码文件的 CRLF/LF 影响。
+		Assert.Equal(diff.ReplaceLineEndings("\n"), markdown);
 	}
 
 	[Fact]
