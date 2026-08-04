@@ -5,7 +5,10 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IncludeSymbols>true</IncludeSymbols>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <Version>12.1.1.1</Version>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts\</ArtifactsPath>
+    <PackageOutputPath>$(ArtifactsPath)packages\</PackageOutputPath>
+    <Version>12.1.1.2</Version>
     <Authors>沙漠尽头的狼</Authors>
     <RepositoryUrl>https://github.com/dotnet9/CodeWF.Markdown</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
