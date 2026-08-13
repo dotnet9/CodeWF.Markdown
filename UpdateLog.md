@@ -1,5 +1,10 @@
 # 更新日志
 
+## 12.1.1.3 (2026-08-13)
+
+- 🔨[优化]-升级 `Svg.Skia` 至 5.2.1、`Svg.Controls.Skia.Avalonia` 至 12.0.0.15。
+- 🔨[优化]-统一锁定 SkiaSharp 4.151.1 与 HarfBuzzSharp 14.2.1.2 及各平台原生资产，避免 SVG、Avalonia 与导出链路混用不同版本。
+
 ## 12.0.4.3 (2026-06-08)
 
 - 🔨[优化]-补齐根目录 logo.svg、logo.png、logo.ico 三件套，子工程通过 MSBuild Link 引用根 logo，避免维护多份图标副本。
