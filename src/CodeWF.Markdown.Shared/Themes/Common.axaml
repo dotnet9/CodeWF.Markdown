@@ -124,6 +124,12 @@
         <Setter Property="CornerRadius" Value="{DynamicResource CodeWFMarkdownCopyButtonCornerRadius}" />
     </Style>
 
+    <Style Selector="Button.MdCopyButton:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     Button.MdCopyButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background"
+                Value="{Binding Background, RelativeSource={RelativeSource AncestorType=Button}}" />
+    </Style>
+
     <Style Selector="StackPanel.MdList">
         <Setter Property="Spacing" Value="{DynamicResource CodeWFMarkdownListSpacing}" />
         <Setter Property="Margin" Value="{DynamicResource CodeWFMarkdownListMargin}" />
