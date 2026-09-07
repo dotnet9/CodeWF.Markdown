@@ -2,7 +2,7 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    <AvaloniaVersion>12.1.1</AvaloniaVersion>
+    <AvaloniaVersion>12.1.2</AvaloniaVersion>
     <HarfBuzzSharpVersion>14.2.1.2</HarfBuzzSharpVersion>
     <SemiAvaloniaVersion>12.1.0.1</SemiAvaloniaVersion>
     <SkiaSharpVersion>4.151.1</SkiaSharpVersion>
