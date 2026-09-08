@@ -2,10 +2,10 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    <AvaloniaVersion>12.1.1</AvaloniaVersion>
-    <HarfBuzzSharpVersion>14.2.1.2</HarfBuzzSharpVersion>
+    <AvaloniaVersion>12.1.2</AvaloniaVersion>
+    <HarfBuzzSharpVersion>14.2.1.102</HarfBuzzSharpVersion>
     <SemiAvaloniaVersion>12.1.0.1</SemiAvaloniaVersion>
-    <SkiaSharpVersion>4.151.1</SkiaSharpVersion>
+    <SkiaSharpVersion>4.151.2</SkiaSharpVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
@@ -16,11 +16,11 @@
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="Lang.Avalonia.Json" Version="12.1.1.2" />
     <PackageVersion Include="Markdig" Version="1.3.2" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
     <PackageVersion Include="Semi.Avalonia" Version="$(SemiAvaloniaVersion)" />
     <PackageVersion Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
-    <PackageVersion Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.15" />
-    <PackageVersion Include="Svg.Skia" Version="5.2.1" />
+    <PackageVersion Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.17" />
+    <PackageVersion Include="Svg.Skia" Version="5.2.3" />
     <PackageVersion Include="HarfBuzzSharp" Version="$(HarfBuzzSharpVersion)" />
     <PackageVersion Include="HarfBuzzSharp.NativeAssets.Linux" Version="$(HarfBuzzSharpVersion)" />
     <PackageVersion Include="HarfBuzzSharp.NativeAssets.macOS" Version="$(HarfBuzzSharpVersion)" />
@@ -36,8 +36,8 @@
     <PackageVersion Include="TextMateSharp.Grammars" Version="2.0.4" />
     <PackageVersion Include="VC-LTL" Version="5.3.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
     <PackageVersion Include="YY-Thunks" Version="1.2.2" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.301" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.400" />
   </ItemGroup>
 </Project>

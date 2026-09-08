@@ -8,7 +8,7 @@
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts\</ArtifactsPath>
     <PackageOutputPath>$(ArtifactsPath)packages\</PackageOutputPath>
-    <Version>12.1.1.4</Version>
+    <Version>12.1.2.1</Version>
     <Authors>沙漠尽头的狼</Authors>
     <RepositoryUrl>https://github.com/dotnet9/CodeWF.Markdown</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
