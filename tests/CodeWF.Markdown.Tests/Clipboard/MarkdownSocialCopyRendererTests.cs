@@ -38,7 +38,8 @@ public sealed class MarkdownSocialCopyRendererTests
 		Assert.Contains(MarkdownHtmlClipboard.StartFragmentMarker, content.Html);
 		Assert.Contains("border-bottom: 2px solid", content.Html);
 		Assert.DoesNotContain("mountain_2_20191028221337.png", content.Html);
-		Assert.Contains("<section id=\"codewf-markdown\"", content.Text);
+		Assert.Contains("Section", content.Text);
+		Assert.DoesNotContain("<section", content.Text, StringComparison.OrdinalIgnoreCase);
 	}
 
 	[Fact]

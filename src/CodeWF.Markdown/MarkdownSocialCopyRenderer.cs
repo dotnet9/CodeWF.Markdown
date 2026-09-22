@@ -9,6 +9,7 @@ using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 
 using Lang.Avalonia;
+using CodeWF.Markdown.Shared.Rendering;
 
 using MarkdigInline = Markdig.Syntax.Inlines.Inline;
 
@@ -114,7 +115,8 @@ public static class MarkdownSocialCopyRenderer
 			</html>
 			""";
 
-		return new MarkdownHtmlCopyContent(section, html);
+		var plainText = MarkdownParser.Parse(document.Markdown, Pipeline).PlainText;
+		return new MarkdownHtmlCopyContent(plainText, html);
 	}
 
 	private static MarkdownExportDocument CreateDocumentFromFile(string markdownFilePath)

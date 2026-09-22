@@ -6,6 +6,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
+using Markdig;
+using CodeWF.Markdown.Shared.Rendering;
 
 namespace CodeWF.Markdown;
 
@@ -15,6 +17,10 @@ namespace CodeWF.Markdown;
 /// </summary>
 public static class MarkdownHtmlClipboard
 {
+	private static readonly MarkdownPipeline ClipboardPipeline = new MarkdownPipelineBuilder()
+		.UseAdvancedExtensions()
+		.Build();
+
 	public const string HtmlMimeFormatName = "text/html";
 	public const string MacHtmlFormatName = "public.html";
 	public const string WindowsHtmlFormatName = "HTML Format";
@@ -699,7 +705,7 @@ public static class MarkdownHtmlClipboard
 
 		var clipboardHtml = NormalizeHtmlForClipboard(html);
 		var item = new DataTransferItem();
-		item.SetText(text ?? html);
+		item.SetText(text ?? MarkdownParser.Parse(MarkdownHtmlConverter.Html2Markdown(html), ClipboardPipeline).PlainText);
 		item.Set(HtmlMimeFormat, clipboardHtml);
 		item.Set(MacHtmlFormat, clipboardHtml);
 		item.Set(WindowsHtmlFormat, BuildWindowsClipboardHtmlBytes(clipboardHtml));
