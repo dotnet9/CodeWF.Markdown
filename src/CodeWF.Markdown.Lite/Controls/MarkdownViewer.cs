@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -14,6 +15,7 @@ using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using System.Text;
 using AvaloniaInline = Avalonia.Controls.Documents.Inline;
+using CodeWF.Markdown.Shared.Rendering;
 
 namespace CodeWF.Markdown.Lite.Controls;
 
@@ -43,6 +45,9 @@ public class MarkdownViewer : TemplatedControl
 
 	public static readonly StyledProperty<string?> TypographySizeProperty =
 		AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(TypographySize));
+
+	public static readonly StyledProperty<string?> ImageBasePathProperty =
+		AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(ImageBasePath));
 
 	public static readonly StyledProperty<IBrush?> TextBrushProperty =
 		AvaloniaProperty.Register<MarkdownViewer, IBrush?>(nameof(TextBrush), Brushes.Black);
@@ -150,6 +155,7 @@ public class MarkdownViewer : TemplatedControl
 		MarkdownProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument());
 		TypographyThemeProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument());
 		TypographySizeProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument());
+		ImageBasePathProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument());
 	}
 
 	public MarkdownViewer()
@@ -173,6 +179,12 @@ public class MarkdownViewer : TemplatedControl
 	{
 		get => GetValue(TypographySizeProperty) ?? DefaultTypographySize;
 		set => SetValue(TypographySizeProperty, value);
+	}
+
+	public string? ImageBasePath
+	{
+		get => GetValue(ImageBasePathProperty);
+		set => SetValue(ImageBasePathProperty, value);
 	}
 
 	public IBrush? TextBrush
@@ -499,6 +511,7 @@ public class MarkdownViewer : TemplatedControl
 		{
 			textBlock.Inlines!.Add(inline);
 		}
+		AttachLinkInteraction(textBlock, ExtractLinkSpans(heading.Inline));
 
 		var border = new Border
 		{
@@ -524,6 +537,7 @@ public class MarkdownViewer : TemplatedControl
 		{
 			textBlock.Inlines!.Add(inline);
 		}
+		AttachLinkInteraction(textBlock, ExtractLinkSpans(paragraph.Inline));
 
 		return textBlock;
 	}
@@ -673,7 +687,8 @@ public class MarkdownViewer : TemplatedControl
 		var markdownImage = new MarkdownImage
 		{
 			Source = image?.Url,
-			AltText = image is null ? string.Empty : ExtractImageText(image)
+			AltText = image is null ? string.Empty : ExtractImageText(image),
+			ImageBasePath = ImageBasePath
 		};
 		AddMarkdownClass(markdownImage, MarkdownStyleKeys.Image);
 		return markdownImage;
@@ -939,6 +954,134 @@ public class MarkdownViewer : TemplatedControl
 		}
 
 		return span;
+	}
+
+	private static IReadOnlyList<MarkdownLinkSpan> ExtractLinkSpans(ContainerInline? container)
+	{
+		var links = new List<MarkdownLinkSpan>();
+		CollectLinkSpans(container, 0, links);
+		return links;
+	}
+
+	private static int CollectLinkSpans(
+		ContainerInline? container,
+		int offset,
+		ICollection<MarkdownLinkSpan> links)
+	{
+		var child = container?.FirstChild;
+		while (child is not null)
+		{
+			switch (child)
+			{
+				case LiteralInline literal:
+					offset += literal.Content.Length;
+					break;
+				case CodeInline code:
+					offset += code.Content.Length;
+					break;
+				case LineBreakInline:
+					offset += Environment.NewLine.Length;
+					break;
+				case TaskList:
+					break;
+				case LinkInline { IsImage: true } image:
+					offset += ExtractImageText(image).Length;
+					break;
+				case LinkInline link:
+					var start = offset;
+					offset = CollectLinkSpans(link, offset, links);
+					if (offset == start && !string.IsNullOrWhiteSpace(link.Url))
+					{
+						offset += link.Url!.Length;
+					}
+
+					if (offset > start && !string.IsNullOrWhiteSpace(link.Url))
+					{
+						links.Add(new MarkdownLinkSpan(start, offset, link.Url!));
+					}
+
+					break;
+				case ContainerInline nested:
+					offset = CollectLinkSpans(nested, offset, links);
+					break;
+				case HtmlInline html:
+					offset += html.Tag.Length;
+					break;
+				default:
+					var text = child.ToString() ?? string.Empty;
+					if (!IsTypeNameFallback(text, child.GetType()))
+					{
+						offset += text.Length;
+					}
+
+					break;
+			}
+
+			child = child.NextSibling;
+		}
+
+		return offset;
+	}
+
+	private static void AttachLinkInteraction(
+		SelectableTextBlock textBlock,
+		IReadOnlyList<MarkdownLinkSpan> links)
+	{
+		if (links.Count == 0)
+		{
+			return;
+		}
+
+		textBlock.Tag = links;
+		textBlock.PointerMoved += (_, e) =>
+		{
+			textBlock.Cursor = TryGetLinkAtPointer(textBlock, e, out var url)
+				&& MarkdownUrlPolicy.IsAllowedExternalUri(url)
+				? new Cursor(StandardCursorType.Hand)
+				: null;
+		};
+		textBlock.PointerExited += (_, _) => textBlock.Cursor = null;
+		textBlock.PointerReleased += (_, e) =>
+		{
+			if (e.InitialPressMouseButton == MouseButton.Left
+				&& string.IsNullOrEmpty(textBlock.SelectedText)
+				&& TryGetLinkAtPointer(textBlock, e, out var url)
+				&& MarkdownUrlPolicy.IsAllowedExternalUri(url))
+			{
+				MarkdownUrlPolicy.Open(url);
+				e.Handled = true;
+			}
+		};
+	}
+
+	private static bool TryGetLinkAtPointer(
+		SelectableTextBlock textBlock,
+		PointerEventArgs e,
+		out string? url)
+	{
+		url = null;
+		if (textBlock.Tag is not IReadOnlyList<MarkdownLinkSpan> links || links.Count == 0)
+		{
+			return false;
+		}
+
+		var hit = textBlock.TextLayout.HitTestPoint(e.GetPosition(textBlock));
+		if (!hit.IsInside)
+		{
+			return false;
+		}
+
+		var textPosition = hit.TextPosition;
+		foreach (var link in links)
+		{
+			if (textPosition >= link.Start && textPosition < link.End)
+			{
+				url = link.Url;
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private Button CreateCopyButton(string code)
@@ -1231,4 +1374,6 @@ public class MarkdownViewer : TemplatedControl
 		return string.Equals(text, type.FullName, StringComparison.Ordinal)
 			   || string.Equals(text, type.Name, StringComparison.Ordinal);
 	}
+
+	private sealed record MarkdownLinkSpan(int Start, int End, string Url);
 }

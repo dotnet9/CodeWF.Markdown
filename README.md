@@ -12,7 +12,7 @@
 
 ## 仓库规范
 
-- 当前版本：`12.1.2.5`，版本号统一维护在根目录 `Directory.Build.props` 的 `<Version>` 节点。
+- 当前版本：`12.1.2.7`，版本号统一维护在根目录 `Directory.Build.props` 的 `<Version>` 节点。
 - NuGet 包项目统一支持 `net8.0;net10.0;net11.0`；Demo、App 使用 `net11.0` / `net11.0-windows`，测试项目覆盖全部三个 NuGet 目标框架。
 - 根目录 `logo.svg`、`logo.png`、`logo.ico` 是唯一图标源，子工程只通过 MSBuild `Link` 引用，不维护图标副本。
 - 运行时帮助、Markdown 示例、内置备忘录、设计说明等业务文档按功能保留；仓库级入口文档使用根目录 `README.md` 和 `UpdateLog.md`。
@@ -23,6 +23,18 @@
 - `CodeWF.Markdown.Themes`：`CodeWF.Markdown` 的默认控件模板和多套排版主题。
 - `CodeWF.Markdown.Lite`：移除代码高亮、数学、SVG 和图片预览依赖的轻量 MarkdownViewer。
 - `CodeWF.Markdown.Lite.Themes`：`CodeWF.Markdown.Lite` 的默认控件模板和排版主题。
+
+### Full / Lite 功能矩阵
+
+| 能力 | Full | Lite |
+| --- | --- | --- |
+| 常规 Markdown、表格、任务列表、引用和代码块 | 支持 | 支持 |
+| 链接点击与 `http` / `https` / `mailto` 协议策略 | 支持 | 支持 |
+| 相对图片路径和 `ImageBasePath` | 支持 | 支持 |
+| 图片异步加载取消与 32 MiB 默认读取上限 | 支持 | 支持 |
+| SVG、GIF 预览与图片点击预览 | 支持 | 不支持 |
+| 代码语法高亮、多语言资源和数学渲染 | 支持 | 不支持 |
+| PNG、PDF、Word 导出与社交剪贴板 HTML | 支持 | 不支持 |
 
 ## 图片加载与导出辅助能力
 

@@ -23,5 +23,6 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Markdig" />
     <Compile Include="..\CodeWF.Markdown.Shared\Rendering\MarkdownImageByteLoader.cs" Link="Rendering\Shared\MarkdownImageByteLoader.cs" />
+    <Compile Include="..\CodeWF.Markdown.Shared\Rendering\MarkdownUrlPolicy.cs" Link="Rendering\Shared\MarkdownUrlPolicy.cs" />
   </ItemGroup>
 </Project>

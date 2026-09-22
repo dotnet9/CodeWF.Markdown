@@ -28,6 +28,9 @@ public class MarkdownImage : TemplatedControl
 	public static readonly StyledProperty<string?> AltTextProperty =
 		AvaloniaProperty.Register<MarkdownImage, string?>(nameof(AltText));
 
+	public static readonly StyledProperty<string?> ImageBasePathProperty =
+		AvaloniaProperty.Register<MarkdownImage, string?>(nameof(ImageBasePath));
+
 	public string? Source
 	{
 		get => GetValue(SourceProperty);
@@ -40,9 +43,16 @@ public class MarkdownImage : TemplatedControl
 		set => SetValue(AltTextProperty, value);
 	}
 
+	public string? ImageBasePath
+	{
+		get => GetValue(ImageBasePathProperty);
+		set => SetValue(ImageBasePathProperty, value);
+	}
+
 	static MarkdownImage()
 	{
 		SourceProperty.Changed.AddClassHandler<MarkdownImage>((image, _) => image.QueueLoad());
+		ImageBasePathProperty.Changed.AddClassHandler<MarkdownImage>((image, _) => image.QueueLoad());
 	}
 
 	protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
@@ -99,7 +109,7 @@ public class MarkdownImage : TemplatedControl
 
 		try
 		{
-			var bytes = await LoadBytesAsync(source, token);
+			var bytes = await LoadBytesAsync(source, ImageBasePath, token);
 			token.ThrowIfCancellationRequested();
 
 			await using var stream = new MemoryStream(bytes);
@@ -136,9 +146,9 @@ public class MarkdownImage : TemplatedControl
 		}
 	}
 
-	private static async Task<byte[]> LoadBytesAsync(string source, CancellationToken token)
+	private static async Task<byte[]> LoadBytesAsync(string source, string? imageBasePath, CancellationToken token)
 	{
-		return await MarkdownImageByteLoader.LoadAsync(source, null, token);
+		return await MarkdownImageByteLoader.LoadAsync(source, imageBasePath, token);
 	}
 
 	private Control CreateBitmapContent(Bitmap bitmap)
