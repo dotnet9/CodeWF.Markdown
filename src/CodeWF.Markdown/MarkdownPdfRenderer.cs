@@ -61,25 +61,41 @@ public sealed class MarkdownPdfRenderer
 
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".");
 
-        using var stream = File.Create(path);
-        using var pdf = SKDocument.CreatePdf(stream);
-        if (pdf is null)
+        var fullPath = Path.GetFullPath(path);
+        var temporaryPath = $"{fullPath}.{Guid.NewGuid():N}.tmp";
+        try
         {
-            throw new InvalidOperationException("Could not create the PDF document.");
-        }
+            using (var stream = File.Create(temporaryPath))
+            using (var pdf = SKDocument.CreatePdf(stream))
+            {
+                if (pdf is null)
+                {
+                    throw new InvalidOperationException("Could not create the PDF document.");
+                }
 
-        var pageCount = layout.Pages.Count;
-        for (var pageIndex = 0; pageIndex < pageCount; pageIndex++)
+                var pageCount = layout.Pages.Count;
+                for (var pageIndex = 0; pageIndex < pageCount; pageIndex++)
+                {
+                    var canvas = pdf.BeginPage(PageWidth, PageHeight);
+                    canvas.Clear(pageBackgroundColor);
+                    DrawHeader(canvas, headerTitle, metadataTextColor, metadataLineColor);
+                    layout.Pages[pageIndex].Draw(canvas, resources);
+                    DrawFooter(canvas, footerTitle, pageIndex + 1, pageCount, metadataTextColor, metadataLineColor);
+                    pdf.EndPage();
+                }
+
+                pdf.Close();
+            }
+
+            File.Move(temporaryPath, fullPath, overwrite: true);
+        }
+        finally
         {
-            var canvas = pdf.BeginPage(PageWidth, PageHeight);
-            canvas.Clear(pageBackgroundColor);
-            DrawHeader(canvas, headerTitle, metadataTextColor, metadataLineColor);
-            layout.Pages[pageIndex].Draw(canvas, resources);
-            DrawFooter(canvas, footerTitle, pageIndex + 1, pageCount, metadataTextColor, metadataLineColor);
-            pdf.EndPage();
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
         }
-
-        pdf.Close();
     }
 
     private static void RenderDocument(MarkdownExportDocument document, MarkdownExportStyle style, PdfLayout layout)

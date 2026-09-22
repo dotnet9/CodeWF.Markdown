@@ -724,48 +724,6 @@ public class MarkdownViewer : TemplatedControl
         _renderedMarkdown = text;
         _renderedModel = newModel;
         return true;
-
-#if false
-        var change = CalculateTextChange(_renderedMarkdown, text);
-        if (ShouldFullRender(change, _renderedMarkdown.Length, text.Length))
-        {
-            return false;
-        }
-
-        // Markdig 不直接暴露块级增量渲染，这里用文本范围定位受影响块，再只替换该区间。
-        var replaceStartIndex = FindReplaceStartIndex(change.OldStart);
-        if (replaceStartIndex < 0)
-        {
-            return false;
-        }
-
-        var replaceEndIndex = FindReplaceEndIndex(change, replaceStartIndex);
-        if (replaceEndIndex < replaceStartIndex)
-        {
-            return false;
-        }
-
-        var oldRegionStart = replaceStartIndex < _renderedBlocks.Count
-            ? _renderedBlocks[replaceStartIndex].Start
-            : _renderedMarkdown.Length;
-        var oldRegionEnd = replaceEndIndex < _renderedBlocks.Count
-            ? _renderedBlocks[replaceEndIndex].Start
-            : _renderedMarkdown.Length;
-
-        var newRegionStart = Math.Clamp(MapOldStartOffsetToNew(oldRegionStart, change), 0, text.Length);
-        var newRegionEnd = Math.Clamp(MapOldEndOffsetToNew(oldRegionEnd, change), newRegionStart, text.Length);
-        if (newRegionEnd - newRegionStart > Math.Max(4096, text.Length * 9 / 10))
-        {
-            return false;
-        }
-
-        var fragment = text[newRegionStart..newRegionEnd];
-        var newBlocks = CreateRenderedBlocks(fragment, newRegionStart);
-        ReplaceRenderedBlocks(replaceStartIndex, replaceEndIndex, newBlocks, change.Delta);
-
-        _renderedMarkdown = text;
-        return true;
-#endif
     }
 
     private IReadOnlyList<RenderedBlock> CreateRenderedBlocks(IEnumerable<MarkdownDocumentBlock> modelBlocks, string markdown)

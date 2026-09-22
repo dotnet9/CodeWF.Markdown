@@ -32,7 +32,8 @@ public sealed class MarkdownPngRenderer
         ArgumentNullException.ThrowIfNull(document);
 
         var style = exportStyle ?? MarkdownExportStyle.Resolve(null, null);
-        var visual = BuildVisual(document, style);
+        using var resources = new PngRenderResources();
+        var visual = BuildVisual(document, style, resources);
         visual.Measure(new Size(PageWidth, double.PositiveInfinity));
 
         var width = (int)Math.Ceiling(PageWidth);
@@ -50,11 +51,24 @@ public sealed class MarkdownPngRenderer
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".");
-        using var bitmap = Render(document, exportStyle);
-        bitmap.Save(path, PngBitmapEncoderOptions.Default);
+        var fullPath = Path.GetFullPath(path);
+        var temporaryPath = $"{fullPath}.{Guid.NewGuid():N}.tmp";
+        try
+        {
+            using var bitmap = Render(document, exportStyle);
+            bitmap.Save(temporaryPath, PngBitmapEncoderOptions.Default);
+            File.Move(temporaryPath, fullPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
+        }
     }
 
-    private static Border BuildVisual(MarkdownExportDocument document, MarkdownExportStyle style)
+    private static Border BuildVisual(MarkdownExportDocument document, MarkdownExportStyle style, PngRenderResources resources)
     {
         var stack = new StackPanel
         {
@@ -65,7 +79,7 @@ public sealed class MarkdownPngRenderer
         var parsed = global::Markdig.Markdown.Parse(document.Markdown, Pipeline);
         foreach (var block in parsed)
         {
-            AddBlock(stack, block, document.FilePath, 0, style);
+            AddBlock(stack, block, document.FilePath, 0, style, resources);
         }
 
         if (stack.Children.Count == 0)
@@ -82,14 +96,20 @@ public sealed class MarkdownPngRenderer
         };
     }
 
-    private static void AddBlock(Panel parent, Block block, string? documentPath, int depth, MarkdownExportStyle style)
+    private static void AddBlock(
+        Panel parent,
+        Block block,
+        string? documentPath,
+        int depth,
+        MarkdownExportStyle style,
+        PngRenderResources resources)
     {
         switch (block)
         {
             case HeadingBlock heading:
                 parent.Children.Add(CreateHeading(heading, style));
                 break;
-            case ParagraphBlock paragraph when TryCreateImage(paragraph, documentPath, out var image):
+            case ParagraphBlock paragraph when TryCreateImage(paragraph, documentPath, resources, out var image):
                 parent.Children.Add(image);
                 break;
             case ParagraphBlock paragraph:
@@ -99,10 +119,10 @@ public sealed class MarkdownPngRenderer
                 parent.Children.Add(CreateCodeBlock(codeBlock, style));
                 break;
             case QuoteBlock quote:
-                parent.Children.Add(CreateQuoteBlock(quote, documentPath, depth, style));
+                parent.Children.Add(CreateQuoteBlock(quote, documentPath, depth, style, resources));
                 break;
             case ListBlock list:
-                parent.Children.Add(CreateListBlock(list, documentPath, depth, style));
+                parent.Children.Add(CreateListBlock(list, documentPath, depth, style, resources));
                 break;
             case ThematicBreakBlock:
                 parent.Children.Add(CreateThematicBreak(style));
@@ -116,7 +136,7 @@ public sealed class MarkdownPngRenderer
             case ContainerBlock container:
                 foreach (var child in container)
                 {
-                    AddBlock(parent, child, documentPath, depth, style);
+                    AddBlock(parent, child, documentPath, depth, style, resources);
                 }
 
                 break;
@@ -192,7 +212,12 @@ public sealed class MarkdownPngRenderer
         };
     }
 
-    private static Border CreateQuoteBlock(QuoteBlock quote, string? documentPath, int depth, MarkdownExportStyle style)
+    private static Border CreateQuoteBlock(
+        QuoteBlock quote,
+        string? documentPath,
+        int depth,
+        MarkdownExportStyle style,
+        PngRenderResources resources)
     {
         var stack = new StackPanel
         {
@@ -201,7 +226,7 @@ public sealed class MarkdownPngRenderer
 
         foreach (var child in quote)
         {
-            AddBlock(stack, child, documentPath, depth + 1, style);
+            AddBlock(stack, child, documentPath, depth + 1, style, resources);
         }
 
         return new Border
@@ -215,7 +240,12 @@ public sealed class MarkdownPngRenderer
         };
     }
 
-    private static StackPanel CreateListBlock(ListBlock list, string? documentPath, int depth, MarkdownExportStyle style)
+    private static StackPanel CreateListBlock(
+        ListBlock list,
+        string? documentPath,
+        int depth,
+        MarkdownExportStyle style,
+        PngRenderResources resources)
     {
         var stack = new StackPanel
         {
@@ -232,7 +262,7 @@ public sealed class MarkdownPngRenderer
                 index++;
             }
 
-            stack.Children.Add(CreateListItem(marker, child, documentPath, depth, style));
+            stack.Children.Add(CreateListItem(marker, child, documentPath, depth, style, resources));
         }
 
         return stack;
@@ -261,7 +291,13 @@ public sealed class MarkdownPngRenderer
         return true;
     }
 
-    private static Grid CreateListItem(string marker, ListItemBlock item, string? documentPath, int depth, MarkdownExportStyle style)
+    private static Grid CreateListItem(
+        string marker,
+        ListItemBlock item,
+        string? documentPath,
+        int depth,
+        MarkdownExportStyle style,
+        PngRenderResources resources)
     {
         var grid = new Grid
         {
@@ -280,7 +316,7 @@ public sealed class MarkdownPngRenderer
         var content = new StackPanel { Spacing = 0 };
         foreach (var child in item)
         {
-            AddBlock(content, child, documentPath, depth + 1, style);
+            AddBlock(content, child, documentPath, depth + 1, style, resources);
         }
 
         Grid.SetColumn(content, 1);
@@ -511,6 +547,7 @@ public sealed class MarkdownPngRenderer
     private static bool TryCreateImage(
         ParagraphBlock paragraph,
         string? documentPath,
+        PngRenderResources resources,
         out Control imageControl)
     {
         imageControl = null!;
@@ -524,6 +561,8 @@ public sealed class MarkdownPngRenderer
         {
             return false;
         }
+
+        resources.Track(bitmap);
 
         imageControl = new Image
         {
@@ -640,4 +679,24 @@ public sealed class MarkdownPngRenderer
     }
 
     private static SolidColorBrush Brush(string color) => new(Color.Parse(color));
+
+    private sealed class PngRenderResources : IDisposable
+    {
+        private readonly List<Bitmap> _bitmaps = [];
+
+        public void Track(Bitmap bitmap)
+        {
+            _bitmaps.Add(bitmap);
+        }
+
+        public void Dispose()
+        {
+            for (var index = _bitmaps.Count - 1; index >= 0; index--)
+            {
+                _bitmaps[index].Dispose();
+            }
+
+            _bitmaps.Clear();
+        }
+    }
 }
