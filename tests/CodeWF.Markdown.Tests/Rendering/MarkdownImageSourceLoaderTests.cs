@@ -74,6 +74,29 @@ public sealed class MarkdownImageSourceLoaderTests
 	}
 
 	[Fact]
+	public async Task LoadAsync_WhenLocalImageExceedsLimit_Throws()
+	{
+		var root = Path.Combine(Path.GetTempPath(), "CodeWFMarkdownImageTests", Guid.NewGuid().ToString("N"));
+		var imagePath = Path.Combine(root, "large.png");
+		Directory.CreateDirectory(root);
+
+		try
+		{
+			await File.WriteAllBytesAsync(imagePath, new byte[8]);
+
+			await Assert.ThrowsAsync<InvalidDataException>(() =>
+				MarkdownImageSourceLoader.LoadAsync(imagePath, maxLocalImageBytes: 4));
+		}
+		finally
+		{
+			if (Directory.Exists(root))
+			{
+				Directory.Delete(root, recursive: true);
+			}
+		}
+	}
+
+	[Fact]
 	public async Task LoadAsync_WhenRemoteImageExceedsLimit_Throws()
 	{
 		var payload = new byte[8];

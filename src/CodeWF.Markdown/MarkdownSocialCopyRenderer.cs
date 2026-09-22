@@ -604,13 +604,16 @@ public static class MarkdownSocialCopyRenderer
 			return false;
 		}
 
-		try
+	try
 		{
-			var bytes = File.ReadAllBytes(path);
+			var imageSource = MarkdownImageSourceLoader.Load(
+				path,
+				maxLocalImageBytes: MarkdownImageSourceLoader.DefaultMaxRemoteImageBytes);
+			var bytes = imageSource.Bytes;
 			dataUri = $"data:{ResolveImageMediaType(path)};base64,{Convert.ToBase64String(bytes)}";
 			return true;
 		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or PathTooLongException)
+		catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException or NotSupportedException or PathTooLongException)
 		{
 			return false;
 		}
