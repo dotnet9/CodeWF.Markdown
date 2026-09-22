@@ -4,7 +4,7 @@
     <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <OutputType>Library</OutputType>
     <IsPackable>true</IsPackable>
     <Description>基于 Avalonia 12 的 Markdown 解析与渲染控件，支持常规 Markdown 元素、代码高亮、规范样式 Key 与增量渲染。Avalonia Markdown viewer with common Markdown rendering hooks and incremental rendering.</Description>

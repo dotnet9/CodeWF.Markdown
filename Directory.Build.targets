@@ -1,8 +1,8 @@
 <Project>
 	<PropertyGroup Condition="'$(IsPackable)' == 'true'">
-		<GeneratePackageOnBuild Condition="'$(GeneratePackageOnBuild)' == ''">true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild Condition="'$(GeneratePackageOnBuild)' == ''">false</GeneratePackageOnBuild>
 		<Platforms Condition="'$(Platforms)' == ''">AnyCPU;x64;x86</Platforms>
-		<IsAotCompatible Condition="'$(IsAotCompatible)' == ''">true</IsAotCompatible>
+		<IsAotCompatible Condition="'$(IsAotCompatible)' == ''">false</IsAotCompatible>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(IsPackable)' == 'true' and '$(PackageReadmeFile)' == 'README.md'">

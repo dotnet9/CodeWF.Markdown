@@ -4,7 +4,7 @@
     <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <OutputType>Library</OutputType>
     <IsPackable>true</IsPackable>
     <Description>CodeWF.Markdown 的配套排版主题资源，内置多套公众号/技术文档风格，并适配 Avalonia 明暗主题。Typography themes for CodeWF.Markdown.</Description>
