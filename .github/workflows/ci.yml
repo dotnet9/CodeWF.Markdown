@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+            11.0.x
+          dotnet-quality: preview
+
+      - name: Restore
+        run: dotnet restore CodeWF.Markdown.slnx
+
+      - name: Build solution
+        run: dotnet build CodeWF.Markdown.slnx --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test tests/CodeWF.Markdown.Tests/CodeWF.Markdown.Tests.csproj --configuration Release --no-build --no-restore
+
+      - name: Pack NuGet packages
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-packages
+          for project in \
+            src/CodeWF.Markdown/CodeWF.Markdown.csproj \
+            src/CodeWF.Markdown.Themes/CodeWF.Markdown.Themes.csproj \
+            src/CodeWF.Markdown.Lite/CodeWF.Markdown.Lite.csproj \
+            src/CodeWF.Markdown.Lite.Themes/CodeWF.Markdown.Lite.Themes.csproj; do
+            dotnet pack "$project" --configuration Release --no-build --no-restore \
+              -p:GeneratePackageOnBuild=false --output artifacts/ci-packages
+          done
+
+      - name: Audit NuGet dependencies
+        run: dotnet list CodeWF.Markdown.slnx package --vulnerable --include-transitive
+
+      - name: Check patch whitespace
+        run: git diff --check HEAD^
