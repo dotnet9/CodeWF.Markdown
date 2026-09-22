@@ -19,11 +19,12 @@ public class MarkdownImage : TemplatedControl
     private const string ContentHostPartName = "PART_ContentHost";
     private const double DefaultMaxImageWidth = 900;
     private const double DefaultMaxImageHeight = 520;
-    private const int MaxImageByteCacheSize = 64;
+    private const long MaxImageByteCacheBytes = 128L * 1024 * 1024;
 
     private static readonly Dictionary<string, MarkdownImageSource> ImageByteCache = new(StringComparer.Ordinal);
-    private static readonly Queue<string> ImageByteCacheOrder = new();
+    private static readonly LinkedList<string> ImageByteCacheOrder = new();
     private static readonly object ImageByteCacheGate = new();
+    private static long _imageByteCacheBytes;
 
     private ContentControl? _contentHost;
     private Bitmap? _bitmap;
@@ -218,7 +219,14 @@ public class MarkdownImage : TemplatedControl
     {
         lock (ImageByteCacheGate)
         {
-            return ImageByteCache.TryGetValue(source, out result!);
+            if (!ImageByteCache.TryGetValue(source, out result!))
+            {
+                return false;
+            }
+
+            ImageByteCacheOrder.Remove(source);
+            ImageByteCacheOrder.AddLast(source);
+            return true;
         }
     }
 
@@ -226,20 +234,32 @@ public class MarkdownImage : TemplatedControl
     {
         lock (ImageByteCacheGate)
         {
-            if (ImageByteCache.ContainsKey(source))
+            if (result.Bytes.LongLength > MaxImageByteCacheBytes)
             {
-                ImageByteCache[source] = result;
                 return;
             }
 
-            if (ImageByteCache.Count >= MaxImageByteCacheSize)
+            if (ImageByteCache.TryGetValue(source, out var existing))
             {
-                var oldest = ImageByteCacheOrder.Dequeue();
-                ImageByteCache.Remove(oldest);
+                _imageByteCacheBytes -= existing.Bytes.LongLength;
+                ImageByteCacheOrder.Remove(source);
+                ImageByteCache[source] = result;
+            }
+            else
+            {
+                ImageByteCache[source] = result;
             }
 
-            ImageByteCache[source] = result;
-            ImageByteCacheOrder.Enqueue(source);
+            ImageByteCacheOrder.AddLast(source);
+            _imageByteCacheBytes += result.Bytes.LongLength;
+            while (_imageByteCacheBytes > MaxImageByteCacheBytes && ImageByteCacheOrder.First is { } oldest)
+            {
+                ImageByteCacheOrder.RemoveFirst();
+                if (ImageByteCache.Remove(oldest.Value, out var removed))
+                {
+                    _imageByteCacheBytes -= removed.Bytes.LongLength;
+                }
+            }
         }
     }
 

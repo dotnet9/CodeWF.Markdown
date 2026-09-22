@@ -136,4 +136,16 @@ public sealed class MarkdownSocialCopyRendererTests
 			}
 		}
 	}
+
+	[Fact]
+	public void RenderMarkdown_WhenRawHtmlIsPresent_EncodesItByDefault()
+	{
+		var content = MarkdownSocialCopyRenderer.RenderMarkdown(
+			"<script>alert('x')</script>\n\n[unsafe](javascript:alert(1))",
+			CopyKind.Wechat);
+
+		Assert.DoesNotContain("<script>", content.Html, StringComparison.OrdinalIgnoreCase);
+		Assert.DoesNotContain("href=\"javascript:", content.Html, StringComparison.OrdinalIgnoreCase);
+		Assert.Contains("&lt;script&gt;", content.Html, StringComparison.OrdinalIgnoreCase);
+	}
 }

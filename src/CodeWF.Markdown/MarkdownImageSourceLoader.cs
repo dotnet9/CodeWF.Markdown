@@ -14,11 +14,15 @@ public static class MarkdownImageSourceLoader
 	public static MarkdownImageSource Load(
 		string? source,
 		string? imageBasePath = null,
-		long maxRemoteImageBytes = DefaultMaxRemoteImageBytes)
+		long maxRemoteImageBytes = DefaultMaxRemoteImageBytes,
+		long maxLocalImageBytes = DefaultMaxRemoteImageBytes)
 	{
+		ValidateMaxImageBytes(maxRemoteImageBytes, nameof(maxRemoteImageBytes));
+		ValidateMaxImageBytes(maxLocalImageBytes, nameof(maxLocalImageBytes));
 		var normalizedSource = NormalizeSource(source);
 		if (TryReadDataUri(normalizedSource, out var dataUriBytes, out var dataUriIsSvg, out var dataUriIsGif))
 		{
+			ValidateImageLength(dataUriBytes.Length, maxLocalImageBytes);
 			return new MarkdownImageSource(
 				dataUriBytes,
 				ResolveFileName(normalizedSource),
@@ -42,23 +46,27 @@ public static class MarkdownImageSourceLoader
 
 			if (uri.IsFile)
 			{
-				return LoadLocalFile(uri.LocalPath, uri.LocalPath);
+				return LoadLocalFile(uri.LocalPath, uri.LocalPath, maxLocalImageBytes);
 			}
 		}
 
 		var localPath = ResolveLocalPath(normalizedSource, imageBasePath);
-		return LoadLocalFile(localPath.Path, localPath.DisplayPath);
+		return LoadLocalFile(localPath.Path, localPath.DisplayPath, maxLocalImageBytes);
 	}
 
 	public static async Task<MarkdownImageSource> LoadAsync(
 		string? source,
 		string? imageBasePath = null,
 		CancellationToken cancellationToken = default,
-		long maxRemoteImageBytes = DefaultMaxRemoteImageBytes)
+		long maxRemoteImageBytes = DefaultMaxRemoteImageBytes,
+		long maxLocalImageBytes = DefaultMaxRemoteImageBytes)
 	{
+		ValidateMaxImageBytes(maxRemoteImageBytes, nameof(maxRemoteImageBytes));
+		ValidateMaxImageBytes(maxLocalImageBytes, nameof(maxLocalImageBytes));
 		var normalizedSource = NormalizeSource(source);
 		if (TryReadDataUri(normalizedSource, out var dataUriBytes, out var dataUriIsSvg, out var dataUriIsGif))
 		{
+			ValidateImageLength(dataUriBytes.Length, maxLocalImageBytes);
 			return new MarkdownImageSource(
 				dataUriBytes,
 				ResolveFileName(normalizedSource),
@@ -82,12 +90,12 @@ public static class MarkdownImageSourceLoader
 
 			if (uri.IsFile)
 			{
-				return await LoadLocalFileAsync(uri.LocalPath, uri.LocalPath, cancellationToken);
+				return await LoadLocalFileAsync(uri.LocalPath, uri.LocalPath, maxLocalImageBytes, cancellationToken);
 			}
 		}
 
 		var localPath = ResolveLocalPath(normalizedSource, imageBasePath);
-		return await LoadLocalFileAsync(localPath.Path, localPath.DisplayPath, cancellationToken);
+		return await LoadLocalFileAsync(localPath.Path, localPath.DisplayPath, maxLocalImageBytes, cancellationToken);
 	}
 
 	internal static string CreateCacheKey(string source, string? imageBasePath)
@@ -206,14 +214,17 @@ public static class MarkdownImageSourceLoader
 		return string.IsNullOrWhiteSpace(directory) ? null : directory;
 	}
 
-	private static MarkdownImageSource LoadLocalFile(string path, string displayPath)
+	private static MarkdownImageSource LoadLocalFile(string path, string displayPath, long maxImageBytes)
 	{
 		if (!File.Exists(path))
 		{
 			throw new FileNotFoundException("Markdown image file was not found.", displayPath);
 		}
 
+		var fileInfo = new FileInfo(path);
+		ValidateImageLength(fileInfo.Length, maxImageBytes);
 		var bytes = File.ReadAllBytes(path);
+		ValidateImageLength(bytes.Length, maxImageBytes);
 		return new MarkdownImageSource(
 			bytes,
 			ResolveFileName(path),
@@ -222,14 +233,21 @@ public static class MarkdownImageSourceLoader
 			path);
 	}
 
-	private static async Task<MarkdownImageSource> LoadLocalFileAsync(string path, string displayPath, CancellationToken cancellationToken)
+	private static async Task<MarkdownImageSource> LoadLocalFileAsync(
+		string path,
+		string displayPath,
+		long maxImageBytes,
+		CancellationToken cancellationToken)
 	{
 		if (!File.Exists(path))
 		{
 			throw new FileNotFoundException("Markdown image file was not found.", displayPath);
 		}
 
+		var fileInfo = new FileInfo(path);
+		ValidateImageLength(fileInfo.Length, maxImageBytes);
 		var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
+		ValidateImageLength(bytes.Length, maxImageBytes);
 		return new MarkdownImageSource(
 			bytes,
 			ResolveFileName(path),
@@ -292,9 +310,26 @@ public static class MarkdownImageSourceLoader
 
 	private static void ValidateRemoteLength(long? contentLength, long maxRemoteImageBytes)
 	{
+		ValidateMaxImageBytes(maxRemoteImageBytes, nameof(maxRemoteImageBytes));
 		if (contentLength > maxRemoteImageBytes)
 		{
 			throw new InvalidDataException("Markdown image response is too large.");
+		}
+	}
+
+	private static void ValidateImageLength(long length, long maxImageBytes)
+	{
+		if (length > maxImageBytes)
+		{
+			throw new InvalidDataException("Markdown image data is too large.");
+		}
+	}
+
+	private static void ValidateMaxImageBytes(long maxImageBytes, string parameterName)
+	{
+		if (maxImageBytes is <= 0 or > int.MaxValue)
+		{
+			throw new ArgumentOutOfRangeException(parameterName);
 		}
 	}
 

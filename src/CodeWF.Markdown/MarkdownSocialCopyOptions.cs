@@ -16,4 +16,10 @@ public sealed record MarkdownSocialCopyOptions
 	public string? SuffixFormat { get; init; }
 
 	public string Website { get; init; } = "https://codewf.com";
+
+	/// <summary>
+	/// Allows raw HTML blocks and inline tags to pass through to clipboard HTML.
+	/// Keep disabled for untrusted Markdown.
+	/// </summary>
+	public bool AllowRawHtml { get; init; }
 }

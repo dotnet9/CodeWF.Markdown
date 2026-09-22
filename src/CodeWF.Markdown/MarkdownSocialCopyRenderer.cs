@@ -187,7 +187,9 @@ public static class MarkdownSocialCopyRenderer
 			CodeBlock codeBlock => RenderSocialCodeBlock(codeBlock, style),
 			ThematicBreakBlock => $"""<hr style="height: 1px; border: none; border-top: 1px solid {style.BorderColor}; margin: 24px 0;" />""",
 			Table table => RenderSocialTable(table, style, profile, options),
-			HtmlBlock htmlBlock => htmlBlock.Lines.ToString(),
+			HtmlBlock htmlBlock => options.AllowRawHtml
+				? htmlBlock.Lines.ToString()
+				: WebUtility.HtmlEncode(htmlBlock.Lines.ToString()),
 			ContainerBlock container => RenderSocialBlocks(container, style, profile, options),
 			_ => string.Empty
 		};
@@ -348,7 +350,9 @@ public static class MarkdownSocialCopyRenderer
 			LinkInline { IsImage: true } image => RenderSocialImage(image, style, profile, options),
 			LinkInline link => RenderSocialLink(link, style, profile, options),
 			TaskList taskList => taskList.Checked ? "[x] " : "[ ] ",
-			HtmlInline htmlInline => htmlInline.Tag,
+			HtmlInline htmlInline => options.AllowRawHtml
+				? htmlInline.Tag
+				: WebUtility.HtmlEncode(htmlInline.Tag),
 			ContainerInline nested => RenderSocialInlines(nested, style, profile, options),
 			_ => WebUtility.HtmlEncode(inline.ToString() ?? string.Empty)
 		};
@@ -373,7 +377,12 @@ public static class MarkdownSocialCopyRenderer
 		MarkdownSocialCopyOptions options)
 	{
 		var content = RenderSocialInlines(link, style, profile, options);
-		var url = WebUtility.HtmlEncode(link.Url ?? string.Empty);
+		if (!TryGetSafeUri(link.Url, allowDataImage: false, out var safeUrl))
+		{
+			return content;
+		}
+
+		var url = WebUtility.HtmlEncode(safeUrl);
 		return $"""<a href="{url}" style="{BuildSocialLinkStyle(style)}">{content}</a>""";
 	}
 
@@ -383,9 +392,49 @@ public static class MarkdownSocialCopyRenderer
 		MarkdownSocialCopyProfile profile,
 		MarkdownSocialCopyOptions options)
 	{
-		var url = WebUtility.HtmlEncode(image.Url ?? string.Empty);
+		if (!TryGetSafeUri(image.Url, allowDataImage: true, out var safeUrl))
+		{
+			return WebUtility.HtmlEncode(RenderSocialInlines(image, style, profile, options));
+		}
+
+		var url = WebUtility.HtmlEncode(safeUrl);
 		var alt = WebUtility.HtmlEncode(RenderSocialInlines(image, style, profile, options));
 		return $"""<img src="{url}" alt="{alt}" style="max-width: 100%; display: block; margin: 14px auto;" />""";
+	}
+
+	private static bool TryGetSafeUri(string? value, bool allowDataImage, out string safeUri)
+	{
+		safeUri = string.Empty;
+		if (string.IsNullOrWhiteSpace(value))
+		{
+			return false;
+		}
+
+		var trimmed = value.Trim();
+		if (allowDataImage && trimmed.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
+		{
+			safeUri = trimmed;
+			return true;
+		}
+
+		if (Uri.TryCreate(trimmed, UriKind.Absolute, out var uri))
+		{
+			if (uri.Scheme is not ("http" or "https" or "mailto"))
+			{
+				return false;
+			}
+
+			safeUri = trimmed;
+			return true;
+		}
+
+		if (trimmed.StartsWith('#') || !trimmed.Contains(':'))
+		{
+			safeUri = trimmed;
+			return true;
+		}
+
+		return false;
 	}
 
 	private static string BuildSocialRootStyle(MarkdownExportStyle style)

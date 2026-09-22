@@ -22,5 +22,6 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Markdig" />
+    <Compile Include="..\CodeWF.Markdown.Shared\Rendering\MarkdownImageByteLoader.cs" Link="Rendering\Shared\MarkdownImageByteLoader.cs" />
   </ItemGroup>
 </Project>

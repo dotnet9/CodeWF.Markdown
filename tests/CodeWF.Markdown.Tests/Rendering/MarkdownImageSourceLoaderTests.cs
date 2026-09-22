@@ -74,6 +74,27 @@ public sealed class MarkdownImageSourceLoaderTests
 	}
 
 	[Fact]
+	public async Task LoadAsync_WhenRemoteImageExceedsLimit_Throws()
+	{
+		var payload = new byte[8];
+		using var listener = new TcpListener(IPAddress.Loopback, 0);
+		listener.Start();
+		var endpoint = (IPEndPoint)listener.LocalEndpoint;
+		var serverTask = ServeSingleImageAsync(listener, payload, "image/png");
+
+		try
+		{
+			await Assert.ThrowsAsync<InvalidDataException>(() =>
+				MarkdownImageSourceLoader.LoadAsync($"http://127.0.0.1:{endpoint.Port}/image.png", maxRemoteImageBytes: 4));
+		}
+		finally
+		{
+			listener.Stop();
+			await serverTask;
+		}
+	}
+
+	[Fact]
 	public void RenderToPngBytes_WhenGifImage_ReturnsStaticPng()
 	{
 		var gif = Convert.FromBase64String("R0lGODlhAQABAPAAAP///wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==");
@@ -83,6 +104,15 @@ public sealed class MarkdownImageSourceLoaderTests
 
 		Assert.True(png.Length > 8);
 		Assert.Equal(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, png[..4]);
+	}
+
+	[Fact]
+	public void RenderToPngBytes_WhenPixelLimitIsInvalid_Throws()
+	{
+		var gif = Convert.FromBase64String("R0lGODlhAQABAPAAAP///wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==");
+		var source = new MarkdownImageSource(gif, "pixel.gif", IsSvg: false, IsGif: true, LocalPath: null);
+
+		Assert.Throws<ArgumentOutOfRangeException>(() => MarkdownImageRasterizer.RenderToPngBytes(source, maxPixelCount: 0));
 	}
 
 	[Fact]

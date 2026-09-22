@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using CodeWF.Markdown.Shared.Rendering;
 
 namespace CodeWF.Markdown.Lite.Controls;
 
@@ -15,8 +16,6 @@ public class MarkdownImage : TemplatedControl
 	private const string ContentHostPartName = "PART_ContentHost";
 	private const double DefaultMaxImageWidth = 900;
 	private const double DefaultMaxImageHeight = 520;
-
-	private static readonly HttpClient HttpClient = new();
 
 	private ContentControl? _contentHost;
 	private Bitmap? _bitmap;
@@ -139,23 +138,7 @@ public class MarkdownImage : TemplatedControl
 
 	private static async Task<byte[]> LoadBytesAsync(string source, CancellationToken token)
 	{
-		if (Uri.TryCreate(source, UriKind.Absolute, out var uri))
-		{
-			if (uri.Scheme is "http" or "https")
-			{
-				return await HttpClient.GetByteArrayAsync(uri, token);
-			}
-
-			if (uri.IsFile)
-			{
-				return await File.ReadAllBytesAsync(uri.LocalPath, token);
-			}
-		}
-
-		var path = Path.IsPathRooted(source)
-			? source
-			: Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, source.Replace('/', Path.DirectorySeparatorChar)));
-		return await File.ReadAllBytesAsync(path, token);
+		return await MarkdownImageByteLoader.LoadAsync(source, null, token);
 	}
 
 	private Control CreateBitmapContent(Bitmap bitmap)
