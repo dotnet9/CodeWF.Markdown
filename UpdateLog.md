@@ -1,5 +1,9 @@
 # 更新日志
 
+## 12.1.2.11 (2026-09-23)
+
+- 🐛[修复]-将 Avalonia 12.1.3 使用的 SkiaSharp、HarfBuzzSharp、Svg.Skia 和 Svg.Controls.Skia.Avalonia 依赖对齐到兼容版本，并替换 SkiaSharp 4 专用绘制 API，避免运行时混用不兼容的 Skia 原生库。
+
 ## 12.1.2.2 (2026-09-20)
 
 - 🚀[新增]-NuGet 包统一支持 `net8.0;net10.0;net11.0`，并发布新版本。

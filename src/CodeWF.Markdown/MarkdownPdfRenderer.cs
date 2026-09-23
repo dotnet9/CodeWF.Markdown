@@ -1009,7 +1009,7 @@ public sealed class MarkdownPdfRenderer
 
         var titleMaxWidth = PageWidth - (PageMargin * 2);
         var visibleTitle = TrimToWidth(title, font, textPaint, titleMaxWidth);
-        canvas.DrawText(visibleTitle, PageMargin, PageMargin + 17, SKTextAlign.Left, font, textPaint);
+        canvas.DrawText(visibleTitle, PageMargin, PageMargin + 17, font, textPaint);
     }
 
     private static void DrawFooter(SKCanvas canvas, string title, int pageNumber, int pageCount, SKColor textColor, SKColor lineColor)
@@ -1028,8 +1028,8 @@ public sealed class MarkdownPdfRenderer
         var titleMaxWidth = Math.Max(0, pageTextX - PageMargin - 24);
         var visibleTitle = TrimToWidth(title, font, textPaint, titleMaxWidth);
 
-        canvas.DrawText(visibleTitle, PageMargin, baseline, SKTextAlign.Left, font, textPaint);
-        canvas.DrawText(pageText, pageTextX, baseline, SKTextAlign.Left, font, textPaint);
+        canvas.DrawText(visibleTitle, PageMargin, baseline, font, textPaint);
+        canvas.DrawText(pageText, pageTextX, baseline, font, textPaint);
     }
 
     private static SKPaint CreateLinePaint(SKColor color)
@@ -1354,7 +1354,7 @@ public sealed class MarkdownPdfRenderer
             {
                 using var font = new SKFont(segment.Typeface, Style.FontSize) { Subpixel = true };
                 using var paint = CreateTextPaint(Style.Color);
-                canvas.DrawText(segment.Text, cursorX, Baseline, SKTextAlign.Left, font, paint);
+                canvas.DrawText(segment.Text, cursorX, Baseline, font, paint);
                 cursorX += segment.Width;
             }
 
@@ -1459,7 +1459,7 @@ public sealed class MarkdownPdfRenderer
         public void Draw(SKCanvas canvas, PdfRenderResources resources)
         {
             var destination = new SKRect(X, Y, X + Width, Y + Height);
-            canvas.DrawBitmap(Bitmap, destination, new SKSamplingOptions(SKFilterMode.Linear));
+            canvas.DrawBitmap(Bitmap, destination);
         }
     }
 
