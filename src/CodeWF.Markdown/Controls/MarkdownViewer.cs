@@ -2912,7 +2912,7 @@ public class MarkdownViewer : TemplatedControl
 
     private SelectableTextBlock CreateSelectableText(params string[] classes)
     {
-        var textBlock = new SelectableTextBlock
+        var textBlock = new MarkdownSelectableTextBlock
         {
             Inlines = new InlineCollection(),
             TextWrapping = TextWrapping.Wrap

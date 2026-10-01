@@ -1,5 +1,10 @@
 # 更新日志
 
+## 12.1.2.13 (2026-10-01)
+
+- 🐛[修复]-修复标题等容器内含行内代码（自定义字号、基线对齐、背景）的文本被选中后渲染移位的问题：Avalonia 12.1 `SelectableTextBlock` 构造选区前景色覆盖时会用控件级 FontSize 与默认 BaselineAlignment 重建 Run 属性，导致选中的行内代码按容器字号放大并下沉、背景块丢失。新增 `MarkdownSelectableTextBlock` 子类只替换选中部分前景色，完整保留 Run 原有属性，主控件与 Lite 控件同步修复。关联：dotnet9/Vex#3。
+- 🧪[测试]-新增选区属性覆盖构建的回归测试，覆盖混合字号、部分选中和空选区场景。
+
 ## 12.1.2.11 (2026-09-23)
 
 - 🐛[修复]-将 Avalonia 12.1.3 使用的 SkiaSharp、HarfBuzzSharp、Svg.Skia 和 Svg.Controls.Skia.Avalonia 依赖对齐到兼容版本，并替换 SkiaSharp 4 专用绘制 API，避免运行时混用不兼容的 Skia 原生库。

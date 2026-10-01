@@ -582,7 +582,7 @@ public class MarkdownViewer : TemplatedControl
 		header.Children.Add(copyButton);
 		content.Children.Add(header);
 
-		var codeText = new SelectableTextBlock
+		var codeText = new MarkdownSelectableTextBlock
 		{
 			Text = code,
 			TextWrapping = TextWrapping.NoWrap
@@ -1106,7 +1106,7 @@ public class MarkdownViewer : TemplatedControl
 
 	private SelectableTextBlock CreateSelectableText(params string[] classes)
 	{
-		var textBlock = new SelectableTextBlock
+		var textBlock = new MarkdownSelectableTextBlock
 		{
 			Inlines = new InlineCollection(),
 			TextWrapping = TextWrapping.Wrap
