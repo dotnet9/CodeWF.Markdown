@@ -1428,6 +1428,38 @@ public class MarkdownViewer : TemplatedControl
         return border;
     }
 
+    /// <summary>
+    /// 决定代码块 token 配色是否使用深色主题：
+    /// 以实际生效的代码块背景（排版主题按变体提供的 <see cref="TextBlockCodeBackground"/> 或
+    /// 显式设置的 <see cref="CodeBackgroundBrush"/>）的感知亮度为准。
+    /// 此前按 <c>ActualThemeVariant == ThemeVariant.Dark</c> 判定，自定义主题变体
+    /// （Desert/NightSky 等，基座为 Light/Dark 但变体本身不等于 Dark）恒判为浅色，
+    /// 导致深色代码块底上渲染浅色主题的深色 token（键名/标点不可读）。
+    /// </summary>
+    private bool ResolveCodeBlockIsDark()
+    {
+        if (GetValue(CodeBackgroundBrushProperty) is ISolidColorBrush solid
+            && solid.Color.A > 0)
+        {
+            return GetPerceivedLuminance(solid.Color) < 0.5;
+        }
+
+        // 排版主题未定义代码背景资源（如 Simple）时解析失败，默认按深色底处理：
+        // 内置排版主题的代码块底色即为深色系，DarkPlus token 在其上可读。
+        if (TryGetResource(MarkdownStyleKeys.CodeBackgroundBrushResource, ActualThemeVariant, out var resource)
+            && resource is ISolidColorBrush themeBrush)
+        {
+            return GetPerceivedLuminance(themeBrush.Color) < 0.5;
+        }
+
+        return true;
+    }
+
+    private static double GetPerceivedLuminance(Color color)
+    {
+        return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
+    }
+
     private Control CreateCodeBlock(CodeBlock codeBlock)
     {
         var code = codeBlock.Lines.ToString();
@@ -1476,7 +1508,7 @@ public class MarkdownViewer : TemplatedControl
         stack.Children.Add(CodeHighlighter.Render(
             code,
             language,
-            ActualThemeVariant == ThemeVariant.Dark,
+            ResolveCodeBlockIsDark(),
             CodeFontFamily,
             CodeBlockFontSize,
             CodeBlockLineHeight,
