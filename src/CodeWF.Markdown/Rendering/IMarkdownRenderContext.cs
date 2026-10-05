@@ -6,7 +6,6 @@ using Avalonia.Styling;
 using CodeWF.Markdown.Controls;
 using CodeWF.Markdown.Shared.Rendering;
 using Markdig.Syntax;
-
 namespace CodeWF.Markdown.Rendering;
 
 /// <summary>
@@ -16,6 +15,25 @@ namespace CodeWF.Markdown.Rendering;
 internal interface IMarkdownRenderContext
 {
     double ParagraphLineHeight { get; }
+
+    double ParagraphFontSize { get; }
+
+    double UnorderedListMarkerWidth { get; }
+
+    double OrderedListMarkerMinWidth { get; }
+
+    double OrderedListMarkerCharacterWidth { get; }
+
+    double OrderedListMarkerExtraWidth { get; }
+
+    Thickness ListFirstParagraphMargin { get; }
+
+    Thickness ListNestedParagraphMargin { get; }
+
+    /// <summary>递归转换嵌套块（引用、列表、表格单元格内容）。</summary>
+    Control? ConvertBlock(Block block, string? sourceMarkdown);
+
+    SelectableTextBlock CreateParagraph(ParagraphBlock paragraph, bool stripTaskPrefix, Thickness? marginOverride);
 
     IDisposable BindTheme<T>(
         AvaloniaObject target,

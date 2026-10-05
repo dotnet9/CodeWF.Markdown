@@ -458,6 +458,10 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         var pipeline = new MarkdownBlockRendererPipeline();
         pipeline.Register(new MathBlockRenderer());
         pipeline.Register(new CodeBlockRenderer());
+        pipeline.Register(new ListRenderer());
+        pipeline.Register(new QuoteRenderer());
+        pipeline.Register(new TableRenderer());
+        pipeline.Register(new ThematicBreakRenderer());
         return pipeline;
     }
 
@@ -1252,10 +1256,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
             HeadingBlock heading => CreateHeading(heading),
             LinkReferenceDefinitionGroup => null,
             LinkReferenceDefinition => null,
-            ListBlock list => CreateList(list),
-            QuoteBlock quote => CreateQuote(quote),
-            ThematicBreakBlock => CreateThematicBreak(),
-            Table table => CreateTable(table),
             FootnoteGroup footnotes => CreateFootnoteGroup(footnotes),
             Footnote footnote => CreateFootnote(footnote),
             HtmlBlock htmlBlock => CreateHtmlBlock(htmlBlock.Lines.ToString()),
@@ -1468,151 +1468,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
     }
 
-    private Control CreateList(ListBlock list)
-    {
-        var items = list.OfType<ListItemBlock>().ToList();
-        var startIndex = GetOrderedStart(list);
-        var markerWidth = CalculateListMarkerWidth(list.IsOrdered, startIndex, items.Count);
-        var panel = new StackPanel
-        {
-            Orientation = Orientation.Vertical
-        };
-        AddMarkdownClass(panel, MarkdownStyleKeys.List);
-
-        for (var i = 0; i < items.Count; i++)
-        {
-            panel.Children.Add(CreateListItem(items[i], list.IsOrdered, startIndex + i, markerWidth));
-        }
-
-        return panel;
-    }
-
-    private Control CreateListItem(ListItemBlock item, bool ordered, int index, double markerWidth)
-    {
-        var itemGrid = new Grid
-        {
-            ColumnDefinitions =
-            {
-                new ColumnDefinition(GridLength.Auto),
-                new ColumnDefinition(new GridLength(1, GridUnitType.Star))
-            }
-        };
-        AddMarkdownClass(itemGrid, MarkdownStyleKeys.ListItem);
-
-        var isTask = MarkdownTaskListHelper.TryReadTaskState(item, out var isChecked);
-        Control marker = isTask
-            ? CreateTaskMarker(isChecked, markerWidth)
-            : CreateListMarker(ordered ? $"{index}." : "•", markerWidth);
-
-        Grid.SetColumn(marker, 0);
-        itemGrid.Children.Add(marker);
-
-        var content = new StackPanel { Orientation = Orientation.Vertical };
-        AddMarkdownClass(content, MarkdownStyleKeys.ListItemContent);
-        var firstParagraph = true;
-        foreach (var block in item)
-        {
-            var child = block is ParagraphBlock paragraph
-                ? CreateParagraph(paragraph, isTask && firstParagraph, GetListParagraphMargin(firstParagraph))
-                : ConvertBlock(block);
-            firstParagraph = false;
-
-            if (child is not null)
-            {
-                content.Children.Add(child);
-            }
-        }
-
-        Grid.SetColumn(content, 1);
-        itemGrid.Children.Add(content);
-        return itemGrid;
-    }
-
-    private Control CreateTaskMarker(bool isChecked, double markerWidth)
-    {
-        var checkBox = new CheckBox
-        {
-            IsChecked = isChecked,
-            IsHitTestVisible = false,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Top
-        };
-        AddMarkdownClass(checkBox, MarkdownStyleKeys.TaskMarkerBox);
-
-        var marker = new Border
-        {
-            Child = checkBox,
-            MinWidth = markerWidth,
-            VerticalAlignment = VerticalAlignment.Top
-        };
-        AddMarkdownClass(marker, MarkdownStyleKeys.ListMarker);
-        return marker;
-    }
-
-    private SelectableTextBlock CreateListMarker(string text, double markerWidth)
-    {
-        var marker = CreateSelectableText(MarkdownStyleKeys.ListMarker);
-        marker.Text = text;
-        marker.FontWeight = FontWeight.Bold;
-        marker.MinWidth = markerWidth;
-        marker.TextAlignment = TextAlignment.Right;
-        marker.VerticalAlignment = VerticalAlignment.Top;
-        BindTheme(marker, SelectableTextBlock.ForegroundProperty, AccentBrushProperty);
-        BindTheme(marker, SelectableTextBlock.FontFamilyProperty, ContentFontFamilyProperty);
-        BindTheme(marker, SelectableTextBlock.FontSizeProperty, ParagraphFontSizeProperty);
-        BindTheme(marker, SelectableTextBlock.LineHeightProperty, ParagraphLineHeightProperty);
-        return marker;
-    }
-
-    private static int GetOrderedStart(ListBlock list)
-    {
-        return list.IsOrdered
-               && int.TryParse(list.OrderedStart, out var start)
-               && start > 0
-            ? start
-            : 1;
-    }
-
-    private double CalculateListMarkerWidth(bool ordered, int startIndex, int itemCount)
-    {
-        if (!ordered)
-        {
-            return UnorderedListMarkerWidth;
-        }
-
-        var lastMarkerLength = $"{Math.Max(startIndex, startIndex + itemCount - 1)}.".Length;
-        return Math.Max(
-            OrderedListMarkerMinWidth,
-            lastMarkerLength * OrderedListMarkerCharacterWidth + OrderedListMarkerExtraWidth);
-    }
-
-    private Thickness GetListParagraphMargin(bool firstParagraph)
-    {
-        return firstParagraph ? ListFirstParagraphMargin : ListNestedParagraphMargin;
-    }
-
-    private Control CreateQuote(QuoteBlock quote)
-    {
-        var border = new Border();
-        AddMarkdownClass(border, MarkdownStyleKeys.Quote);
-        BindTheme(border, Border.BorderBrushProperty, BorderLineBrushProperty);
-        BindTheme(border, Border.BackgroundProperty, QuoteBackgroundBrushProperty);
-
-        var stack = new StackPanel { Orientation = Orientation.Vertical };
-        AddMarkdownClass(stack, MarkdownStyleKeys.QuoteContent);
-        foreach (var block in quote)
-        {
-            var child = ConvertBlock(block);
-            if (child is not null)
-            {
-                stack.Children.Add(child);
-            }
-        }
-
-        border.Child = stack;
-        return border;
-    }
-
     private Control CreateThematicBreak()
     {
         var border = new Border();
@@ -1621,72 +1476,9 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         return border;
     }
 
-    private Control CreateTable(Table table)
+    private Thickness GetListParagraphMargin(bool firstParagraph)
     {
-        var rows = table.OfType<TableRow>().ToList();
-        var columnCount = rows.Select(row => row.Count).DefaultIfEmpty(0).Max();
-        var grid = new Grid();
-        AddMarkdownClass(grid, MarkdownStyleKeys.Table);
-
-        for (var i = 0; i < columnCount; i++)
-        {
-            grid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(1, GridUnitType.Star)));
-        }
-
-        for (var rowIndex = 0; rowIndex < rows.Count; rowIndex++)
-        {
-            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            var row = rows[rowIndex];
-            for (var columnIndex = 0; columnIndex < row.Count; columnIndex++)
-            {
-                if (row[columnIndex] is not TableCell cell)
-                {
-                    continue;
-                }
-
-                var cellBorder = CreateTableCell(cell, row.IsHeader, rowIndex, columnIndex);
-                Grid.SetRow(cellBorder, rowIndex);
-                Grid.SetColumn(cellBorder, columnIndex);
-                grid.Children.Add(cellBorder);
-            }
-        }
-
-        var container = new Border
-        {
-            Child = grid,
-            ClipToBounds = true
-        };
-        AddMarkdownClass(container, MarkdownStyleKeys.TableContainer);
-        BindTheme(container, Border.BorderBrushProperty, BorderLineBrushProperty);
-        return container;
-    }
-
-    private Border CreateTableCell(TableCell cell, bool isHeader, int rowIndex, int columnIndex)
-    {
-        var border = new Border
-        {
-            BorderThickness = new Thickness(columnIndex == 0 ? 0 : 1, rowIndex == 0 ? 0 : 1, 0, 0)
-        };
-        AddMarkdownClass(border, isHeader ? MarkdownStyleKeys.TableHeaderCell : MarkdownStyleKeys.TableCell);
-        BindTheme(border, Border.BorderBrushProperty, BorderLineBrushProperty);
-        if (isHeader)
-        {
-            BindTheme(border, Border.BackgroundProperty, TableHeaderBackgroundBrushProperty);
-        }
-
-        var stack = new StackPanel { Orientation = Orientation.Vertical };
-        AddMarkdownClass(stack, MarkdownStyleKeys.TableCellContent);
-        foreach (var block in cell)
-        {
-            var child = CreateTableCellBlock(block, isHeader);
-            if (child is not null)
-            {
-                stack.Children.Add(child);
-            }
-        }
-
-        border.Child = stack;
-        return border;
+        return firstParagraph ? ListFirstParagraphMargin : ListNestedParagraphMargin;
     }
 
     private Control CreateFootnoteGroup(FootnoteGroup footnotes)
@@ -1831,20 +1623,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         }
 
         return panel;
-    }
-
-    private Control? CreateTableCellBlock(Block block, bool isHeader)
-    {
-        var child = block is ParagraphBlock paragraph
-            ? CreateParagraph(paragraph, false, new Thickness(0))
-            : ConvertBlock(block);
-
-        if (isHeader && child is SelectableTextBlock textBlock)
-        {
-            textBlock.FontWeight = FontWeight.SemiBold;
-        }
-
-        return child;
     }
 
     private MarkdownMathView CreateMathView(string latex, double fontSize, CSharpMath.Atom.LineStyle lineStyle)
@@ -2723,6 +2501,12 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
     void Rendering.IMarkdownRenderContext.RaiseCodeBlockToolRender(StackPanel header, StackPanel content, CodeBlock codeBlock) =>
         CodeBlockToolRender?.Invoke(this, new CodeBlockToolRenderEventArgs(header, content, codeBlock));
+
+    Control? Rendering.IMarkdownRenderContext.ConvertBlock(Block block, string? sourceMarkdown) =>
+        ConvertBlock(block, sourceMarkdown);
+
+    SelectableTextBlock Rendering.IMarkdownRenderContext.CreateParagraph(ParagraphBlock paragraph, bool stripTaskPrefix, Thickness? marginOverride) =>
+        CreateParagraph(paragraph, stripTaskPrefix, marginOverride);
 
     private sealed record MarkdownLinkSpan(int Start, int End, string Url);
 
