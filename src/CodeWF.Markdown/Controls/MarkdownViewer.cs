@@ -1347,7 +1347,7 @@ public class MarkdownViewer : TemplatedControl
         var markdownImage = new MarkdownImage
         {
             Source = image.Url,
-            AltText = ExtractPlainText(image),
+            AltText = MarkdownPlainTextExtractor.ExtractPlainText(image),
             ImageBasePath = ImageBasePath,
             HorizontalAlignment = HorizontalAlignment.Left
         };
@@ -1552,7 +1552,7 @@ public class MarkdownViewer : TemplatedControl
         };
         AddMarkdownClass(itemGrid, MarkdownStyleKeys.ListItem);
 
-        var isTask = TryReadTaskState(item, out var isChecked);
+        var isTask = MarkdownTaskListHelper.TryReadTaskState(item, out var isChecked);
         Control marker = isTask
             ? CreateTaskMarker(isChecked, markerWidth)
             : CreateListMarker(ordered ? $"{index}." : "•", markerWidth);
@@ -1875,7 +1875,7 @@ public class MarkdownViewer : TemplatedControl
         foreach (var heading in document.OfType<HeadingBlock>().Where(h => h.Level is >= 1 and <= 3))
         {
             var item = CreateSelectableText(MarkdownStyleKeys.ListMarker);
-            item.Text = $"{new string(' ', Math.Max(0, heading.Level - 1) * 2)}{ExtractPlainText(heading.Inline)}";
+            item.Text = $"{new string(' ', Math.Max(0, heading.Level - 1) * 2)}{MarkdownPlainTextExtractor.ExtractPlainText(heading.Inline)}";
             item.TextWrapping = TextWrapping.Wrap;
             BindTheme(item, SelectableTextBlock.ForegroundProperty, heading.Level <= 2 ? AccentBrushProperty : TextBrushProperty);
             BindTheme(item, SelectableTextBlock.FontFamilyProperty, ContentFontFamilyProperty);
@@ -1902,7 +1902,7 @@ public class MarkdownViewer : TemplatedControl
             return !string.IsNullOrWhiteSpace(latex);
         }
 
-        if (allowBareLatex && !string.IsNullOrWhiteSpace(trimmed) && !IsTypeNameFallback(trimmed, typeof(Block)))
+        if (allowBareLatex && !string.IsNullOrWhiteSpace(trimmed) && !MarkdownPlainTextExtractor.IsTypeNameFallback(trimmed, typeof(Block)))
         {
             latex = trimmed;
             return true;
@@ -2235,7 +2235,7 @@ public class MarkdownViewer : TemplatedControl
     private Control? CreateUnknownBlock(Block block)
     {
         var text = block.ToString() ?? string.Empty;
-        return IsTypeNameFallback(text, block.GetType())
+        return MarkdownPlainTextExtractor.IsTypeNameFallback(text, block.GetType())
             ? null
             : CreateFallbackText(text, MarkdownStyleKeys.UnknownBlock);
     }
@@ -2269,7 +2269,7 @@ public class MarkdownViewer : TemplatedControl
         {
             case LiteralInline literal:
                 var literalText = literal.Content.ToString();
-                if (stripTaskPrefix && TryStripTaskPrefix(literalText, out var stripped))
+                if (stripTaskPrefix && MarkdownTaskListHelper.TryStripTaskPrefix(literalText, out var stripped))
                 {
                     stripTaskPrefix = false;
                     if (!string.IsNullOrWhiteSpace(stripped))
@@ -2331,7 +2331,7 @@ public class MarkdownViewer : TemplatedControl
             default:
                 stripTaskPrefix = false;
                 var text = inline.ToString() ?? string.Empty;
-                if (!IsTypeNameFallback(text, inline.GetType()))
+                if (!MarkdownPlainTextExtractor.IsTypeNameFallback(text, inline.GetType()))
                 {
                     result.Add(new Run(text));
                 }
@@ -2356,14 +2356,14 @@ public class MarkdownViewer : TemplatedControl
             }
 
             text = inline.ToString()?.Trim() ?? string.Empty;
-            if (IsTypeNameFallback(text, inline.GetType()))
+            if (MarkdownPlainTextExtractor.IsTypeNameFallback(text, inline.GetType()))
             {
                 return false;
             }
         }
 
         text = TrimInlineMathDelimiters(text);
-        if (string.IsNullOrWhiteSpace(text) || IsTypeNameFallback(text, inline.GetType()))
+        if (string.IsNullOrWhiteSpace(text) || MarkdownPlainTextExtractor.IsTypeNameFallback(text, inline.GetType()))
         {
             return false;
         }
@@ -2690,7 +2690,7 @@ public class MarkdownViewer : TemplatedControl
         var image = new MarkdownImage
         {
             Source = imageInline.Url,
-            AltText = ExtractPlainText(imageInline),
+            AltText = MarkdownPlainTextExtractor.ExtractPlainText(imageInline),
             ImageBasePath = ImageBasePath
         };
         AddMarkdownClass(image, MarkdownStyleKeys.Image);
@@ -2714,7 +2714,7 @@ public class MarkdownViewer : TemplatedControl
 
     private Inline CreateLink(LinkInline linkInline)
     {
-        var text = ExtractPlainText(linkInline);
+        var text = MarkdownPlainTextExtractor.ExtractPlainText(linkInline);
         if (string.IsNullOrWhiteSpace(text))
         {
             text = linkInline.Url ?? string.Empty;
@@ -2746,47 +2746,6 @@ public class MarkdownViewer : TemplatedControl
         return new InlineUIContainer(control);
     }
 
-    private static string ExtractPlainText(ContainerInline? container)
-    {
-        if (container is null)
-        {
-            return string.Empty;
-        }
-
-        var parts = new List<string>();
-        var child = container.FirstChild;
-        while (child is not null)
-        {
-            parts.Add(child switch
-            {
-                LiteralInline literal => literal.Content.ToString(),
-                CodeInline code => code.Content,
-                LineBreakInline => Environment.NewLine,
-                TaskList => string.Empty,
-                LinkInline { IsImage: true } image => ExtractImageText(image),
-                ContainerInline nested => ExtractPlainText(nested),
-                _ when MarkdownChemistry.TryGetChemInlinePlainText(child, out var chemText) => chemText,
-                _ => IsTypeNameFallback(child.ToString() ?? string.Empty, child.GetType())
-                    ? string.Empty
-                    : MarkdownChemistry.ReplaceChemCommandsWithPlainText(child.ToString() ?? string.Empty)
-            });
-            child = child.NextSibling;
-        }
-
-        return string.Concat(parts);
-    }
-
-    private static string ExtractImageText(LinkInline image)
-    {
-        var altText = ExtractPlainText((ContainerInline)image);
-        if (!string.IsNullOrWhiteSpace(altText))
-        {
-            return altText;
-        }
-
-        return string.IsNullOrWhiteSpace(image.Url) ? "[image]" : image.Url!;
-    }
-
     private static IReadOnlyList<MarkdownLinkSpan> ExtractLinkSpans(ContainerInline? container, bool stripTaskPrefix = false)
     {
         var links = new List<MarkdownLinkSpan>();
@@ -2807,7 +2766,7 @@ public class MarkdownViewer : TemplatedControl
             {
                 case LiteralInline literal:
                     var literalText = literal.Content.ToString();
-                    if (stripTaskPrefix && TryStripTaskPrefix(literalText, out var stripped))
+                    if (stripTaskPrefix && MarkdownTaskListHelper.TryStripTaskPrefix(literalText, out var stripped))
                     {
                         stripTaskPrefix = false;
                         if (!string.IsNullOrWhiteSpace(stripped))
@@ -2835,7 +2794,7 @@ public class MarkdownViewer : TemplatedControl
                     break;
                 case LinkInline { IsImage: true } image:
                     stripTaskPrefix = false;
-                    offset += ExtractImageText(image).Length;
+                    offset += MarkdownPlainTextExtractor.ExtractImageText(image).Length;
                     break;
                 case LinkInline { IsImage: false } link:
                     stripTaskPrefix = false;
@@ -2859,7 +2818,7 @@ public class MarkdownViewer : TemplatedControl
                 default:
                     stripTaskPrefix = false;
                     var text = child.ToString() ?? string.Empty;
-                    if (!IsTypeNameFallback(text, child.GetType()))
+                    if (!MarkdownPlainTextExtractor.IsTypeNameFallback(text, child.GetType()))
                     {
                         offset += text.Length;
                     }
@@ -3001,48 +2960,6 @@ public class MarkdownViewer : TemplatedControl
         }
     }
 
-    private static bool TryReadTaskState(ListItemBlock item, out bool isChecked)
-    {
-        isChecked = false;
-        if (item.FirstOrDefault() is not ParagraphBlock paragraph)
-        {
-            return false;
-        }
-
-        if (paragraph.Inline?.FirstChild is TaskList taskList)
-        {
-            isChecked = taskList.Checked;
-            return true;
-        }
-
-        if (paragraph.Inline?.FirstChild is not LiteralInline literal)
-        {
-            return false;
-        }
-
-        var text = literal.Content.ToString();
-        if (text.StartsWith("[x]", StringComparison.OrdinalIgnoreCase))
-        {
-            isChecked = true;
-            return true;
-        }
-
-        return text.StartsWith("[ ]", StringComparison.Ordinal);
-    }
-
-    private static bool TryStripTaskPrefix(string text, out string stripped)
-    {
-        stripped = text;
-        if (text.StartsWith("[x]", StringComparison.OrdinalIgnoreCase)
-            || text.StartsWith("[ ]", StringComparison.Ordinal))
-        {
-            stripped = text[3..];
-            return true;
-        }
-
-        return false;
-    }
-
     private static bool TryGetSingleTextLink(ContainerInline? container, out string? url)
     {
         url = null;
@@ -3078,157 +2995,6 @@ public class MarkdownViewer : TemplatedControl
         var disposable = target.Bind(targetProperty, this.GetObservable(sourceProperty));
         _currentBlockDisposables.Add(disposable);
         return disposable;
-    }
-
-    private static void AppendPlainTextBlock(StringBuilder builder, Block block, int indent)
-    {
-        switch (block)
-        {
-            case HeadingBlock heading:
-                AppendIndentedLine(builder, indent, ExtractPlainText(heading.Inline));
-                builder.AppendLine();
-                break;
-            case ParagraphBlock paragraph:
-                AppendIndentedLine(builder, indent, ExtractPlainText(paragraph.Inline));
-                builder.AppendLine();
-                break;
-            case LinkReferenceDefinitionGroup:
-            case LinkReferenceDefinition:
-                break;
-            case MathBlock mathBlock:
-                AppendIndentedLines(builder, indent, ExtractMathPlainText(mathBlock.Lines.ToString().TrimEnd()));
-                builder.AppendLine();
-                break;
-            case CodeBlock codeBlock:
-                AppendIndentedLines(builder, indent, codeBlock.Lines.ToString().TrimEnd());
-                builder.AppendLine();
-                break;
-            case ListBlock list:
-                AppendPlainTextList(builder, list, indent);
-                builder.AppendLine();
-                break;
-            case QuoteBlock quote:
-                foreach (var child in quote)
-                {
-                    AppendPlainTextBlock(builder, child, indent);
-                }
-
-                break;
-            case ThematicBreakBlock:
-                AppendIndentedLine(builder, indent, "---");
-                builder.AppendLine();
-                break;
-            case Table table:
-                AppendPlainTextTable(builder, table, indent);
-                builder.AppendLine();
-                break;
-            case HtmlBlock htmlBlock:
-                AppendIndentedLines(builder, indent, htmlBlock.Lines.ToString().TrimEnd());
-                builder.AppendLine();
-                break;
-            default:
-                var text = block.ToString() ?? string.Empty;
-                if (!IsTypeNameFallback(text, block.GetType()))
-                {
-                    AppendIndentedLine(builder, indent, MarkdownChemistry.ReplaceChemCommandsWithPlainText(text));
-                    builder.AppendLine();
-                }
-
-                break;
-        }
-    }
-
-    private static string ExtractMathPlainText(string text)
-    {
-        return MarkdownChemistry.TryParseLatex(text, out var expression)
-            ? expression.PlainText
-            : MarkdownChemistry.ReplaceChemCommandsWithPlainText(text);
-    }
-
-    private static bool IsTypeNameFallback(string text, Type type)
-    {
-        return string.Equals(text, type.FullName, StringComparison.Ordinal)
-               || string.Equals(text, type.Name, StringComparison.Ordinal);
-    }
-
-    private static void AppendPlainTextList(StringBuilder builder, ListBlock list, int indent)
-    {
-        var index = 1;
-        foreach (var item in list.OfType<ListItemBlock>())
-        {
-            var marker = list.IsOrdered ? $"{index++}. " : "- ";
-            AppendPlainTextListItem(builder, item, marker, indent);
-        }
-    }
-
-    private static void AppendPlainTextListItem(StringBuilder builder, ListItemBlock item, string marker, int indent)
-    {
-        var isFirstBlock = true;
-        foreach (var block in item)
-        {
-            if (isFirstBlock && block is ParagraphBlock paragraph)
-            {
-                var text = ExtractPlainText(paragraph.Inline);
-                if (TryStripTaskPrefix(text, out var stripped))
-                {
-                    text = stripped.TrimStart();
-                }
-
-                AppendIndent(builder, indent);
-                builder.Append(marker);
-                builder.AppendLine(text);
-            }
-            else
-            {
-                AppendPlainTextBlock(builder, block, indent + 2);
-            }
-
-            isFirstBlock = false;
-        }
-    }
-
-    private static void AppendPlainTextTable(StringBuilder builder, Table table, int indent)
-    {
-        foreach (var row in table.OfType<TableRow>())
-        {
-            var cells = row.OfType<TableCell>()
-                .Select(cell => ExtractBlocksPlainText(cell).ReplaceLineEndings(" "))
-                .ToArray();
-            AppendIndentedLine(builder, indent, string.Join('\t', cells));
-        }
-    }
-
-    private static string ExtractBlocksPlainText(IEnumerable<Block> blocks)
-    {
-        var builder = new StringBuilder();
-        foreach (var block in blocks)
-        {
-            AppendPlainTextBlock(builder, block, 0);
-        }
-
-        return builder.ToString().Trim();
-    }
-
-    private static void AppendIndentedLines(StringBuilder builder, int indent, string text)
-    {
-        foreach (var line in text.Replace("\r\n", "\n").Split('\n'))
-        {
-            AppendIndentedLine(builder, indent, line);
-        }
-    }
-
-    private static void AppendIndentedLine(StringBuilder builder, int indent, string text)
-    {
-        AppendIndent(builder, indent);
-        builder.AppendLine(text);
-    }
-
-    private static void AppendIndent(StringBuilder builder, int indent)
-    {
-        if (indent > 0)
-        {
-            builder.Append(' ', indent);
-        }
     }
 
     private sealed record MarkdownLinkSpan(int Start, int End, string Url);
