@@ -45,7 +45,7 @@ public enum MarkdownRenderMode
 /// 将 Markdown 文本渲染为 Avalonia 控件树的只读预览控件。
 /// </summary>
 [TemplatePart(DocumentHostPartName, typeof(Panel), IsRequired = true)]
-public class MarkdownViewer : TemplatedControl
+public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 {
     private const string DocumentHostPartName = "PART_DocumentHost";
     private const string DefaultTypographyTheme = "Basic";
@@ -450,6 +450,15 @@ public class MarkdownViewer : TemplatedControl
     }
 
     private MenuItem? _viewerCopyMenuItem;
+
+    private readonly MarkdownBlockRendererPipeline _blockPipeline = CreateDefaultPipeline();
+
+    private static MarkdownBlockRendererPipeline CreateDefaultPipeline()
+    {
+        var pipeline = new MarkdownBlockRendererPipeline();
+        pipeline.Register(new MathBlockRenderer());
+        return pipeline;
+    }
 
     public MarkdownViewer()
     {
@@ -1225,6 +1234,12 @@ public class MarkdownViewer : TemplatedControl
 
     private Control? ConvertBlock(Block block, string? sourceMarkdown = null)
     {
+        // 管线渲染器优先（如数学/化学块），未受理再走内置的特殊块与类型分派。
+        if (_blockPipeline.Render(block, sourceMarkdown, this) is { } pipelineBlock)
+        {
+            return pipelineBlock;
+        }
+
         if (TryCreateSpecialBlock(block, sourceMarkdown, out var specialBlock))
         {
             return specialBlock;
@@ -1276,12 +1291,6 @@ public class MarkdownViewer : TemplatedControl
             return true;
         }
 
-        if (TryExtractMathBlock(text, IsMathBlock(block), out var latex))
-        {
-            control = CreateMathBlock(latex);
-            return true;
-        }
-
         if (TryCreateSlideBlock(text, out var slideBlock))
         {
             control = slideBlock;
@@ -1298,12 +1307,12 @@ public class MarkdownViewer : TemplatedControl
                || typeName.Equals("TocBlock", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsMathBlock(Block block)
+    internal static bool IsMathBlock(Block block)
     {
         return block.GetType().Name.Contains("Math", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string? GetSpecialBlockText(Block block, string? sourceMarkdown)
+    internal static string? GetSpecialBlockText(Block block, string? sourceMarkdown)
     {
         var sourceText = GetSourceText(block, sourceMarkdown);
         if (!string.IsNullOrWhiteSpace(sourceText))
@@ -1886,58 +1895,6 @@ public class MarkdownViewer : TemplatedControl
         return panel;
     }
 
-    private static bool TryExtractMathBlock(string text, bool allowBareLatex, out string latex)
-    {
-        latex = string.Empty;
-        var trimmed = text.Trim();
-        if (trimmed.StartsWith("$$", StringComparison.Ordinal) && trimmed.EndsWith("$$", StringComparison.Ordinal) && trimmed.Length > 4)
-        {
-            latex = trimmed[2..^2].Trim();
-            return !string.IsNullOrWhiteSpace(latex);
-        }
-
-        if (trimmed.StartsWith(@"\[", StringComparison.Ordinal) && trimmed.EndsWith(@"\]", StringComparison.Ordinal) && trimmed.Length > 4)
-        {
-            latex = trimmed[2..^2].Trim();
-            return !string.IsNullOrWhiteSpace(latex);
-        }
-
-        if (allowBareLatex && !string.IsNullOrWhiteSpace(trimmed) && !MarkdownPlainTextExtractor.IsTypeNameFallback(trimmed, typeof(Block)))
-        {
-            latex = trimmed;
-            return true;
-        }
-
-        return false;
-    }
-
-    private Control CreateMathBlock(string latex)
-    {
-        if (MarkdownChemistry.TryParseLatex(latex, out var chemExpression))
-        {
-            return CreateChemBlock(chemExpression);
-        }
-
-        MarkdownMathView view;
-        try
-        {
-            view = CreateMathView(latex, 20, CSharpMath.Atom.LineStyle.Display);
-        }
-        catch
-        {
-            return CreateFallbackText(latex, MarkdownStyleKeys.HtmlBlock);
-        }
-
-        var border = new Border
-        {
-            Child = view,
-            Padding = new Thickness(0, 8),
-            HorizontalAlignment = HorizontalAlignment.Center
-        };
-        AddMarkdownClass(border, MarkdownStyleKeys.HtmlBlock);
-        return border;
-    }
-
     private Control? CreateTableCellBlock(Block block, bool isHeader)
     {
         var child = block is ParagraphBlock paragraph
@@ -1952,206 +1909,17 @@ public class MarkdownViewer : TemplatedControl
         return child;
     }
 
-    private Control CreateChemBlock(MarkdownChemExpression expression)
-    {
-        var textBlock = CreateSelectableText(MarkdownStyleKeys.HtmlBlock);
-        textBlock.TextAlignment = TextAlignment.Center;
-        textBlock.FontSize = 20;
-        textBlock.LineHeight = Math.Max(28, ParagraphLineHeight);
-        BindTheme(textBlock, SelectableTextBlock.ForegroundProperty, TextBrushProperty);
-        BindTheme(textBlock, SelectableTextBlock.FontFamilyProperty, ContentFontFamilyProperty);
-
-        foreach (var inline in CreateChemInlines(expression, 20))
-        {
-            textBlock.Inlines?.Add(inline);
-        }
-
-        var border = new Border
-        {
-            Child = textBlock,
-            Padding = new Thickness(0, 8),
-            HorizontalAlignment = HorizontalAlignment.Center
-        };
-        AddMarkdownClass(border, MarkdownStyleKeys.HtmlBlock);
-        return border;
-    }
-
     private MarkdownMathView CreateMathView(string latex, double fontSize, CSharpMath.Atom.LineStyle lineStyle)
     {
         var view = new MarkdownMathView
         {
-            LaTeX = NormalizeLatex(latex),
+            LaTeX = MathLatexNormalizer.NormalizeLatex(latex),
             FontSize = (float)fontSize,
             LineStyle = lineStyle,
             DisplayErrorInline = false
         };
         BindTheme(view, MarkdownMathView.ForegroundProperty, TextBrushProperty);
         return view;
-    }
-
-    private static string NormalizeLatex(string latex)
-    {
-        if (string.IsNullOrWhiteSpace(latex) || !latex.Contains(@"\ce{", StringComparison.Ordinal))
-        {
-            return latex;
-        }
-
-        var builder = new StringBuilder(latex.Length);
-        var index = 0;
-        while (index < latex.Length)
-        {
-            var ceStart = latex.IndexOf(@"\ce{", index, StringComparison.Ordinal);
-            if (ceStart < 0)
-            {
-                builder.Append(latex[index..]);
-                break;
-            }
-
-            builder.Append(latex[index..ceStart]);
-            var contentStart = ceStart + 4;
-            var contentEnd = FindMatchingBrace(latex, contentStart - 1);
-            if (contentEnd < 0)
-            {
-                builder.Append(latex[ceStart..]);
-                break;
-            }
-
-            builder.Append(ConvertChemExpression(latex[contentStart..contentEnd]));
-            index = contentEnd + 1;
-        }
-
-        return builder.ToString();
-    }
-
-    private static int FindMatchingBrace(string text, int openBraceIndex)
-    {
-        var depth = 0;
-        for (var i = openBraceIndex; i < text.Length; i++)
-        {
-            if (text[i] == '{')
-            {
-                depth++;
-            }
-            else if (text[i] == '}')
-            {
-                depth--;
-                if (depth == 0)
-                {
-                    return i;
-                }
-            }
-        }
-
-        return -1;
-    }
-
-    private static string ConvertChemExpression(string expression)
-    {
-        var tokens = Regex.Split(expression.Trim(), @"\s+").Where(token => token.Length > 0);
-        return string.Join(" ", tokens.Select(ConvertChemToken));
-    }
-
-    private static string ConvertChemToken(string token)
-    {
-        var arrowMatch = Regex.Match(token, @"^(?<arrow><->|->|<-)(\[(?<label>[^\]]+)\])?$");
-        if (arrowMatch.Success)
-        {
-            var arrow = arrowMatch.Groups["arrow"].Value switch
-            {
-                "<-" => @"\leftarrow",
-                "<->" => @"\leftrightarrow",
-                _ => @"\longrightarrow"
-            };
-            return arrowMatch.Groups["label"].Success
-                ? $@"{arrow}^{{{ConvertChemFormula(arrowMatch.Groups["label"].Value)}}}"
-                : arrow;
-        }
-
-        return ConvertChemFormula(token);
-    }
-
-    private static string ConvertChemFormula(string formula)
-    {
-        var builder = new StringBuilder(formula.Length * 2);
-        for (var i = 0; i < formula.Length; i++)
-        {
-            var c = formula[i];
-            if (char.IsUpper(c))
-            {
-                var start = i;
-                i++;
-                while (i < formula.Length && char.IsLower(formula[i]))
-                {
-                    i++;
-                }
-                builder.Append(@"\mathrm{").Append(formula[start..i]).Append('}');
-                i--;
-            }
-            else if (char.IsDigit(c))
-            {
-                var start = i;
-                while (i + 1 < formula.Length && char.IsDigit(formula[i + 1]))
-                {
-                    i++;
-                }
-                builder.Append("_{").Append(formula[start..(i + 1)]).Append('}');
-            }
-            else if (c == '^')
-            {
-                var value = ReadScriptValue(formula, ref i);
-                builder.Append("^{").Append(ConvertScriptText(value)).Append('}');
-            }
-            else if ((c == '+' || c == '-') && i == formula.Length - 1)
-            {
-                builder.Append("^{").Append(c).Append('}');
-            }
-            else if (char.IsLetter(c))
-            {
-                builder.Append(@"\mathrm{").Append(c).Append('}');
-            }
-            else
-            {
-                builder.Append(c);
-            }
-        }
-
-        return builder.ToString();
-    }
-
-    private static string ReadScriptValue(string text, ref int index)
-    {
-        if (index + 1 >= text.Length)
-        {
-            return string.Empty;
-        }
-
-        if (text[index + 1] == '{')
-        {
-            var end = FindMatchingBrace(text, index + 1);
-            if (end > index + 1)
-            {
-                var value = text[(index + 2)..end];
-                index = end;
-                return value;
-            }
-        }
-
-        var start = index + 1;
-        var endIndex = start;
-        while (endIndex < text.Length && (char.IsLetterOrDigit(text[endIndex]) || text[endIndex] is '+' or '-'))
-        {
-            endIndex++;
-        }
-
-        index = Math.Max(start, endIndex) - 1;
-        return text[start..endIndex];
-    }
-
-    private static string ConvertScriptText(string text)
-    {
-        return text.All(c => char.IsLetter(c))
-            ? $@"\mathrm{{{text}}}"
-            : text;
     }
 
     private bool TryCreateSlideBlock(string text, out Control control)
@@ -2489,7 +2257,7 @@ public class MarkdownViewer : TemplatedControl
         if (MarkdownChemistry.TryParseLatex(latex, out var chemExpression))
         {
             var span = new Span();
-            foreach (var inline in CreateChemInlines(chemExpression, ParagraphFontSize))
+            foreach (var inline in MathBlockRenderer.CreateChemInlines(chemExpression, ParagraphFontSize))
             {
                 span.Inlines.Add(inline);
             }
@@ -2506,26 +2274,6 @@ public class MarkdownViewer : TemplatedControl
         catch
         {
             return new Run($"${latex}$");
-        }
-    }
-
-    private IEnumerable<Inline> CreateChemInlines(MarkdownChemExpression expression, double fontSize)
-    {
-        foreach (var chemInline in expression.Inlines)
-        {
-            var run = new Run(chemInline.Text);
-            if (chemInline.Kind == MarkdownChemInlineKind.Subscript)
-            {
-                run.BaselineAlignment = BaselineAlignment.Subscript;
-                run.FontSize = Math.Max(9, fontSize * 0.72);
-            }
-            else if (chemInline.Kind == MarkdownChemInlineKind.Superscript)
-            {
-                run.BaselineAlignment = BaselineAlignment.Superscript;
-                run.FontSize = Math.Max(9, fontSize * 0.72);
-            }
-
-            yield return run;
         }
     }
 
@@ -2996,6 +2744,23 @@ public class MarkdownViewer : TemplatedControl
         _currentBlockDisposables.Add(disposable);
         return disposable;
     }
+
+    IDisposable Rendering.IMarkdownRenderContext.BindTheme<T>(
+        AvaloniaObject target,
+        AvaloniaProperty<T> targetProperty,
+        StyledProperty<T> sourceProperty) => BindTheme(target, targetProperty, sourceProperty);
+
+    SelectableTextBlock Rendering.IMarkdownRenderContext.CreateSelectableText(params string[] classes) =>
+        CreateSelectableText(classes);
+
+    void Rendering.IMarkdownRenderContext.AddMarkdownClass(Control control, params string[] classes) =>
+        AddMarkdownClass(control, classes);
+
+    MarkdownMathView Rendering.IMarkdownRenderContext.CreateMathView(string latex, double fontSize, CSharpMath.Atom.LineStyle lineStyle) =>
+        CreateMathView(latex, fontSize, lineStyle);
+
+    Control Rendering.IMarkdownRenderContext.CreateFallbackText(string text, string className) =>
+        CreateFallbackText(text, className);
 
     private sealed record MarkdownLinkSpan(int Start, int End, string Url);
 
