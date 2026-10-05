@@ -457,6 +457,7 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     {
         var pipeline = new MarkdownBlockRendererPipeline();
         pipeline.Register(new MathBlockRenderer());
+        pipeline.Register(new CodeBlockRenderer());
         return pipeline;
     }
 
@@ -1251,8 +1252,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
             HeadingBlock heading => CreateHeading(heading),
             LinkReferenceDefinitionGroup => null,
             LinkReferenceDefinition => null,
-            FencedCodeBlock codeBlock => CreateCodeBlock(codeBlock),
-            CodeBlock codeBlock => CreateCodeBlock(codeBlock),
             ListBlock list => CreateList(list),
             QuoteBlock quote => CreateQuote(quote),
             ThematicBreakBlock => CreateThematicBreak(),
@@ -1467,67 +1466,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     private static double GetPerceivedLuminance(Color color)
     {
         return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
-    }
-
-    private Control CreateCodeBlock(CodeBlock codeBlock)
-    {
-        var code = codeBlock.Lines.ToString();
-        var language = codeBlock is FencedCodeBlock fenced ? fenced.Info ?? "text" : "text";
-
-        var border = new Border();
-        AddMarkdownClass(border, MarkdownStyleKeys.CodeBlock);
-        BindTheme(border, Border.BackgroundProperty, CodeBackgroundBrushProperty);
-        BindTheme(border, Border.BorderBrushProperty, BorderLineBrushProperty);
-
-        var stack = new StackPanel { Orientation = Orientation.Vertical };
-        AddMarkdownClass(stack, MarkdownStyleKeys.CodeBlockContent);
-        var header = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Right
-        };
-        AddMarkdownClass(header, MarkdownStyleKeys.CodeBlockHeader);
-
-        var languageText = CreateSelectableText(MarkdownStyleKeys.CodeLanguage);
-        languageText.Text = string.IsNullOrWhiteSpace(language) ? "text" : language;
-        languageText.VerticalAlignment = VerticalAlignment.Center;
-        BindTheme(languageText, SelectableTextBlock.ForegroundProperty, MutedTextBrushProperty);
-        BindTheme(languageText, SelectableTextBlock.FontSizeProperty, CodeLanguageFontSizeProperty);
-
-        var copyButton = new Button
-        {
-            Content = I18nManager.Instance.GetResource(MarkdownL.Copy),
-            Tag = code
-        };
-        AddMarkdownClass(copyButton, MarkdownStyleKeys.CopyButton);
-        BindTheme(copyButton, Button.BackgroundProperty, AccentBrushProperty);
-        BindTheme(copyButton, Button.ForegroundProperty, AccentForegroundBrushProperty);
-        copyButton.Click += (_, _) =>
-        {
-            CopyClick?.Invoke(this, EventArgs.Empty);
-            if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard && copyButton.Tag is string tagCode)
-            {
-                _ = clipboard.SetTextAsync(tagCode);
-            }
-        };
-
-        header.Children.Add(languageText);
-        header.Children.Add(copyButton);
-        stack.Children.Add(header);
-        stack.Children.Add(CodeHighlighter.Render(
-            code,
-            language,
-            ResolveCodeBlockIsDark(),
-            CodeFontFamily,
-            CodeBlockFontSize,
-            CodeBlockLineHeight,
-            () => HasSelection,
-            CopySelectionAsync));
-
-        CodeBlockToolRender?.Invoke(this, new CodeBlockToolRenderEventArgs(header, stack, codeBlock));
-
-        border.Child = stack;
-        return border;
     }
 
     private Control CreateList(ListBlock list)
@@ -2761,6 +2699,30 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
     Control Rendering.IMarkdownRenderContext.CreateFallbackText(string text, string className) =>
         CreateFallbackText(text, className);
+
+    bool Rendering.IMarkdownRenderContext.CodeBlockIsDark => ResolveCodeBlockIsDark();
+
+    FontFamily Rendering.IMarkdownRenderContext.CodeFontFamily => CodeFontFamily;
+
+    double Rendering.IMarkdownRenderContext.CodeBlockFontSize => CodeBlockFontSize;
+
+    double Rendering.IMarkdownRenderContext.CodeBlockLineHeight => CodeBlockLineHeight;
+
+    bool Rendering.IMarkdownRenderContext.HasSelection => HasSelection;
+
+    void Rendering.IMarkdownRenderContext.CopyCodeToClipboard(string code)
+    {
+        CopyClick?.Invoke(this, EventArgs.Empty);
+        if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        {
+            _ = clipboard.SetTextAsync(code);
+        }
+    }
+
+    Task Rendering.IMarkdownRenderContext.CopySelectionAsync() => CopySelectionAsync();
+
+    void Rendering.IMarkdownRenderContext.RaiseCodeBlockToolRender(StackPanel header, StackPanel content, CodeBlock codeBlock) =>
+        CodeBlockToolRender?.Invoke(this, new CodeBlockToolRenderEventArgs(header, content, codeBlock));
 
     private sealed record MarkdownLinkSpan(int Start, int End, string Url);
 
