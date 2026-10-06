@@ -102,10 +102,14 @@
 
         <!-- 侧栏 -->
         <Style Selector="Border.sidebar">
-            <Setter Property="Width" Value="208" />
+            <Setter Property="Width" Value="216" />
             <Setter Property="Background" Value="{DynamicResource SemiColorBg1}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
             <Setter Property="BorderThickness" Value="0 0 1 0" />
+        </Style>
+        <!-- 选中态主色左条（对应原型 .doc-item.active::before） -->
+        <Style Selector="ListBox.doc-list ListBoxItem:selected Border#ActiveBar">
+            <Setter Property="IsVisible" Value="True" />
         </Style>
         <Style Selector="Border.sidebar.collapsed">
             <Setter Property="Width" Value="56" />
@@ -321,7 +325,19 @@
                         SelectedItem="{Binding SelectedFile}">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:MarkdownSampleFile">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Grid ColumnDefinitions="3,*">
+                                    <Border
+                                        x:Name="ActiveBar"
+                                        Width="3"
+                                        Margin="0 9 0 9"
+                                        Background="{DynamicResource SemiColorPrimary}"
+                                        CornerRadius="0 3 3 0"
+                                        IsVisible="False" />
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        Margin="7 0 0 0"
+                                        Orientation="Horizontal"
+                                        Spacing="10">
                                     <Border
                                         Width="30"
                                         Height="30"
@@ -349,7 +365,8 @@
                                             Foreground="{DynamicResource SemiColorText2}"
                                             Text="{Binding Description}" />
                                     </StackPanel>
-                                </StackPanel>
+                                    </StackPanel>
+                                </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
