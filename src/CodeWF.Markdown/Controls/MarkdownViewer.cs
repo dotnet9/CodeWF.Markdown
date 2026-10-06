@@ -51,7 +51,7 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     private const string DefaultTypographyTheme = "Basic";
     private const string DefaultTypographySize = "Normal";
 
-    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+    internal static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .Build();
 
@@ -456,6 +456,7 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     private static MarkdownBlockRendererPipeline CreateDefaultPipeline()
     {
         var pipeline = new MarkdownBlockRendererPipeline();
+        pipeline.Register(new SpecialBlockRenderer());
         pipeline.Register(new MathBlockRenderer());
         pipeline.Register(new CodeBlockRenderer());
         pipeline.Register(new ListRenderer());
@@ -464,6 +465,7 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         pipeline.Register(new ThematicBreakRenderer());
         pipeline.Register(new HeadingRenderer());
         pipeline.Register(new FootnoteRenderer());
+        pipeline.Register(new HtmlBlockRenderer());
         return pipeline;
     }
 
@@ -1241,142 +1243,22 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
     private Control? ConvertBlock(Block block, string? sourceMarkdown = null)
     {
-        // 管线渲染器优先（如数学/化学块），未受理再走内置的特殊块与类型分派。
+        // 管线渲染器优先（特殊块/数学/代码/排版块等），未受理再走内置兜底。
         if (_blockPipeline.Render(block, sourceMarkdown, this) is { } pipelineBlock)
         {
             return pipelineBlock;
         }
 
-        if (TryCreateSpecialBlock(block, sourceMarkdown, out var specialBlock))
+        if (block is LinkReferenceDefinitionGroup or LinkReferenceDefinition)
         {
-            return specialBlock;
+            return null;
         }
 
         return block switch
         {
             ParagraphBlock paragraph => CreateParagraph(paragraph),
-            LinkReferenceDefinitionGroup => null,
-            LinkReferenceDefinition => null,
-            HtmlBlock htmlBlock => CreateHtmlBlock(htmlBlock.Lines.ToString()),
             _ => CreateUnknownBlock(block)
         };
-    }
-
-    private bool TryCreateSpecialBlock(Block block, string? sourceMarkdown, out Control? control)
-    {
-        control = null;
-        if (block is ParagraphBlock paragraph && TryCreateImageBlock(paragraph, out control))
-        {
-            return true;
-        }
-
-        if (IsTocBlock(block))
-        {
-            control = CreateToc();
-            return true;
-        }
-
-        var text = GetSpecialBlockText(block, sourceMarkdown);
-
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return false;
-        }
-
-        if (string.Equals(text, "[TOC]", StringComparison.OrdinalIgnoreCase))
-        {
-            control = CreateToc();
-            return true;
-        }
-
-        if (TryCreateSlideBlock(text, out var slideBlock))
-        {
-            control = slideBlock;
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsTocBlock(Block block)
-    {
-        var typeName = block.GetType().Name;
-        return typeName.Contains("TableOfContents", StringComparison.OrdinalIgnoreCase)
-               || typeName.Equals("TocBlock", StringComparison.OrdinalIgnoreCase);
-    }
-
-    internal static bool IsMathBlock(Block block)
-    {
-        return block.GetType().Name.Contains("Math", StringComparison.OrdinalIgnoreCase);
-    }
-
-    internal static string? GetSpecialBlockText(Block block, string? sourceMarkdown)
-    {
-        var sourceText = GetSourceText(block, sourceMarkdown);
-        if (!string.IsNullOrWhiteSpace(sourceText))
-        {
-            return sourceText.Trim();
-        }
-
-        return block switch
-        {
-            ParagraphBlock paragraphBlock => paragraphBlock.Lines.ToString().Trim(),
-            HtmlBlock htmlBlock => htmlBlock.Lines.ToString().Trim(),
-            LeafBlock leafBlock when IsMathBlock(block) => leafBlock.Lines.ToString().Trim(),
-            _ when IsMathBlock(block) => block.ToString()?.Trim(),
-            _ => null
-        };
-    }
-
-    private static string? GetSourceText(Block block, string? sourceMarkdown)
-    {
-        if (string.IsNullOrEmpty(sourceMarkdown)
-            || block.Span.Start < 0
-            || block.Span.End < block.Span.Start
-            || block.Span.Start >= sourceMarkdown.Length)
-        {
-            return null;
-        }
-
-        var end = Math.Min(block.Span.End, sourceMarkdown.Length - 1);
-        return sourceMarkdown[block.Span.Start..(end + 1)];
-    }
-
-    private bool TryCreateImageBlock(ParagraphBlock paragraph, out Control? control)
-    {
-        control = null;
-        var first = paragraph.Inline?.FirstChild;
-        if (first is not LinkInline { IsImage: true } image || HasNonEmptySibling(first.NextSibling))
-        {
-            return false;
-        }
-
-        var markdownImage = new MarkdownImage
-        {
-            Source = image.Url,
-            AltText = MarkdownPlainTextExtractor.ExtractPlainText(image),
-            ImageBasePath = ImageBasePath,
-            HorizontalAlignment = HorizontalAlignment.Left
-        };
-        AddMarkdownClass(markdownImage, MarkdownStyleKeys.Image);
-        control = markdownImage;
-        return true;
-    }
-
-    private static bool HasNonEmptySibling(Markdig.Syntax.Inlines.Inline? inline)
-    {
-        while (inline is not null)
-        {
-            if (inline is LiteralInline literal && string.IsNullOrWhiteSpace(literal.Content.ToString()))
-            {
-                inline = inline.NextSibling;
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
     }
 
     private SelectableTextBlock CreateParagraph(
@@ -1440,86 +1322,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
     }
 
-    private Control CreateHtmlBlock(string html)
-    {
-        var trimmed = html.Trim();
-        if (Regex.IsMatch(trimmed, @"^<a\s+[^>]*id\s*=\s*[""'][^""']+[""'][^>]*>\s*</a>$", RegexOptions.IgnoreCase))
-        {
-            return new Border { Height = 0, IsHitTestVisible = false };
-        }
-
-        if (TryCreateStyledSpan(trimmed, out var spanBlock))
-        {
-            return spanBlock;
-        }
-
-        if (TryCreateSlideBlock(trimmed, out var slideBlock))
-        {
-            return slideBlock;
-        }
-
-        return CreateFallbackText(html, MarkdownStyleKeys.HtmlBlock);
-    }
-
-    private bool TryCreateStyledSpan(string html, out Control control)
-    {
-        control = null!;
-        var match = Regex.Match(
-            html,
-            @"^<span\s+[^>]*style\s*=\s*[""'](?<style>[^""']*)[""'][^>]*>(?<text>.*?)</span>$",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
-        if (!match.Success)
-        {
-            return false;
-        }
-
-        var textBlock = CreateSelectableText(MarkdownStyleKeys.HtmlBlock);
-        textBlock.Text = Regex.Replace(match.Groups["text"].Value, "<.*?>", string.Empty);
-        BindTheme(textBlock, SelectableTextBlock.ForegroundProperty, TextBrushProperty);
-        BindTheme(textBlock, SelectableTextBlock.FontFamilyProperty, ContentFontFamilyProperty);
-        BindTheme(textBlock, SelectableTextBlock.FontSizeProperty, ParagraphFontSizeProperty);
-        BindTheme(textBlock, SelectableTextBlock.LineHeightProperty, ParagraphLineHeightProperty);
-
-        var style = match.Groups["style"].Value;
-        if (style.Contains("text-align:center", StringComparison.OrdinalIgnoreCase))
-        {
-            textBlock.TextAlignment = TextAlignment.Center;
-        }
-        else if (style.Contains("text-align:right", StringComparison.OrdinalIgnoreCase))
-        {
-            textBlock.TextAlignment = TextAlignment.Right;
-        }
-
-        var colorMatch = Regex.Match(style, @"color\s*:\s*(?<color>#[0-9a-fA-F]{3,8}|[a-zA-Z]+)");
-        if (colorMatch.Success && Color.TryParse(colorMatch.Groups["color"].Value, out var color))
-        {
-            textBlock.Foreground = new SolidColorBrush(color);
-        }
-
-        control = textBlock;
-        return true;
-    }
-
-    private Control CreateToc()
-    {
-        var panel = new StackPanel { Orientation = Orientation.Vertical, Spacing = 4 };
-        AddMarkdownClass(panel, MarkdownStyleKeys.List);
-
-        var document = Markdig.Markdown.Parse(Markdown ?? string.Empty, Pipeline);
-        foreach (var heading in document.OfType<HeadingBlock>().Where(h => h.Level is >= 1 and <= 3))
-        {
-            var item = CreateSelectableText(MarkdownStyleKeys.ListMarker);
-            item.Text = $"{new string(' ', Math.Max(0, heading.Level - 1) * 2)}{MarkdownPlainTextExtractor.ExtractPlainText(heading.Inline)}";
-            item.TextWrapping = TextWrapping.Wrap;
-            BindTheme(item, SelectableTextBlock.ForegroundProperty, heading.Level <= 2 ? AccentBrushProperty : TextBrushProperty);
-            BindTheme(item, SelectableTextBlock.FontFamilyProperty, ContentFontFamilyProperty);
-            BindTheme(item, SelectableTextBlock.FontSizeProperty, ParagraphFontSizeProperty);
-            panel.Children.Add(item);
-        }
-
-        return panel;
-    }
-
     private MarkdownMathView CreateMathView(string latex, double fontSize, CSharpMath.Atom.LineStyle lineStyle)
     {
         var view = new MarkdownMathView
@@ -1531,73 +1333,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         };
         BindTheme(view, MarkdownMathView.ForegroundProperty, TextBrushProperty);
         return view;
-    }
-
-    private bool TryCreateSlideBlock(string text, out Control control)
-    {
-        control = null!;
-        var trimmed = text.Trim();
-        if (!trimmed.StartsWith("<", StringComparison.Ordinal) || !trimmed.EndsWith(">", StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        var content = trimmed[1..^1];
-        var matches = Regex.Matches(content, @"!\[(?<alt>[^\]]*)\]\((?<url>[^)]+)\)");
-        if (matches.Count < 2)
-        {
-            return false;
-        }
-
-        var panel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 24,
-            Margin = new Thickness(0, 4, 0, 8)
-        };
-
-        foreach (Match match in matches)
-        {
-            panel.Children.Add(new MarkdownImage
-            {
-                Source = match.Groups["url"].Value,
-                AltText = match.Groups["alt"].Value,
-                ImageBasePath = ImageBasePath,
-                Width = 320,
-                Height = 220,
-                MaxWidth = 360,
-                MaxHeight = 260
-            });
-        }
-
-        var scrollViewer = new ScrollViewer
-        {
-            Content = panel,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Margin = new Thickness(0, 8, 0, 12)
-        };
-        scrollViewer.PointerWheelChanged += OnSlidePointerWheelChanged;
-        control = scrollViewer;
-        return true;
-    }
-
-    private static void OnSlidePointerWheelChanged(object? sender, PointerWheelEventArgs e)
-    {
-        if (sender is not ScrollViewer scrollViewer || Math.Abs(e.Delta.Y) <= 0)
-        {
-            return;
-        }
-
-        var maxX = Math.Max(0, scrollViewer.Extent.Width - scrollViewer.Viewport.Width);
-        if (maxX <= 0)
-        {
-            return;
-        }
-
-        var x = Math.Clamp(scrollViewer.Offset.X - e.Delta.Y * 80, 0, maxX);
-        scrollViewer.Offset = new Vector(x, scrollViewer.Offset.Y);
-        e.Handled = true;
     }
 
     private SelectableTextBlock CreateFallbackText(string text, string className)
@@ -2257,6 +1992,10 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         Markdig.Syntax.Inlines.ContainerInline? container,
         bool stripTaskPrefix) =>
         MarkdownLinkInteraction.AttachLinkInteraction(textBlock, MarkdownLinkInteraction.ExtractLinkSpans(container, stripTaskPrefix));
+
+    string? Rendering.IMarkdownRenderContext.MarkdownText => Markdown;
+
+    string? Rendering.IMarkdownRenderContext.ImageBasePath => ImageBasePath;
 
     private sealed record RenderedBlock(
         int Start,

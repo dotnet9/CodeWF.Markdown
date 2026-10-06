@@ -18,13 +18,13 @@ internal sealed class MathBlockRenderer : IMarkdownBlockRenderer
 {
     public Control? TryRender(Block block, string? sourceMarkdown, IMarkdownRenderContext context)
     {
-        var text = MarkdownViewer.GetSpecialBlockText(block, sourceMarkdown);
+        var text = MarkdownSpecialBlocks.GetSpecialBlockText(block, sourceMarkdown);
         if (string.IsNullOrWhiteSpace(text))
         {
             return null;
         }
 
-        if (!TryExtractMathBlock(text, MarkdownViewer.IsMathBlock(block), out var latex))
+        if (!TryExtractMathBlock(text, MarkdownSpecialBlocks.IsMathBlock(block), out var latex))
         {
             return null;
         }

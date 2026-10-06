@@ -18,6 +18,12 @@ internal interface IMarkdownRenderContext
 
     double ParagraphFontSize { get; }
 
+    /// <summary>当前渲染的 Markdown 源文本（TOC 等需要整篇重解析的块使用）。</summary>
+    string? MarkdownText { get; }
+
+    /// <summary>相对图片路径的解析基路径。</summary>
+    string? ImageBasePath { get; }
+
     double UnorderedListMarkerWidth { get; }
 
     double OrderedListMarkerMinWidth { get; }
