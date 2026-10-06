@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" />
+    <PackageReference Include="CodeWF.AvaloniaControls" />
     <PackageReference Include="Lang.Avalonia.Json" />
     <PackageReference Include="Markdig" />
     <PackageReference Include="Svg.Skia" />

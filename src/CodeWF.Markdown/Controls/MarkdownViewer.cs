@@ -11,6 +11,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using CodeWF.AvaloniaControls.Controls;
 using CodeWF.Markdown.Helpers;
 using CodeWF.Markdown.Rendering;
 using CodeWF.Markdown.Shared.Rendering;
@@ -59,7 +60,7 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
     private readonly List<IDisposable> _currentBlockDisposables = [];
     private readonly MarkdownSelectionController _selectionController = new();
     private Panel? _documentHost;
-    private MarkdownVirtualizingPanel? _virtualizingHost;
+    private WindowedStackPanel? _virtualizingHost;
     private string _renderedMarkdown = string.Empty;
     private MarkdownDocumentModel _renderedModel = MarkdownDocumentModel.Empty;
     private MarkdownRenderMode _queuedRenderMode = MarkdownRenderMode.Incremental;
@@ -631,7 +632,7 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
         base.OnApplyTemplate(e);
 
         _documentHost = e.NameScope.Find<Panel>(DocumentHostPartName);
-        if (_documentHost is MarkdownVirtualizingPanel panel)
+        if (_documentHost is WindowedStackPanel panel)
         {
             _virtualizingHost = panel;
             panel.ScrollHost ??= ResolveScrollHost();
@@ -1656,7 +1657,7 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
     {
         if (_virtualizingHost is { } host)
         {
-            host.AddBlock(control, kind);
+            host.AddItem(control, pinnedByKind: IsAlwaysRealizedKind(kind));
             return;
         }
 
@@ -1667,7 +1668,7 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
     {
         if (_virtualizingHost is { } host)
         {
-            host.InsertBlock(index, control, kind);
+            host.InsertItem(index, control, pinnedByKind: IsAlwaysRealizedKind(kind));
             return;
         }
 
@@ -1678,12 +1679,16 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
     {
         if (_virtualizingHost is { } host)
         {
-            host.RemoveBlockAt(index);
+            host.RemoveAt(index);
             return;
         }
 
         _documentHost?.Children.RemoveAt(index);
     }
+
+    /// <summary>大块（代码块 / 表格 / 图片）始终物化，避免测量与滚动抖动。</summary>
+    private static bool IsAlwaysRealizedKind(MarkdownBlockKind kind) =>
+        kind is MarkdownBlockKind.Code or MarkdownBlockKind.Table or MarkdownBlockKind.Image;
 
     private void ReplaceBlockControl(int index, Control control, MarkdownBlockKind kind)
     {
@@ -1695,7 +1700,7 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
     {
         if (_virtualizingHost is { } host)
         {
-            host.ClearBlocks();
+            host.ClearItems();
             return;
         }
 

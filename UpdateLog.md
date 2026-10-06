@@ -1,10 +1,11 @@
-# 更新日志
+﻿# 更新日志
 
 ## 13.1.0（未发布）
 
 - 🚀[新增]-文档宿主改为虚拟化面板：块数达到阈值（默认 40，可调）后只物化视口 ± 2 屏内的块，代码块/表格/图片等大块始终物化；离屏块保留已测量高度占位，滚动离屏即释放控件，长文档不再一次性挂载全部控件。
 - 🚀[新增]-`MarkdownViewer.EnableVirtualization` / `VirtualizationThreshold` 开关与阈值（异常场景可退回非虚拟化宿主）；新增 `RealizedBlockCount` / `IsBlockRealized` 供宿主与诊断观察物化状态。
 - 🔨[优化]-偏移映射在虚拟化宿主下会先物化目标块再返回精确 Bounds。
+- 🔨[优化]-虚拟化宿主改为复用 `CodeWF.AvaloniaControls` 的 `WindowedStackPanel`（同源实现只维护一份），库内不再自带裁剪面板与重复单测。
 
 
 ## 13.0.0.1 (2026-10-06)
