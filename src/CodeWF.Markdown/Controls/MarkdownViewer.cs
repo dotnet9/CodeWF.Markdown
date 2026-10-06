@@ -45,7 +45,7 @@ public enum MarkdownRenderMode
 /// 将 Markdown 文本渲染为 Avalonia 控件树的只读预览控件。
 /// </summary>
 [TemplatePart(DocumentHostPartName, typeof(Panel), IsRequired = true)]
-public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
+public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 {
     private const string DocumentHostPartName = "PART_DocumentHost";
     private const string DefaultTypographyTheme = "Basic";
@@ -534,6 +534,9 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
     public MarkdownViewer()
     {
+        _scheduler = new MarkdownRenderScheduler(ParseMarkdownWithTiming);
+        _scheduler.Completed += OnSchedulerParseCompleted;
+        _scheduler.Failed += OnSchedulerParseFailed;
         Focusable = true;
         ContextMenu = CreateViewerContextMenu();
         TextOptions.SetBaselinePixelAlignment(this, BaselinePixelAlignment.Aligned);
@@ -590,35 +593,12 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     /// <summary>
     /// Try to locate the rendered block that contains the specified Markdown source offset.
     /// The returned bounds are relative to this <see cref="MarkdownViewer"/>.
+    /// 同步返回最近一块已物化块的边界；后台解析尚未完成时不会强制同步解析。
     /// </summary>
     public bool TryGetSourceOffsetBounds(int sourceOffset, out Rect bounds)
     {
-        bounds = default;
-        if (_documentHost is null)
-        {
-            return false;
-        }
-
         var text = Markdown ?? string.Empty;
-        if (!string.Equals(_renderedMarkdown, text, StringComparison.Ordinal))
-        {
-            RenderDocument(MarkdownRenderMode.Incremental);
-        }
-
-        if (_renderedBlocks.Count == 0)
-        {
-            return false;
-        }
-
-        var offset = Math.Clamp(sourceOffset, 0, text.Length);
-        var renderedBlock = FindRenderedBlockBySourceOffset(offset);
-        if (renderedBlock is null || renderedBlock.Control.TranslatePoint(new Point(0, 0), this) is not { } topLeft)
-        {
-            return false;
-        }
-
-        bounds = new Rect(topLeft, renderedBlock.Control.Bounds.Size);
-        return true;
+        return TryGetSourceOffsetBoundsNow(Math.Clamp(sourceOffset, 0, text.Length), out bounds);
     }
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
@@ -723,16 +703,10 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
             return;
         }
 
-        var text = Markdown ?? string.Empty;
-        if (mode == MarkdownRenderMode.Incremental && TryRenderIncremental(text))
-        {
-            return;
-        }
-
-        RenderDocumentFull(text);
+        ScheduleRender(mode);
     }
 
-    private void RenderDocumentFull(string text)
+    private void RenderDocumentFull(string text, MarkdownDocumentModel? parsedModel = null)
     {
         if (_documentHost is null)
         {
@@ -747,7 +721,14 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         _documentHost.Children.Clear();
         _renderedBlocks.Clear();
         _renderedMarkdown = text;
-        _renderedModel = MarkdownParser.Parse(text, Pipeline);
+        var parseStart = System.Diagnostics.Stopwatch.GetTimestamp();
+        _renderedModel = parsedModel ?? MarkdownParser.Parse(text, Pipeline);
+        if (parsedModel is null)
+        {
+            _lastParseDuration = System.Diagnostics.Stopwatch.GetElapsedTime(parseStart);
+        }
+
+        _lastRenderMode = MarkdownRenderMode.Full;
         ResetSelectionState();
 
         if (string.IsNullOrWhiteSpace(text))
@@ -766,7 +747,7 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         InvalidateDocumentLayout();
     }
 
-    private bool TryRenderIncremental(string text)
+    private bool TryRenderIncremental(string text, MarkdownDocumentModel? parsedModel, MarkdownTextSpan? dirtySpan)
     {
         if (_documentHost is null)
         {
@@ -783,8 +764,11 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
             return false;
         }
 
-        var newModel = MarkdownParser.Parse(text, Pipeline);
-        var diff = MarkdownDiffService.Compare(_renderedModel, newModel);
+        var newModel = parsedModel ?? MarkdownParser.Parse(text, Pipeline);
+        var diff = dirtySpan is { Length: > 0 } span
+            ? MarkdownDiffService.TryCompareWithinDirtySpan(_renderedModel, newModel, span)
+              ?? MarkdownDiffService.Compare(_renderedModel, newModel)
+            : MarkdownDiffService.Compare(_renderedModel, newModel);
         if (diff.RequiresFullRender)
         {
             return false;
@@ -794,6 +778,7 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         {
             _renderedMarkdown = text;
             _renderedModel = newModel;
+            _lastRenderMode = MarkdownRenderMode.Incremental;
             return true;
         }
 
@@ -804,6 +789,7 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
         _renderedMarkdown = text;
         _renderedModel = newModel;
+        _lastRenderMode = MarkdownRenderMode.Incremental;
         return true;
     }
 
@@ -821,7 +807,12 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
             }
 
             var blockDisposables = ExtractCurrentBlockDisposables(previousDisposableCount);
-            renderedBlocks.Add(RenderedBlock.FromModel(modelBlock, control, blockDisposables));
+            renderedBlocks.Add(RenderedBlock.FromModel(
+                modelBlock,
+                control,
+                blockDisposables,
+                ContainsRemoteImage(modelBlock),
+                TryGetTaskMarkerOffset(markdown, modelBlock)));
         }
 
         return renderedBlocks;
@@ -859,7 +850,9 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
                 MarkdownDependencyFlags.None,
                 0,
                 control,
-                blockDisposables));
+                blockDisposables,
+                false,
+                -1));
         }
 
         return renderedBlocks;
@@ -1556,12 +1549,16 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         MarkdownDependencyFlags DependencyFlags,
         ulong ContentHash,
         Control Control,
-        List<IDisposable>? Bindings)
+        List<IDisposable>? Bindings,
+        bool HasRemoteImage,
+        int TaskMarkerOffset)
     {
         public static RenderedBlock FromModel(
             MarkdownDocumentBlock modelBlock,
             Control control,
-            List<IDisposable>? bindings)
+            List<IDisposable>? bindings,
+            bool hasRemoteImage = false,
+            int taskMarkerOffset = -1)
         {
             return new RenderedBlock(
                 modelBlock.SourceSpan.Start,
@@ -1573,7 +1570,9 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
                 modelBlock.DependencyFlags,
                 modelBlock.ContentHash,
                 control,
-                bindings);
+                bindings,
+                hasRemoteImage,
+                taskMarkerOffset);
         }
 
         public void Cleanup()

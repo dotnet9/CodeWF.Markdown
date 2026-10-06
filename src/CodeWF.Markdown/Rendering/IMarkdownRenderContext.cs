@@ -79,6 +79,17 @@ public interface IMarkdownRenderContext
 
     Control CreateFallbackText(string text, string className);
 
+    /// <summary>
+    /// 任务列表勾选框是否可交互（点击回写 Markdown）。
+    /// 宿主未提供回写能力时应返回 false，保持只读展示。
+    /// </summary>
+    bool TaskMarkersInteractive { get; }
+
+    /// <summary>
+    /// 将任务勾选框接入回写：宿主记录源码偏移并在点击时抛出写回事件。
+    /// </summary>
+    void AttachTaskMarkerInteraction(CheckBox checkBox, int sourceMarkerOffset);
+
     // ---- 代码块渲染所需 ----
 
     /// <summary>

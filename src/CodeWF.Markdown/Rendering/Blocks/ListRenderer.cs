@@ -51,7 +51,7 @@ internal sealed class ListRenderer : IMarkdownBlockRenderer
 
         var isTask = MarkdownTaskListHelper.TryReadTaskState(item, out var isChecked);
         Control marker = isTask
-            ? CreateTaskMarker(isChecked, markerWidth, context)
+            ? CreateTaskMarker(isChecked, markerWidth, item, context)
             : CreateListMarker(ordered ? $"{index}." : "•", markerWidth, context);
 
         Grid.SetColumn(marker, 0);
@@ -78,16 +78,25 @@ internal sealed class ListRenderer : IMarkdownBlockRenderer
         return itemGrid;
     }
 
-    private static Control CreateTaskMarker(bool isChecked, double markerWidth, IMarkdownRenderContext context)
+    private static Control CreateTaskMarker(
+        bool isChecked,
+        double markerWidth,
+        ListItemBlock item,
+        IMarkdownRenderContext context)
     {
+        var interactive = context.TaskMarkersInteractive;
         var checkBox = new CheckBox
         {
             IsChecked = isChecked,
-            IsHitTestVisible = false,
+            IsHitTestVisible = interactive,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Top
         };
         context.AddMarkdownClass(checkBox, MarkdownStyleKeys.TaskMarkerBox);
+        if (interactive && item.Span.Start >= 0)
+        {
+            context.AttachTaskMarkerInteraction(checkBox, item.Span.Start);
+        }
 
         var marker = new Border
         {

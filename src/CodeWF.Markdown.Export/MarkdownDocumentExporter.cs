@@ -96,6 +96,9 @@ public static class MarkdownDocumentExporter
 			case ExportKind.Word:
 				ExportWord(document, savePath, style);
 				break;
+			case ExportKind.Html:
+				ExportHtml(document, savePath, style);
+				break;
 			default:
 				throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported Markdown export kind.");
 		}
@@ -145,6 +148,29 @@ public static class MarkdownDocumentExporter
 		ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
 		MarkdownDocxExporter.Export(document, path, style ?? MarkdownExportStyle.Resolve(null, null));
+	}
+
+	/// <summary>
+	/// 导出自包含单文件 HTML（内联样式，本地图片内嵌为 data URI）。
+	/// </summary>
+	public static void ExportHtml(
+		MarkdownExportDocument document,
+		string path,
+		MarkdownExportStyle? style = null,
+		MarkdownHtmlDocumentOptions? options = null)
+	{
+		MarkdownHtmlExporter.Export(document, path, style, options);
+	}
+
+	/// <summary>
+	/// 生成可直接用于打印预览或剪贴板的 HTML 文档内容。
+	/// </summary>
+	public static string RenderHtml(
+		MarkdownExportDocument document,
+		MarkdownExportStyle? style = null,
+		MarkdownHtmlDocumentOptions? options = null)
+	{
+		return MarkdownHtmlExporter.RenderDocument(document, style, options);
 	}
 
 	private static MarkdownExportDocument CreateDocumentFromFile(string markdownFilePath)
