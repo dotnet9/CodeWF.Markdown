@@ -98,7 +98,7 @@ public static class MarkdownImageSourceLoader
 		return await LoadLocalFileAsync(localPath.Path, localPath.DisplayPath, maxLocalImageBytes, cancellationToken);
 	}
 
-	internal static string CreateCacheKey(string source, string? imageBasePath)
+	public static string CreateCacheKey(string source, string? imageBasePath)
 	{
 		var normalizedSource = NormalizeSource(source);
 		if (IsDataUri(normalizedSource)

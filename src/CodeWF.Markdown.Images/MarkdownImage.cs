@@ -11,10 +11,12 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Lang.Avalonia;
 
+using CodeWF.Markdown.Rendering;
+
 namespace CodeWF.Markdown.Controls;
 
 [TemplatePart(ContentHostPartName, typeof(ContentControl), IsRequired = true)]
-public class MarkdownImage : TemplatedControl
+public class MarkdownImage : TemplatedControl, CodeWF.Markdown.Rendering.IMarkdownInteractiveVisual
 {
     private const string ContentHostPartName = "PART_ContentHost";
     private const double DefaultMaxImageWidth = 900;

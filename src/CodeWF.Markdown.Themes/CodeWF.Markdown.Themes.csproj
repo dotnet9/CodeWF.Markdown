@@ -24,6 +24,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CodeWF.Markdown\CodeWF.Markdown.csproj" />
+    <!-- 过渡依赖：Common.axaml 中的 MarkdownImage ControlTheme 随 Images 能力包迁出后移除 -->
+    <ProjectReference Include="..\CodeWF.Markdown.Images\CodeWF.Markdown.Images.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\CodeWF.Markdown.Shared\Themes\*.cs" Link="%(Filename)%(Extension)" />

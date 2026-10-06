@@ -457,6 +457,15 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
     private static Rendering.MarkdownMathViewFactory? s_mathViewFactory;
 
+    private static Rendering.MarkdownImageControlFactory? s_imageControlFactory;
+
+    /// <summary>
+    /// 注册全局图片控件工厂（CodeWF.Markdown.Images 包注册）；
+    /// 未注册时图片由 Core 降级为替代文本渲染。
+    /// </summary>
+    public static void RegisterImageControlFactory(Rendering.MarkdownImageControlFactory? factory) =>
+        s_imageControlFactory = factory;
+
     /// <summary>
     /// 注册全局数学视图工厂（CodeWF.Markdown.Math 包注册）；
     /// 未注册时数学公式由 Core 降级为原文渲染。
@@ -1092,7 +1101,7 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
                 or MenuItem
                 or CheckBox
                 or ScrollBar
-                or MarkdownImage)
+                or IMarkdownInteractiveVisual)
             {
                 return true;
             }
@@ -1475,6 +1484,11 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         AddMarkdownClass(control, classes);
 
     Rendering.MarkdownMathViewFactory? Rendering.IMarkdownRenderContext.MathViewFactory => s_mathViewFactory;
+
+    Rendering.MarkdownImageControlFactory? Rendering.IMarkdownRenderContext.ImageControlFactory => s_imageControlFactory;
+
+    Control? Rendering.IMarkdownRenderContext.CreateImageControl(string source, string altText) =>
+        s_imageControlFactory?.Invoke(this, source, altText);
 
     Control? Rendering.IMarkdownRenderContext.CreateMathView(string latex, double fontSize, Rendering.MarkdownMathLineStyle lineStyle) =>
         s_mathViewFactory?.Invoke(this, latex, fontSize, lineStyle);

@@ -69,6 +69,14 @@ public interface IMarkdownRenderContext
 
     Control? CreateMathView(string latex, double fontSize, MarkdownMathLineStyle lineStyle);
 
+    /// <summary>
+    /// 图片控件工厂（CodeWF.Markdown.Images 包注册）；为 null 或返回 null 时
+    /// 由调用方降级为替代文本渲染。
+    /// </summary>
+    MarkdownImageControlFactory? ImageControlFactory { get; }
+
+    Control? CreateImageControl(string source, string altText);
+
     Control CreateFallbackText(string text, string className);
 
     // ---- 代码块渲染所需 ----

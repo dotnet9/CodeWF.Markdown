@@ -56,15 +56,23 @@ internal sealed class SpecialBlockRenderer : IMarkdownBlockRenderer
             return null;
         }
 
-        var markdownImage = new MarkdownImage
+        var altText = MarkdownPlainTextExtractor.ExtractPlainText(image);
+        if (context.CreateImageControl(image.Url, altText) is not { } imageControl)
         {
-            Source = image.Url,
-            AltText = MarkdownPlainTextExtractor.ExtractPlainText(image),
-            ImageBasePath = context.ImageBasePath,
-            HorizontalAlignment = HorizontalAlignment.Left
-        };
-        context.AddMarkdownClass(markdownImage, MarkdownStyleKeys.Image);
-        return markdownImage;
+            return CreateImageFallback(altText, context);
+        }
+
+        imageControl.HorizontalAlignment = HorizontalAlignment.Left;
+        return imageControl;
+    }
+
+    /// <summary>
+    /// 无图片能力时的降级渲染：替代文本。
+    /// </summary>
+    private static Control CreateImageFallback(string altText, IMarkdownRenderContext context)
+    {
+        var text = string.IsNullOrWhiteSpace(altText) ? "[image]" : $"[image] {altText}";
+        return context.CreateFallbackText(text, MarkdownStyleKeys.Image);
     }
 
     private static bool HasNonEmptySibling(Markdig.Syntax.Inlines.Inline? inline)
@@ -127,16 +135,19 @@ internal sealed class SpecialBlockRenderer : IMarkdownBlockRenderer
 
         foreach (Match match in matches)
         {
-            panel.Children.Add(new MarkdownImage
+            if (context.CreateImageControl(match.Groups["url"].Value, match.Groups["alt"].Value)
+                is not { } imageControl)
             {
-                Source = match.Groups["url"].Value,
-                AltText = match.Groups["alt"].Value,
-                ImageBasePath = context.ImageBasePath,
-                Width = 320,
-                Height = 220,
-                MaxWidth = 360,
-                MaxHeight = 260
-            });
+                return CreateImageFallback(
+                    string.Join(" / ", matches.Select(m => m.Groups["alt"].Value)),
+                    context);
+            }
+
+            imageControl.Width = 320;
+            imageControl.Height = 220;
+            imageControl.MaxWidth = 360;
+            imageControl.MaxHeight = 260;
+            panel.Children.Add(imageControl);
         }
 
         var scrollViewer = new ScrollViewer

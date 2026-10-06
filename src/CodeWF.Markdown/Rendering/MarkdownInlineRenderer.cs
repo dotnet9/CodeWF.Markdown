@@ -454,14 +454,13 @@ internal sealed class MarkdownInlineRenderer(IMarkdownRenderContext context)
 
     private Inline CreateImage(LinkInline imageInline)
     {
-        var image = new MarkdownImage
+        var altText = MarkdownPlainTextExtractor.ExtractPlainText(imageInline);
+        if (_context.CreateImageControl(imageInline.Url, altText) is { } imageControl)
         {
-            Source = imageInline.Url,
-            AltText = MarkdownPlainTextExtractor.ExtractPlainText(imageInline),
-            ImageBasePath = _context.ImageBasePath
-        };
-        _context.AddMarkdownClass(image, MarkdownStyleKeys.Image);
-        return CreateInlineContainer(image);
+            return CreateInlineContainer(imageControl);
+        }
+
+        return new Run(string.IsNullOrWhiteSpace(altText) ? "[image]" : $"[image] {altText}");
     }
 
     private Inline CreateFootnoteLink(FootnoteLink footnoteLink)
