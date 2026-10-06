@@ -31,7 +31,7 @@ public partial class MainWindow : Window
         {
             Vm?.ToggleQuickOpen();
             e.Handled = true;
-            Avalonia.Threading.Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 if (this.GetControl<TextBox>("QuickOpenInput") is { } input)
                 {
