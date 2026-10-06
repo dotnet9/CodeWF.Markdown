@@ -117,6 +117,7 @@
         <Style Selector="Border.sidebar TextBlock.side-label">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="LetterSpacing" Value="0.8" />
             <Setter Property="Foreground" Value="{DynamicResource SemiColorText3}" />
             <Setter Property="Margin" Value="16 14 0 8" />
         </Style>
