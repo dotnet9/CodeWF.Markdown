@@ -281,7 +281,12 @@ internal sealed class MarkdownInlineRenderer(IMarkdownRenderContext context)
 
         try
         {
-            var view = _context.CreateMathView(latex, _context.ParagraphFontSize, CSharpMath.Atom.LineStyle.Text);
+            var view = _context.CreateMathView(latex, _context.ParagraphFontSize, MarkdownMathLineStyle.Text);
+            if (view is null)
+            {
+                return new Run($"${latex}$");
+            }
+
             view.VerticalAlignment = VerticalAlignment.Center;
             return CreateInlineContainer(view);
         }

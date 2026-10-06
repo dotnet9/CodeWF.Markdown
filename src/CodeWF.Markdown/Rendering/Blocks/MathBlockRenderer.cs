@@ -39,12 +39,17 @@ internal sealed class MathBlockRenderer : IMarkdownBlockRenderer
             return CreateChemBlock(chemExpression, context);
         }
 
-        MarkdownMathView view;
+        Control view;
         try
         {
-            view = context.CreateMathView(latex, 20, CSharpMath.Atom.LineStyle.Display);
+            view = context.CreateMathView(latex, 20, MarkdownMathLineStyle.Display);
         }
         catch
+        {
+            view = null!;
+        }
+
+        if (view is null)
         {
             return context.CreateFallbackText(latex, MarkdownStyleKeys.HtmlBlock);
         }

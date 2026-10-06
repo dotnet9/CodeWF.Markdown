@@ -454,6 +454,15 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     private readonly MarkdownBlockRendererPipeline _blockPipeline = CreateDefaultPipeline();
 
     private static readonly List<Rendering.IMarkdownBlockRenderer> s_externalRenderers = [];
+
+    private static Rendering.MarkdownMathViewFactory? s_mathViewFactory;
+
+    /// <summary>
+    /// 注册全局数学视图工厂（CodeWF.Markdown.Math 包注册）；
+    /// 未注册时数学公式由 Core 降级为原文渲染。
+    /// </summary>
+    public static void RegisterMathViewFactory(Rendering.MarkdownMathViewFactory? factory) =>
+        s_mathViewFactory = factory;
     private static readonly object s_externalRenderersLock = new();
 
     /// <summary>
@@ -1339,19 +1348,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
     }
 
-    private MarkdownMathView CreateMathView(string latex, double fontSize, CSharpMath.Atom.LineStyle lineStyle)
-    {
-        var view = new MarkdownMathView
-        {
-            LaTeX = MathLatexNormalizer.NormalizeLatex(latex),
-            FontSize = (float)fontSize,
-            LineStyle = lineStyle,
-            DisplayErrorInline = false
-        };
-        BindTheme(view, MarkdownMathView.ForegroundProperty, TextBrushProperty);
-        return view;
-    }
-
     private SelectableTextBlock CreateFallbackText(string text, string className)
     {
         var textBlock = CreateSelectableText(className);
@@ -1478,8 +1474,10 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     void Rendering.IMarkdownRenderContext.AddMarkdownClass(Control control, params string[] classes) =>
         AddMarkdownClass(control, classes);
 
-    MarkdownMathView Rendering.IMarkdownRenderContext.CreateMathView(string latex, double fontSize, CSharpMath.Atom.LineStyle lineStyle) =>
-        CreateMathView(latex, fontSize, lineStyle);
+    Rendering.MarkdownMathViewFactory? Rendering.IMarkdownRenderContext.MathViewFactory => s_mathViewFactory;
+
+    Control? Rendering.IMarkdownRenderContext.CreateMathView(string latex, double fontSize, Rendering.MarkdownMathLineStyle lineStyle) =>
+        s_mathViewFactory?.Invoke(this, latex, fontSize, lineStyle);
 
     Control Rendering.IMarkdownRenderContext.CreateFallbackText(string text, string className) =>
         CreateFallbackText(text, className);

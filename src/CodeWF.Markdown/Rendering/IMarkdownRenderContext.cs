@@ -61,7 +61,13 @@ public interface IMarkdownRenderContext
 
     void AddMarkdownClass(Control control, params string[] classes);
 
-    MarkdownMathView CreateMathView(string latex, double fontSize, CSharpMath.Atom.LineStyle lineStyle);
+    /// <summary>
+    /// 数学视图工厂（CodeWF.Markdown.Math 包注册）；为 null 或返回 null 时
+    /// 由调用方降级为原文渲染。
+    /// </summary>
+    MarkdownMathViewFactory? MathViewFactory { get; }
+
+    Control? CreateMathView(string latex, double fontSize, MarkdownMathLineStyle lineStyle);
 
     Control CreateFallbackText(string text, string className);
 

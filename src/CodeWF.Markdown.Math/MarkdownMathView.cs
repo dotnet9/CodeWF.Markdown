@@ -5,7 +5,7 @@ using Avalonia.Media;
 using CSharpMath.Atom;
 using CSharpMath.Avalonia;
 
-namespace CodeWF.Markdown.Controls;
+namespace CodeWF.Markdown.MathRendering;
 
 public sealed class MarkdownMathView : Control
 {

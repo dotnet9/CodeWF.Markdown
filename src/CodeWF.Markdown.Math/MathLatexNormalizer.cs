@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace CodeWF.Markdown.Rendering;
+namespace CodeWF.Markdown.MathRendering;
 
 /// <summary>
 /// LaTeX 文本规范化：把 \ce{} 化学式降级为上下标纯文本，

@@ -27,7 +27,6 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Lang.Avalonia.Json" />
     <PackageReference Include="Markdig" />
-    <PackageReference Include="Sylinko.CSharpMath.Avalonia" />
     <PackageReference Include="Svg.Controls.Skia.Avalonia" />
     <PackageReference Include="Svg.Skia" />
   </ItemGroup>
