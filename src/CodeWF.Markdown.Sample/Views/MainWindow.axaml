@@ -37,7 +37,7 @@
     <Window.Styles>
         <!-- 自定义标题栏 -->
         <Style Selector="Border.titlebar">
-            <Setter Property="Height" Value="44" />
+            <Setter Property="Height" Value="48" />
             <Setter Property="Background" Value="{DynamicResource SemiColorBg1}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
             <Setter Property="BorderThickness" Value="0 0 0 1" />
@@ -54,23 +54,23 @@
             <Setter Property="FontSize" Value="13.5" />
         </Style>
         <Style Selector="Border.badge-demo">
-            <Setter Property="Padding" Value="8 2" />
+            <Setter Property="Padding" Value="10 4" />
             <Setter Property="CornerRadius" Value="999" />
             <Setter Property="Background" Value="{DynamicResource SemiColorFill1}" />
         </Style>
         <Style Selector="Border.badge-demo TextBlock">
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="{DynamicResource SemiColorPrimary}" />
         </Style>
         <Style Selector="Border.badge-version">
-            <Setter Property="Padding" Value="8 2" />
+            <Setter Property="Padding" Value="10 4" />
             <Setter Property="CornerRadius" Value="999" />
             <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Border.badge-version TextBlock">
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{DynamicResource SemiColorText2}" />
         </Style>
         <Style Selector="Border.tb-doc">
@@ -275,24 +275,24 @@
                 <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Stretch">
                     <Button Classes="win-btn" Click="MinimizeClick" ToolTip.Tip="最小化">
                         <Path
-                            Width="10"
-                            Height="10"
+                            Width="12"
+                            Height="12"
                             Data="M0 5h10"
                             Stroke="{DynamicResource SemiColorText2}"
                             StrokeThickness="1.2" />
                     </Button>
                     <Button Classes="win-btn" Click="MaximizeClick" ToolTip.Tip="最大化 / 还原">
                         <Path
-                            Width="10"
-                            Height="10"
+                            Width="12"
+                            Height="12"
                             Data="M1 1h8v8H1z"
                             Stroke="{DynamicResource SemiColorText2}"
                             StrokeThickness="1.2" />
                     </Button>
                     <Button Classes="win-btn close" Click="CloseClick" ToolTip.Tip="关闭">
                         <Path
-                            Width="10"
-                            Height="10"
+                            Width="12"
+                            Height="12"
                             Data="M1 1l8 8M9 1l-8 8"
                             Stroke="{DynamicResource SemiColorText2}"
                             StrokeThickness="1.2"

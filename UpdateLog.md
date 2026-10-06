@@ -10,7 +10,10 @@
 - **新能力包 CodeWF.Markdown.Export**：PNG / PDF / Word 导出与微信公众号、知乎、掘金剪贴板 HTML。
 - **升级**：Markdig 1.4.0、Mermaider 0.14.1、Lang.Avalonia.Json 12.1.2.15、Microsoft.NET.Test.Sdk 18.10.1。
 - **Demo 发布**：新增 publish-demo 工作流，为演示应用产出 win-x64（Inno Setup）/ linux-x64 / linux-arm64（deb）/ osx-x64 / osx-arm64（dmg）五平台安装包。
-- **已知问题**：Sylinko.CSharpMath.Avalonia 12.0.0 在 Avalonia 12.1.3 下公式字形不显示（12.x 同样，上游问题）——未注册 Math 能力包时公式以原文显示。
+- **公式渲染修复**：官方 Sylinko.CSharpMath.Avalonia 12.0.0 的画布在 Avalonia 12.1.3 下填充失效（`StreamGeometryContext` 画不出图形、`StreamGeometry.Parse` 不渲染），公式只剩分数线；`CodeWF.Markdown.Math` 改为内置 Avalonia 12 兼容画布（自实现 `ICanvas` / `Path`，直接组装 `PathFigure` 绘制），公式字形恢复完整显示，并新增离屏渲染回归测试守住该行为。
+- **后台解析调度**：文本变更只登记版本化快照，合并窗口（约 70ms）后在后台线程解析，过期结果按版本丢弃；新增脏区间 diff 与块首行哈希匹配（失败自动降级全量），长文档连续输入不再阻塞 UI 线程。
+- **新增能力 API**：`ExportKind.Html`（自包含单文件 HTML，同时提供打印预览/剪贴板用的 `RenderHtml`）、`MarkdownViewer.SaveReadingPosition/RestoreReadingPosition`、`MarkdownViewer.RefreshRemoteImages`、`MarkdownDocumentModel.GetOutline`、`MarkdownTextStatistics.Calculate`、任务列表勾选回写（点击勾选框 → 按源码偏移改写 Markdown 并抛出变更区间）。宿主不必再自行反射滚动位置、给图片 URL 追参或正则改写源码。
+- **Demo 主窗体对齐原型**：标题栏 48px、徽章与窗口按钮尺寸按 `design/prototype.html` 收敛。
 - **破坏性变更**：主包不再内置高亮/数学/图片/导出，需按需引用对应能力包并一行注册（UseHighlighting / UseMath / UseImages / UseMermaid）。
 
 ## 12.1.2.13 (2026-10-01)
