@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeWF.Markdown Demo — 界面原型</title>
+<style>
+/* ================= Token（亮/暗双套） ================= */
+:root, [data-theme="light"] {
+  --bg-window: #FFFFFF;
+  --bg-titlebar: #F7F8FA;
+  --bg-sidebar: #F5F6F8;
+  --bg-toolbar: #FFFFFF;
+  --bg-hover: #F2F4F7;
+  --bg-active: #E8F1FF;
+  --border: #E4E7EC;
+  --border-strong: #D0D5DD;
+  --text: #101828;
+  --text-secondary: #475467;
+  --text-muted: #98A2B3;
+  --text-faint: #98A2B3;
+  --accent: #1677FF;
+  --accent-hover: #4096FF;
+  --accent-soft: #E8F1FF;
+  --code-bg: #1E1E2E;
+  --danger: #E5484D;
+  --win-shadow: 0 24px 80px rgba(0,0,0,.55), 0 4px 16px rgba(0,0,0,.35);
+  --preview-bg: #FFFFFF;
+}
+[data-theme="dark"] {
+  --bg-window: #151B26;
+  --bg-titlebar: #1A2230;
+  --bg-sidebar: #161D2A;
+  --bg-toolbar: #151B26;
+  --bg-hover: #232D3F;
+  --bg-active: #16233A;
+  --border: #26303F;
+  --border-strong: #3A4658;
+  --text: #EBF2FF;
+  --text-secondary: #B7C1D2;
+  --text-muted: #7E899C;
+  --text-faint: #5E6A7D;
+  --accent: #4096FF;
+  --accent-hover: #6CB0FF;
+  --accent-soft: #16233A;
+  --code-bg: #191C25;
+  --danger: #E5484D;
+  --win-shadow: 0 32px 96px rgba(0,0,0,.7), 0 6px 20px rgba(0,0,0,.45);
+  --preview-bg: #151B26;
+}
+/* 排版主题预设 */
+[data-typo="simple"] { --h-color: var(--accent);  --h-border: var(--accent);  --link: var(--accent); }
+[data-typo="wechat"] { --h-color: #1A1A1A;        --h-border: #07C160;        --link: #07C160; }
+[data-typo="github"] { --h-color: var(--text);    --h-border: #D0D7DE;        --link: #0969DA; }
+[data-typo="orange"] { --h-color: #D46B08;        --h-border: #FA8C16;        --link: #D46B08; }
+
+/* ================= 桌面背景与窗体 ================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  font-family: "Inter", "Microsoft YaHei UI", "PingFang SC", sans-serif;
+  font-size: 14px;
+  background:
+    radial-gradient(1200px 700px at 18% 8%, #2C3E67 0%, transparent 55%),
+    radial-gradient(1000px 640px at 85% 90%, #274052 0%, transparent 55%),
+    linear-gradient(150deg, #171E2B 0%, #10151F 100%);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  box-shadow: inset 0 0 220px rgba(0,0,0,.5);
+}
+.window {
+  width: min(1400px, calc(100vw - 64px));
+  height: min(900px, calc(100vh - 64px));
+  display: flex; flex-direction: column;
+  border-radius: 12px; overflow: hidden;
+  background: var(--bg-window); color: var(--text);
+  box-shadow: var(--win-shadow), 0 0 0 1px rgba(255,255,255,.06);
+  position: relative; z-index: 1;
+}
+body.maximized .window {
+  width: 100vw; height: 100vh; border-radius: 0;
+}
+
+/* ================= 主区布局（侧栏 + 内容列 并排） ================= */
+.app-body { flex: 1; display: flex; min-height: 0; }
+
+/* ================= ① 自定义标题栏 ================= */
+.titlebar {
+  height: 44px; flex-shrink: 0;
+  display: flex; align-items: center;
+  background: var(--bg-titlebar);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+.tb-brand { display: flex; align-items: center; gap: 10px; padding-left: 12px; }
+.tb-logo {
+  width: 24px; height: 24px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), #7C3AED);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 13px;
+}
+.tb-title { font-weight: 600; font-size: 13.5px; }
+.badge {
+  font-size: 11px; font-weight: 600; padding: 1.5px 8px; border-radius: 999px;
+}
+.badge.demo { background: var(--accent-soft); color: var(--accent); }
+.badge.version { border: 1px solid var(--border-strong); color: var(--text-muted); font-weight: 500; }
+.tb-doc {
+  margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--border);
+  font-size: 12.5px; color: var(--text-muted);
+}
+.tb-right {
+  margin-left: auto; display: flex; align-items: center; gap: 4px;
+  padding-right: 6px; height: 100%;
+}
+.win-btn {
+  width: 44px; height: 100%; border: none; background: transparent;
+  color: var(--text-secondary); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .12s ease;
+}
+.win-btn:hover { background: var(--bg-hover); color: var(--text); }
+.win-btn.close:hover { background: var(--danger); color: #fff; }
+.titlebar .ctl { display: flex; align-items: center; gap: 6px; margin-right: 10px; }
+.titlebar select {
+  height: 28px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg-window); color: var(--text); padding: 0 6px; font-size: 12.5px; font-family: inherit;
+}
+.icon-btn {
+  width: 30px; height: 30px; border-radius: 6px; border: none; background: transparent;
+  color: var(--text-secondary); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .12s ease, color .12s ease;
+}
+.icon-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+/* ================= ② 侧栏 ================= */
+.sidebar {
+  width: 216px; flex-shrink: 0; display: flex; flex-direction: column;
+  background: var(--bg-sidebar); border-right: 1px solid var(--border);
+  transition: width .18s ease;
+}
+.sidebar.collapsed { width: 56px; }
+.side-label {
+  padding: 14px 18px 8px; font-size: 11px; font-weight: 700;
+  letter-spacing: .8px; color: var(--text-muted); user-select: none;
+}
+.doc-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+.doc-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  margin-bottom: 2px; position: relative;
+  transition: background .12s ease;
+}
+.doc-item:hover { background: var(--bg-hover); }
+.doc-item.active { background: var(--bg-active); }
+.doc-item.active::before {
+  content: ""; position: absolute; left: 0; top: 9px; bottom: 9px;
+  width: 3px; border-radius: 0 3px 3px 0; background: var(--accent);
+}
+.doc-ico {
+  width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); background: var(--bg-window);
+  border: 1px solid var(--border);
+}
+.doc-item.active .doc-ico { color: var(--accent); border-color: var(--accent); }
+.doc-name { font-weight: 600; font-size: 13px; }
+.doc-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.sidebar.collapsed .doc-item { justify-content: center; padding: 8px 4px; }
+.sidebar.collapsed .doc-text, .sidebar.collapsed .side-label { display: none; }
+.sidebar-foot { padding: 8px; border-top: 1px solid var(--border); }
+.foot-btn {
+  width: 100%; height: 32px; border-radius: 7px; border: none; background: transparent;
+  color: var(--text-muted); cursor: pointer; font-size: 12.5px; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: background .12s ease, color .12s ease;
+}
+.foot-btn:hover { background: var(--bg-hover); color: var(--text); }
+.foot-btn .fb-icon { display: inline-flex; transition: transform .18s ease; }
+.sidebar.collapsed .foot-btn { justify-content: center; }
+.sidebar.collapsed .foot-btn .fb-text { display: none; }
+.sidebar.collapsed .foot-btn .fb-icon { transform: rotate(180deg); }
+
+/* ================= ③ 工具栏 ================= */
+.toolbar {
+  height: 44px; flex-shrink: 0; display: flex; align-items: center; gap: 10px;
+  padding: 0 12px; background: var(--bg-toolbar); border-bottom: 1px solid var(--border);
+}
+.segment { display: flex; background: var(--bg-hover); border-radius: 8px; padding: 3px; }
+.segment button {
+  height: 28px; padding: 0 14px; border: none; border-radius: 6px;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  font-size: 13px; font-family: inherit;
+}
+.segment button.on {
+  background: var(--bg-window); color: var(--accent);
+  font-weight: 600; box-shadow: 0 1px 3px rgba(16,24,40,.12);
+}
+.toolbar select {
+  height: 30px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg-window); color: var(--text); padding: 0 8px;
+  font-size: 13px; font-family: inherit; cursor: pointer;
+}
+.toolbar .group-label { font-size: 12px; color: var(--text-faint); }
+.toolbar .spacer { flex: 1; }
+.dd { position: relative; }
+.dd > button {
+  height: 30px; padding: 0 12px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-window);
+  color: var(--text); font-size: 13px; font-family: inherit;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.dd > button:hover { border-color: var(--accent); color: var(--accent); }
+.dd-menu {
+  position: absolute; top: 34px; right: 0; min-width: 180px; z-index: 50;
+  background: var(--bg-window); border: 1px solid var(--border);
+  border-radius: 8px; box-shadow: 0 12px 32px rgba(16,24,40,.18); padding: 4px; display: none;
+}
+.dd.open .dd-menu { display: block; }
+.dd-menu button {
+  width: 100%; text-align: left; padding: 8px 10px; border: none;
+  background: transparent; color: var(--text); font-size: 13px;
+  border-radius: 6px; cursor: pointer; font-family: inherit; display: flex; gap: 8px;
+}
+.dd-menu button:hover { background: var(--bg-hover); }
+.dd-menu .sep { height: 1px; background: var(--border); margin: 4px 6px; }
+.dd > button .chev { color: var(--text-muted); font-size: 11px; }
+.dd-menu .mi-sub { margin-left: auto; color: var(--text-muted); font-size: 11px; }
+
+/* ================= ④⑤ 编辑 / 预览 ================= */
+.main { flex: 1; display: flex; min-height: 0; }
+.pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.pane + .pane { border-left: 1px solid var(--border); }
+.pane-head {
+  height: 32px; flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+  padding: 0 12px; border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 700; letter-spacing: .8px; color: var(--text-muted);
+  user-select: none;
+}
+.pane-head .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.pane-head .ph-right { margin-left: auto; font-weight: 500; letter-spacing: 0; }
+.pane-body { flex: 1; overflow: auto; }
+
+.editor {
+  font-family: "Cascadia Code", Consolas, "Microsoft YaHei", monospace;
+  font-size: 13px; line-height: 1.7; padding: 14px 16px;
+  white-space: pre; color: var(--text);
+}
+.editor .ln { color: var(--text-muted); opacity: .5; user-select: none; margin-right: 18px; }
+.editor .md-h { color: var(--accent); font-weight: 700; }
+.editor .md-code { color: #C678DD; }
+
+.preview { padding: 28px 32px 48px; background: var(--preview-bg); }
+.preview .pv { max-width: 820px; margin: 0 auto; }
+.pv h1 { font-size: 28px; margin: 8px 0 20px; color: var(--h-color); }
+.pv h2 {
+  font-size: 21px; margin: 30px 0 14px; color: var(--h-color);
+  padding-bottom: 8px; border-bottom: 2px solid var(--h-border);
+}
+.pv h3 { font-size: 17px; margin: 22px 0 10px; color: var(--h-color); }
+.pv p { line-height: 1.85; margin: 10px 0; }
+.pv a { color: var(--link); }
+.pv blockquote {
+  border-left: 4px solid var(--accent); background: var(--accent-soft);
+  padding: 10px 16px; border-radius: 0 8px 8px 0; margin: 14px 0;
+  color: var(--text-secondary);
+}
+.pv code.inline {
+  font-family: Consolas, monospace; font-size: .9em;
+  background: rgba(22,119,255,.08); color: var(--accent);
+  padding: 2px 6px; border-radius: 4px;
+}
+.pv table { border-collapse: collapse; width: 100%; margin: 14px 0; }
+.pv th, .pv td { border: 1px solid var(--border-strong); padding: 8px 14px; text-align: left; }
+.pv th { background: var(--accent-soft); font-weight: 700; }
+.pv tr + tr td { border-top: none; }
+.pv ul.task { list-style: none; }
+.pv ul.task li { padding-left: 26px; position: relative; line-height: 2; }
+.pv ul.task li::before {
+  content: ""; position: absolute; left: 2px; top: 7px;
+  width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--border-strong);
+}
+.pv ul.task li.done::before { background: var(--accent); border-color: var(--accent); }
+.pv ul.task li.done { color: var(--text-muted); text-decoration: line-through; }
+.pv ul.task li.done::after {
+  content: ""; position: absolute; left: 6px; top: 10px; width: 6px; height: 3px;
+  border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg);
+}
+.codeblock { background: var(--code-bg); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+.codeblock .cb-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 14px; border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.codeblock .cb-lang { color: #8A94A6; font-size: 12px; font-family: Consolas, monospace; }
+.codeblock .cb-copy {
+  font-size: 11px; color: #fff; background: var(--accent);
+  border: none; border-radius: 5px; padding: 3px 12px; cursor: pointer; font-family: inherit;
+}
+.codeblock .cb-copy:hover { background: var(--accent-hover); }
+.codeblock .cb-body {
+  padding: 12px 16px; font-family: Consolas, monospace; font-size: 13px;
+  line-height: 1.75; overflow-x: auto; color: #DCDFE4;
+}
+.codeblock .ln { color: #555C77; margin-right: 18px; user-select: none; }
+.kw { color: #C678DD; } .ty { color: #E5C07B; } .str { color: #98C379; } .fn { color: #61AFEF; }
+.mermaid {
+  border: 1px solid var(--border); border-radius: 10px; margin: 14px 0;
+  padding: 18px; background: var(--preview-bg);
+  display: flex; justify-content: center;
+}
+.mermaid rect { fill: var(--accent-soft); stroke: var(--accent); }
+.mermaid text { fill: var(--text); font-size: 13px; font-family: inherit; }
+.mermaid .m-edge { stroke: var(--text-muted); fill: none; stroke-width: 1.5; }
+.mermaid polygon { fill: var(--accent); }
+.mermaid .m-label { font-size: 12px; fill: var(--text-muted); }
+.math-block {
+  text-align: center; font-family: "Cambria Math", Georgia, serif;
+  font-style: italic; font-size: 19px; margin: 16px 0; color: var(--text);
+}
+.pv .img-ph {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 320px; height: 150px; border-radius: 10px; margin: 14px 0;
+  background: var(--bg-hover); color: var(--text-muted); border: 1px dashed var(--border-strong);
+  font-size: 13px;
+}
+
+/* ================= ⑥ 状态栏 ================= */
+.statusbar {
+  height: 30px; flex-shrink: 0; display: flex; align-items: center; gap: 20px;
+  padding: 0 16px; background: var(--bg-sidebar); border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-muted); user-select: none;
+}
+.statusbar .ok-dot { width: 7px; height: 7px; border-radius: 50%; background: #12B76A; }
+.statusbar .sp { flex: 1; }
+.statusbar a { color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+.statusbar a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="window">
+
+  <!-- ① 自定义标题栏 -->
+  <div class="titlebar">
+    <div class="tb-brand">
+      <div class="tb-logo">M</div>
+      <span class="tb-title">CodeWF.Markdown Demo</span>
+      <span class="badge demo" style="background:var(--accent-soft); color:var(--accent);">Demo</span>
+      <span class="badge version">v13.0.0</span>
+    </div>
+    <span class="tb-doc">基础元素.md</span>
+    <div class="tb-right">
+      <div class="ctl">
+        <select title="界面语言"><option>简体中文</option><option>English</option></select>
+        <button class="icon-btn" onclick="toggleTheme()" title="明暗切换">
+          <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+          </svg>
+        </button>
+      </div>
+      <button class="win-btn" title="最小化">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 5h10" stroke="currentColor" stroke-width="1.2"/></svg>
+      </button>
+      <button class="win-btn" title="最大化 / 还原" onclick="toggleMax()">
+        <svg id="maxIcon" width="10" height="10" viewBox="0 0 10 10"><rect x="0.6" y="0.6" width="8.8" height="8.8" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+      </button>
+      <button class="win-btn close" title="关闭">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- ② 侧栏 -->
+    <div class="sidebar" id="sidebar">
+      <div class="side-label">示例文档</div>
+      <div class="doc-list" id="docList">
+        <div class="doc-item active" onclick="pickDoc(this,'基础元素.md')">
+          <div class="doc-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+          <div class="doc-text"><div class="doc-name">基础元素</div><div class="doc-desc">标题 · 表格 · 任务列表</div></div>
+        </div>
+        <div class="doc-item" onclick="pickDoc(this,'排版主题.md')">
+          <div class="doc-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/><path d="M12 8v4l2.5 2.5"/></svg></div>
+          <div class="doc-text"><div class="doc-name">排版主题</div><div class="doc-desc">18 套排版主题</div></div>
+        </div>
+        <div class="doc-item" onclick="pickDoc(this,'代码与表格.md')">
+          <div class="doc-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6l-6 6 6 6"/><path d="M16 6l6 6-6 6"/></svg></div>
+          <div class="doc-text"><div class="doc-name">代码与表格</div><div class="doc-desc">TextMate 语法高亮</div></div>
+        </div>
+        <div class="doc-item" onclick="pickDoc(this,'列表引用与HTML.md')">
+          <div class="doc-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h14"/></svg></div>
+          <div class="doc-text"><div class="doc-name">列表与引用</div><div class="doc-desc">嵌套列表 · 引用块</div></div>
+        </div>
+        <div class="doc-item" onclick="pickDoc(this,'图片链接与长文.md')">
+          <div class="doc-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+          <div class="doc-text"><div class="doc-name">图片与链接</div><div class="doc-desc">SVG / GIF · 远程图</div></div>
+        </div>
+        <div class="doc-item" onclick="pickDoc(this,'增量渲染压力.md')">
+          <div class="doc-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <div class="doc-text"><div class="doc-name">增量渲染压力</div><div class="doc-desc">性能演示专用</div></div>
+        </div>
+      </div>
+      <div class="sidebar-foot">
+        <button class="foot-btn" onclick="toggleSidebar()" title="折叠 / 展开侧栏">
+          <span class="fb-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg></span>
+          <span class="fb-text">折叠侧栏</span>
+        </button>
+      </div>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+      <!-- ③ 工具栏 -->
+      <div class="toolbar">
+        <div class="segment" id="viewSeg">
+          <button onclick="setView('edit', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+            编辑
+          </button>
+          <button class="on" onclick="setView('split', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/></svg>
+            分栏
+          </button>
+          <button onclick="setView('preview', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18" opacity=".5"/></svg>
+            预览
+          </button>
+        </div>
+        <span class="group-label">排版主题</span>
+        <select class="tl-select" onchange="setTypo(this.value)">
+          <option value="simple">Simple · 默认</option>
+          <option value="wechat">橙心 · 公众号</option>
+          <option value="github">GitHub</option>
+          <option value="orange">橙色活力</option>
+        </select>
+        <span class="group-label">字号</span>
+        <select class="tl-select"><option>标准</option><option>紧凑</option></select>
+        <div class="spacer"></div>
+        <div class="dd" id="ddPerf">
+          <button onclick="ddToggle(event,'ddPerf')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            性能演示 <span class="chev">▾</span>
+          </button>
+          <div class="dd-menu">
+            <button>增量替换压力 <span class="mi-sub">Ctrl+1</span></button>
+            <button>中部插入演示 <span class="mi-sub">Ctrl+2</span></button>
+            <button>尾部追加演示 <span class="mi-sub">Ctrl+3</span></button>
+            <div class="sep"></div>
+            <button>停止演示</button>
+          </div>
+        </div>
+        <div class="dd" id="ddExport">
+          <button onclick="ddToggle(event,'ddExport')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            导出 <span class="chev">▾</span>
+          </button>
+          <div class="dd-menu">
+            <button>导出 PNG 图片</button>
+            <button>导出 PDF 文档</button>
+            <button>导出 Word 文档</button>
+            <div class="sep"></div>
+            <button>复制为公众号 HTML</button>
+            <button>复制为知乎 HTML</button>
+            <button>复制为掘金 HTML</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④⑤ 编辑 / 预览 -->
+      <div class="main" id="main">
+        <div class="pane" id="paneEdit">
+          <div class="pane-head">
+            <span class="dot"></span>编辑器 · AvaloniaEdit
+            <span class="ph-right">Markdown</span>
+          </div>
+          <div class="pane-body editor" id="editorSource"></div>
+        </div>
+        <div class="pane">
+          <div class="pane-head">
+            <span class="dot"></span>预览 · MarkdownViewer
+            <span class="ph-right" id="pvThemeName">Simple · 亮色</span>
+          </div>
+          <div class="pane-body preview">
+            <div class="pv">
+              <h1>基础元素</h1>
+              <p>CodeWF.Markdown 是基于 Avalonia 的 <b>Markdown 渲染库</b>：块级增量渲染、18 套排版主题、TextMate 代码高亮，能力包按需扩展。本演示覆盖全部基础元素。</p>
+
+              <h2>文本与引用</h2>
+              <p>支持 <b>加粗</b>、<i>斜体</i>、<s>删除线</s>、<code class="inline">行内代码</code> 与 <a href="#">超链接</a>。</p>
+              <blockquote>引用块：渲染库内置 18 套排版主题，跟随明暗变体自动切换，可通过 <b>MarkdownTypographyThemeRegistry</b> 注册自定义主题。</blockquote>
+
+              <h2>任务列表</h2>
+              <ul class="task">
+                <li class="done">块级增量渲染（ContentHash 差分）</li>
+                <li class="done">代码高亮（TextMate 语法）</li>
+                <li>数学公式渲染（能力包）</li>
+                <li>Mermaid 图表（能力包）</li>
+              </ul>
+
+              <h2>表格</h2>
+              <table>
+                <tr><th>能力</th><th>说明</th><th>状态</th></tr>
+                <tr><td>增量渲染</td><td>仅替换变化块，滚动位置保持</td><td>✅ 已内置</td></tr>
+                <tr><td>代码高亮</td><td>TextMate 语法定义，明暗双色</td><td>✅ 已内置</td></tr>
+                <tr><td>Mermaid</td><td>纯 .NET 渲染，无浏览器依赖</td><td>🧩 能力包</td></tr>
+              </table>
+
+              <h2>代码高亮</h2>
+              <div class="codeblock">
+                <div class="cb-head"><span class="cb-lang">csharp</span><button class="cb-copy">复制</button></div>
+                <div class="cb-body">
+                  <span class="ln">1</span><span class="kw">public class</span> <span class="ty">Greeter</span><br>
+                  <span class="ln">2</span>{<br>
+                  <span class="ln">3</span>    <span class="kw">private readonly</span> <span class="ty">string</span> _name;<br>
+                  <span class="ln">4</span>    <span class="kw">public</span> <span class="fn">Greeter</span>(<span class="ty">string</span> name) => _name = name;<br>
+                  <span class="ln">5</span>    <span class="kw">public string</span> <span class="fn">SayHello</span>() => <span class="str">$"Hello, {_name}!"</span>;<br>
+                  <span class="ln">6</span>}
+                </div>
+              </div>
+
+              <h2>Mermaid 图表</h2>
+              <div class="mermaid">
+                <svg width="440" height="120" viewBox="0 0 440 120">
+                  <rect x="10" y="42" width="86" height="36" rx="6"></rect><text x="53" y="64" text-anchor="middle">开始</text>
+                  <path class="m-edge" d="M96 60 H150"></path><polygon points="150,60 142,56 142,64"></polygon>
+                  <rect x="152" y="42" width="86" height="36" rx="18"></rect><text x="195" y="64" text-anchor="middle">判断</text>
+                  <path class="m-edge" d="M238 50 H300 V30 H330"></path><polygon points="330,30 322,26 322,34"></polygon>
+                  <rect x="332" y="12" width="86" height="36" rx="6"></rect><text x="375" y="34" text-anchor="middle">通过</text>
+                  <path class="m-edge" d="M238 70 H300 V90 H330"></path><polygon points="330,90 322,86 322,94"></polygon>
+                  <rect x="332" y="72" width="86" height="36" rx="6"></rect><text x="375" y="94" text-anchor="middle">驳回</text>
+                  <text class="m-label" x="262" y="44">是</text>
+                  <text class="m-label" x="262" y="88">否</text>
+                </svg>
+              </div>
+
+              <h2>数学公式</h2>
+              <div class="math-block">∫₀<sup>∞</sup> e<sup>−x²</sup> dx = √π / 2</div>
+
+              <h2>图片</h2>
+              <div style="text-align:center"><div class="img-ph">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                Images 能力包 · 异步加载 · 点击放大
+              </div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑥ 状态栏 -->
+      <div class="statusbar">
+        <span class="ok-dot" title="文档无未保存更改"></span>
+        <span>已保存</span>
+        <span>示例：基础元素</span>
+        <span>445 字</span>
+        <span>解析 1.8 ms</span>
+        <span>渲染：增量</span>
+        <span class="sp"></span>
+        <span>UTF-8</span>
+        <span>v13.0.0</span>
+        <a href="https://github.com/dotnet9/CodeWF.Markdown" target="_blank">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-1.96c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.18-1.49 3.14-1.18 3.14-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.77 1.05.77 2.12v3.14c0 .31.21.68.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MD_SOURCE = [
+  '# 基础元素',
+  '',
+  'CodeWF.Markdown 是基于 Avalonia 的 **Markdown 渲染库**：',
+  '块级增量渲染、18 套排版主题、TextMate 代码高亮。',
+  '',
+  '## 任务列表',
+  '',
+  '- [x] 块级增量渲染（ContentHash 差分）',
+  '- [ ] 数学公式渲染（Math 能力包）',
+  '- [ ] Mermaid 图表（Mermaid 能力包）',
+  '',
+  '## 代码',
+  '',
+  '```csharp',
+  'public string SayHello() => $"Hello!";',
+  '```',
+  '',
+  '> 增量渲染 + 明暗变体自动跟随',
+  '',
+  '![图片](https://example.com/logo.png)',
+].join('\n');
+
+(function () {
+  const el = document.getElementById('editorSource');
+  el.innerHTML = MD_SOURCE.split('\n').map((l, i) => {
+    const safe = l.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const hl = safe
+      .replace(/^(#+ .*)/, '<span class="md-h">$1</span>')
+      .replace(/(```[a-z]*)/, '<span class="md-code">$1</span>')
+      .replace(/^(!\[.*\]\(.*\))$/, '<span class="md-code">$1</span>');
+    return `<span class="ln">${String(i + 1).padStart(2, '0')}</span>${hl || ' '}`;
+  }).join('\n');
+})();
+
+/* 明暗切换 */
+function toggleTheme() {
+  const el = document.documentElement;
+  const next = el.dataset.theme === 'light' ? 'dark' : 'light';
+  el.dataset.theme = next;
+  document.getElementById('themeIcon').innerHTML = next === 'light'
+    ? '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'
+    : '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M19.4 4.6l-1.8 1.8M6.4 17.6l-1.8 1.8"/>';
+  const pv = document.getElementById('pvThemeName');
+  pv.textContent = document.querySelector('.tl-select').value.charAt(0).toUpperCase()
+    + document.querySelector('.tl-select').value.slice(1) + ' · ' + (next === 'light' ? '亮色' : '暗色');
+}
+
+/* 排版主题 */
+function setTypo(v) {
+  document.documentElement.dataset.typo = v;
+  const names = { simple: 'Simple', wechat: '橙心', github: 'GitHub', orange: '橙色活力' };
+  const el = document.getElementById('pvThemeName');
+  const dark = document.documentElement.dataset.theme === 'dark';
+  el.textContent = (names[v] || v) + ' · ' + (dark ? '暗色' : '亮色');
+}
+
+/* 视图模式 */
+function setView(mode, btn) {
+  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const edit = document.getElementById('paneEdit');
+  const panes = document.querySelectorAll('#main .pane');
+  const preview = panes[panes.length - 1];
+  edit.style.display = mode === 'preview' ? 'none' : 'flex';
+  preview.style.display = mode === 'edit' ? 'none' : 'flex';
+}
+
+/* 侧栏折叠（折叠后底部按钮只留图标） */
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  document.querySelector('#sidebar .fb-text').textContent =
+    sb.classList.contains('collapsed') ? '展开侧栏' : '折叠侧栏';
+}
+function pickDoc(el, name) {
+  document.querySelectorAll('.doc-item').forEach(d => d.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelector('.tb-doc').textContent = name;
+  document.querySelector('.pv h1').textContent = name.replace('.md', '');
+  document.querySelectorAll('.statusbar span')[2].textContent = '示例：' + name.replace('.md', '');
+}
+
+/* 下拉菜单 */
+function ddToggle(e, id) {
+  e.stopPropagation();
+  document.querySelectorAll('.dd').forEach(d => { if (d.id !== id) d.classList.remove('open'); });
+  document.getElementById(id).classList.toggle('open');
+}
+document.addEventListener('click', () =>
+  document.querySelectorAll('.dd').forEach(d => d.classList.remove('open')));
+
+/* 最大化 / 还原 */
+function toggleMax() {
+  document.body.classList.toggle('maximized');
+  const maxed = document.body.classList.contains('maximized');
+  document.getElementById('maxIcon').innerHTML = maxed
+    ? '<rect x="0.6" y="2.6" width="6.8" height="6.8" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M3 2.6V0.6h6.8v6.8h-2" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+    : '<rect x="0.6" y="0.6" width="8.8" height="8.8" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+}
+</script>
+</body>
+</html>
