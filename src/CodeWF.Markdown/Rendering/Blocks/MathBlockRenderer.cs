@@ -18,7 +18,7 @@ internal sealed class MathBlockRenderer : IMarkdownBlockRenderer
 {
     public Control? TryRender(Block block, string? sourceMarkdown, IMarkdownRenderContext context)
     {
-        var text = MarkdownSpecialBlocks.GetSpecialBlockText(block, sourceMarkdown);
+        var text = MarkdownSpecialBlocks.GetSpecialBlockText(block, sourceMarkdown) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(text))
         {
             return null;

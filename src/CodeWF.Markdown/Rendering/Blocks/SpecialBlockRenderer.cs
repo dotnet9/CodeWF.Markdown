@@ -57,7 +57,7 @@ internal sealed class SpecialBlockRenderer : IMarkdownBlockRenderer
         }
 
         var altText = MarkdownPlainTextExtractor.ExtractPlainText(image);
-        if (context.CreateImageControl(image.Url, altText) is not { } imageControl)
+        if (context.CreateImageControl(image.Url ?? string.Empty, altText) is not { } imageControl)
         {
             return CreateImageFallback(altText, context);
         }
