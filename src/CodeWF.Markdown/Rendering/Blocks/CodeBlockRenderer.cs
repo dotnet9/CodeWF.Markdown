@@ -1,5 +1,8 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
+using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
+using Avalonia.Media;
 using CodeWF.Markdown.Controls;
 using Lang.Avalonia;
 using Markdig.Syntax;
@@ -58,19 +61,52 @@ internal sealed class CodeBlockRenderer : IMarkdownBlockRenderer
         header.Children.Add(languageText);
         header.Children.Add(copyButton);
         stack.Children.Add(header);
-        stack.Children.Add(CodeHighlighter.Render(
-            code,
-            language,
-            context.CodeBlockIsDark,
-            context.CodeFontFamily,
-            context.CodeBlockFontSize,
-            context.CodeBlockLineHeight,
-            () => context.HasSelection,
-            context.CopySelectionAsync));
+        stack.Children.Add(
+            context.CodeHighlighter?.Invoke(
+                code,
+                language,
+                context.CodeBlockIsDark,
+                context.CodeFontFamily,
+                context.CodeBlockFontSize,
+                context.CodeBlockLineHeight,
+                () => context.HasSelection,
+                context.CopySelectionAsync)
+            ?? CreatePlainCodeFallback(code, context));
 
         context.RaiseCodeBlockToolRender(header, stack, codeBlock);
 
         border.Child = stack;
         return border;
+    }
+
+    /// <summary>
+    /// 无高亮能力时的降级渲染：单色等宽文本（Core 零高亮依赖）。
+    /// </summary>
+    private static Control CreatePlainCodeFallback(string code, IMarkdownRenderContext context)
+    {
+        var textBlock = context.CreateSelectableText("MdCodeBlockPlain");
+        textBlock.FontFamily = context.CodeFontFamily;
+        textBlock.FontSize = context.CodeBlockFontSize;
+        textBlock.LineHeight = context.CodeBlockLineHeight;
+        textBlock.TextWrapping = TextWrapping.NoWrap;
+        context.BindTheme(textBlock, SelectableTextBlock.ForegroundProperty, MarkdownViewer.TextBrushProperty);
+
+        var lines = code.TrimEnd().Replace("\r\n", "\n").Split('\n');
+        for (var i = 0; i < lines.Length; i++)
+        {
+            textBlock.Inlines?.Add(new Run(lines[i]));
+            if (i < lines.Length - 1)
+            {
+                textBlock.Inlines?.Add(new LineBreak());
+            }
+        }
+
+        var scrollViewer = new ScrollViewer
+        {
+            Content = textBlock,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        return scrollViewer;
     }
 }

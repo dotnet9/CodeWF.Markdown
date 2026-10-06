@@ -471,6 +471,20 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
     private MarkdownInlineRenderer? _inlineRenderer;
 
+    private static Rendering.MarkdownCodeHighlighter? s_codeHighlighter;
+
+    /// <summary>
+    /// 注册全局代码高亮能力（CodeWF.Markdown.Highlighting 包注册）；
+    /// 未注册时代码块由 Core 降级为单色等宽渲染。实例属性可按实例覆盖。
+    /// </summary>
+    public static void RegisterCodeHighlighter(Rendering.MarkdownCodeHighlighter? highlighter) =>
+        s_codeHighlighter = highlighter;
+
+    /// <summary>
+    /// 代码高亮能力实例覆盖；为 null 时回退到全局注册的能力。
+    /// </summary>
+    public Rendering.MarkdownCodeHighlighter? CodeHighlighter { get; set; }
+
     private MarkdownInlineRenderer InlineRenderer => _inlineRenderer ??= new(this);
 
     private static MarkdownBlockRendererPipeline CreateDefaultPipeline()
@@ -1469,6 +1483,8 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
     Control Rendering.IMarkdownRenderContext.CreateFallbackText(string text, string className) =>
         CreateFallbackText(text, className);
+
+    Rendering.MarkdownCodeHighlighter? Rendering.IMarkdownRenderContext.CodeHighlighter => CodeHighlighter ?? s_codeHighlighter;
 
     bool Rendering.IMarkdownRenderContext.CodeBlockIsDark => ResolveCodeBlockIsDark();
 

@@ -67,6 +67,12 @@ public interface IMarkdownRenderContext
 
     // ---- 代码块渲染所需 ----
 
+    /// <summary>
+    /// 代码高亮能力（CodeWF.Markdown.Highlighting 包注册）；为 null 时
+    /// 由 Core 降级为单色等宽渲染。
+    /// </summary>
+    MarkdownCodeHighlighter? CodeHighlighter { get; }
+
     bool CodeBlockIsDark { get; }
 
     FontFamily CodeFontFamily { get; }

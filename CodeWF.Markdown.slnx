@@ -4,6 +4,7 @@
   </Folder>
   <Project Path="src/CodeWF.Markdown/CodeWF.Markdown.csproj" />
   <Project Path="src/CodeWF.Markdown.Mermaid/CodeWF.Markdown.Mermaid.csproj" />
+  <Project Path="src/CodeWF.Markdown.Highlighting/CodeWF.Markdown.Highlighting.csproj" />
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
     <File Path="UpdateLog.md" />

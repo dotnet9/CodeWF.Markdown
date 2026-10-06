@@ -30,8 +30,6 @@
     <PackageReference Include="Sylinko.CSharpMath.Avalonia" />
     <PackageReference Include="Svg.Controls.Skia.Avalonia" />
     <PackageReference Include="Svg.Skia" />
-    <PackageReference Include="TextMateSharp" />
-    <PackageReference Include="TextMateSharp.Grammars" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="I18n\Language.cs">
