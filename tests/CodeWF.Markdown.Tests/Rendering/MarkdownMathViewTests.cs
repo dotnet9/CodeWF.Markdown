@@ -110,10 +110,14 @@ public sealed class MarkdownMathViewTests
 				return;
 			}
 
-			AppBuilder.Configure<Application>()
-				.UseSkia()
-				.UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
-				.SetupWithoutStarting();
+			if (Application.Current is null)
+			{
+				AppBuilder.Configure<Application>()
+					.UseSkia()
+					.UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
+					.SetupWithoutStarting();
+			}
+
 			_initialized = true;
 		}
 	}

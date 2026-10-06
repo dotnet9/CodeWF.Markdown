@@ -22,6 +22,18 @@ public partial class MarkdownViewer
     private int _taskMarkerOffset = -1;
 
     /// <summary>
+    /// 指定块控件当前是否已物化（虚拟化宿主下未进入视口的块不挂载控件）；
+    /// 宿主可用它区分「未物化」与「不存在」。
+    /// </summary>
+    public bool IsBlockRealized(int blockIndex) =>
+        _virtualizingHost is null || _virtualizingHost.GetRealizedControl(blockIndex) is not null;
+
+    /// <summary>
+    /// 已物化的块数量；未启用虚拟化时等于块总数，供诊断与测试使用。
+    /// </summary>
+    public int RealizedBlockCount => _virtualizingHost?.RealizedBlockCount ?? _renderedBlocks.Count;
+
+    /// <summary>
     /// 阅读位置快照：已渲染块序号与本块内的相对进度（0-1）。
     /// 块序号在文档重排后仍可定位，避免用像素值导致跳位。
     /// </summary>
@@ -237,7 +249,15 @@ public partial class MarkdownViewer
         }
 
         var renderedBlock = FindRenderedBlockBySourceOffset(sourceOffset);
-        if (renderedBlock is null || renderedBlock.Control.TranslatePoint(new Point(0, 0), this) is not { } topLeft)
+        if (renderedBlock is null)
+        {
+            return false;
+        }
+
+        // 虚拟化宿主下目标块可能未物化：先物化再量测，保证偏移映射给出精确 Bounds。
+        _virtualizingHost?.RealizeBlock(_renderedBlocks.IndexOf(renderedBlock));
+
+        if (renderedBlock.Control.TranslatePoint(new Point(0, 0), this) is not { } topLeft)
         {
             return false;
         }
@@ -324,7 +344,7 @@ public partial class MarkdownViewer
                 ContainsRemoteImage(modelBlock),
                 TryGetTaskMarkerOffset(_renderedMarkdown, modelBlock));
             block.Cleanup();
-            _documentHost.Children[i] = control;
+            ReplaceBlockControl(i, control, block.Kind);
             _renderedBlocks[i] = replacement;
         }
 

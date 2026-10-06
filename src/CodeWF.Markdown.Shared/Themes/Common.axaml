@@ -46,10 +46,11 @@
                         <StackPanel
                             Classes="MdDocument"
                             Orientation="Vertical">
-                            <StackPanel
+                            <md:MarkdownVirtualizingPanel
                                 Name="PART_DocumentHost"
-                                Orientation="Vertical"
-                                Spacing="{TemplateBinding BlockSpacing}" />
+                                Spacing="{TemplateBinding BlockSpacing}"
+                                EnableVirtualization="{TemplateBinding EnableVirtualization}"
+                                VirtualizationThreshold="{TemplateBinding VirtualizationThreshold}" />
                             <Border
                                 Classes="MdDocumentBottomSpacer"
                                 Height="{TemplateBinding DocumentBottomPadding}"

@@ -59,6 +59,7 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
     private readonly List<IDisposable> _currentBlockDisposables = [];
     private readonly MarkdownSelectionController _selectionController = new();
     private Panel? _documentHost;
+    private MarkdownVirtualizingPanel? _virtualizingHost;
     private string _renderedMarkdown = string.Empty;
     private MarkdownDocumentModel _renderedModel = MarkdownDocumentModel.Empty;
     private MarkdownRenderMode _queuedRenderMode = MarkdownRenderMode.Incremental;
@@ -80,6 +81,30 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
 
     public static readonly StyledProperty<string?> ImageBasePathProperty =
         AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(ImageBasePath));
+
+    /// <summary>
+    /// 文档宿主的块虚拟化开关；关闭后所有块始终物化，可在异常场景退回非虚拟化宿主。
+    /// </summary>
+    public static readonly StyledProperty<bool> EnableVirtualizationProperty =
+        AvaloniaProperty.Register<MarkdownViewer, bool>(nameof(EnableVirtualization), true);
+
+    /// <summary>
+    /// 启用虚拟化的最小块数量；低于该值时按普通面板渲染，避免小文档付出额外开销。
+    /// </summary>
+    public static readonly StyledProperty<int> VirtualizationThresholdProperty =
+        AvaloniaProperty.Register<MarkdownViewer, int>(nameof(VirtualizationThreshold), 40);
+
+    public bool EnableVirtualization
+    {
+        get => GetValue(EnableVirtualizationProperty);
+        set => SetValue(EnableVirtualizationProperty, value);
+    }
+
+    public int VirtualizationThreshold
+    {
+        get => GetValue(VirtualizationThresholdProperty);
+        set => SetValue(VirtualizationThresholdProperty, value);
+    }
 
     public static readonly DirectProperty<MarkdownViewer, string> SelectedTextProperty =
         AvaloniaProperty.RegisterDirect<MarkdownViewer, string>(
@@ -606,6 +631,12 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
         base.OnApplyTemplate(e);
 
         _documentHost = e.NameScope.Find<Panel>(DocumentHostPartName);
+        if (_documentHost is MarkdownVirtualizingPanel panel)
+        {
+            _virtualizingHost = panel;
+            panel.ScrollHost ??= ResolveScrollHost();
+        }
+
         RenderDocument(MarkdownRenderMode.Full);
     }
 
@@ -718,7 +749,7 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
             block.Cleanup();
         }
         DisposePendingBlockDisposables(0);
-        _documentHost.Children.Clear();
+        ClearBlockControls();
         _renderedBlocks.Clear();
         _renderedMarkdown = text;
         var parseStart = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -739,7 +770,7 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
 
         foreach (var renderedBlock in CreateRenderedBlocks(_renderedModel.Blocks, text))
         {
-            _documentHost.Children.Add(renderedBlock.Control);
+            AddBlockControl(renderedBlock.Control, renderedBlock.Kind);
             _renderedBlocks.Add(renderedBlock);
         }
 
@@ -895,14 +926,14 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
         for (var i = 0; i < removeCount; i++)
         {
             _renderedBlocks[replaceStartIndex].Cleanup();
-            _documentHost.Children.RemoveAt(replaceStartIndex);
+            RemoveBlockControlAt(replaceStartIndex);
             _renderedBlocks.RemoveAt(replaceStartIndex);
         }
 
         for (var i = 0; i < newBlocks.Count; i++)
         {
             var renderedBlock = newBlocks[i];
-            _documentHost.Children.Insert(replaceStartIndex + i, renderedBlock.Control);
+            AddBlockControl(replaceStartIndex + i, renderedBlock.Control, renderedBlock.Kind);
             _renderedBlocks.Insert(replaceStartIndex + i, renderedBlock);
         }
 
@@ -931,14 +962,14 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
         for (var i = 0; i < removeCount; i++)
         {
             _renderedBlocks[replaceStartIndex].Cleanup();
-            _documentHost.Children.RemoveAt(replaceStartIndex);
+            RemoveBlockControlAt(replaceStartIndex);
             _renderedBlocks.RemoveAt(replaceStartIndex);
         }
 
         for (var i = 0; i < newBlocks.Count; i++)
         {
             var renderedBlock = newBlocks[i];
-            _documentHost.Children.Insert(replaceStartIndex + i, renderedBlock.Control);
+            AddBlockControl(replaceStartIndex + i, renderedBlock.Control, renderedBlock.Kind);
             _renderedBlocks.Insert(replaceStartIndex + i, renderedBlock);
         }
 
@@ -1124,6 +1155,8 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
     {
         _documentHost?.InvalidateMeasure();
         _documentHost?.InvalidateArrange();
+        _virtualizingHost?.InvalidateMeasure();
+        _virtualizingHost?.InvalidateArrange();
         InvalidateMeasure();
         InvalidateArrange();
     }
@@ -1615,4 +1648,57 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
     private readonly record struct TextRange(int Start, int End);
 
     private readonly record struct TextChange(int OldStart, int OldEnd, int NewStart, int NewEnd, int Delta);
+
+    /// <summary>
+    /// 追加块控件：宿主为虚拟化面板时按块序号登记，否则退回普通面板行为。
+    /// </summary>
+    private void AddBlockControl(Control control, MarkdownBlockKind kind)
+    {
+        if (_virtualizingHost is { } host)
+        {
+            host.AddBlock(control, kind);
+            return;
+        }
+
+        _documentHost?.Children.Add(control);
+    }
+
+    private void AddBlockControl(int index, Control control, MarkdownBlockKind kind)
+    {
+        if (_virtualizingHost is { } host)
+        {
+            host.InsertBlock(index, control, kind);
+            return;
+        }
+
+        _documentHost?.Children.Insert(index, control);
+    }
+
+    private void RemoveBlockControlAt(int index)
+    {
+        if (_virtualizingHost is { } host)
+        {
+            host.RemoveBlockAt(index);
+            return;
+        }
+
+        _documentHost?.Children.RemoveAt(index);
+    }
+
+    private void ReplaceBlockControl(int index, Control control, MarkdownBlockKind kind)
+    {
+        RemoveBlockControlAt(index);
+        AddBlockControl(index, control, kind);
+    }
+
+    private void ClearBlockControls()
+    {
+        if (_virtualizingHost is { } host)
+        {
+            host.ClearBlocks();
+            return;
+        }
+
+        _documentHost?.Children.Clear();
+    }
 }
