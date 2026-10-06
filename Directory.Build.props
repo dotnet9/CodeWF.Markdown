@@ -9,7 +9,7 @@
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts\</ArtifactsPath>
     <PackageOutputPath>$(ArtifactsPath)packages\</PackageOutputPath>
     <!-- 13.0.0 起脱离 Avalonia 版本联动：Major=破坏性重构，Minor=功能，Patch=修复，Revision=热修；-dev 后缀用于本地联调 -->
-    <Version>13.0.0.0-dev.20261006.5</Version>
+    <Version>13.0.0.0-dev.20261006.6</Version>
     <Authors>沙漠尽头的狼</Authors>
     <RepositoryUrl>https://github.com/dotnet9/CodeWF.Markdown</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
