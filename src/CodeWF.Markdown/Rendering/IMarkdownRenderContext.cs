@@ -35,6 +35,17 @@ internal interface IMarkdownRenderContext
 
     SelectableTextBlock CreateParagraph(ParagraphBlock paragraph, bool stripTaskPrefix, Thickness? marginOverride);
 
+    /// <summary>内联树 → Avalonia 内联集合（链接、行内代码、公式、图片等）。</summary>
+    System.Collections.Generic.IEnumerable<Avalonia.Controls.Documents.Inline> ConvertInlines(
+        Markdig.Syntax.Inlines.ContainerInline? container,
+        bool stripTaskPrefix);
+
+    /// <summary>为文本块提取链接区间并挂接手型光标与点击打开交互。</summary>
+    void AttachLinkInteraction(
+        SelectableTextBlock textBlock,
+        Markdig.Syntax.Inlines.ContainerInline? container,
+        bool stripTaskPrefix);
+
     IDisposable BindTheme<T>(
         AvaloniaObject target,
         AvaloniaProperty<T> targetProperty,

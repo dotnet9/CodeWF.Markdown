@@ -462,6 +462,8 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         pipeline.Register(new QuoteRenderer());
         pipeline.Register(new TableRenderer());
         pipeline.Register(new ThematicBreakRenderer());
+        pipeline.Register(new HeadingRenderer());
+        pipeline.Register(new FootnoteRenderer());
         return pipeline;
     }
 
@@ -1057,7 +1059,7 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         }
 
         string? url;
-        return TryGetLinkAtPointer(textBlock, e, out url);
+        return MarkdownLinkInteraction.TryGetLinkAtPointer(textBlock, e, out url);
     }
 
     private void InvalidateDocumentLayout()
@@ -1253,11 +1255,8 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         return block switch
         {
             ParagraphBlock paragraph => CreateParagraph(paragraph),
-            HeadingBlock heading => CreateHeading(heading),
             LinkReferenceDefinitionGroup => null,
             LinkReferenceDefinition => null,
-            FootnoteGroup footnotes => CreateFootnoteGroup(footnotes),
-            Footnote footnote => CreateFootnote(footnote),
             HtmlBlock htmlBlock => CreateHtmlBlock(htmlBlock.Lines.ToString()),
             _ => CreateUnknownBlock(block)
         };
@@ -1404,36 +1403,9 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
             textBlock.Inlines?.Add(inline);
         }
 
-        AttachLinkInteraction(textBlock, ExtractLinkSpans(paragraph.Inline, stripTaskPrefix));
+        MarkdownLinkInteraction.AttachLinkInteraction(textBlock, MarkdownLinkInteraction.ExtractLinkSpans(paragraph.Inline, stripTaskPrefix));
 
         return textBlock;
-    }
-
-    private Control CreateHeading(HeadingBlock heading)
-    {
-        var border = new Border();
-        AddMarkdownClass(
-            border,
-            MarkdownStyleKeys.HeadingBorder,
-            MarkdownStyleKeys.GetHeadingBorderClass(heading.Level));
-        BindTheme(border, Border.BorderBrushProperty, AccentBrushProperty);
-        BindTheme(border, MarginProperty, HeadingMarginProperty);
-
-        var textBlock = CreateSelectableText(MarkdownStyleKeys.Heading, MarkdownStyleKeys.GetHeadingClass(heading.Level));
-        textBlock.FontWeight = FontWeight.Bold;
-        BindTheme(textBlock, SelectableTextBlock.ForegroundProperty, TextBrushProperty);
-        BindTheme(textBlock, SelectableTextBlock.FontFamilyProperty, ContentFontFamilyProperty);
-        BindTheme(textBlock, SelectableTextBlock.FontSizeProperty, GetHeadingFontSizeProperty(heading.Level));
-
-        foreach (var inline in ConvertInlines(heading.Inline))
-        {
-            textBlock.Inlines?.Add(inline);
-        }
-
-        AttachLinkInteraction(textBlock, ExtractLinkSpans(heading.Inline));
-
-        border.Child = textBlock;
-        return border;
     }
 
     /// <summary>
@@ -1466,83 +1438,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     private static double GetPerceivedLuminance(Color color)
     {
         return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
-    }
-
-    private Control CreateThematicBreak()
-    {
-        var border = new Border();
-        AddMarkdownClass(border, MarkdownStyleKeys.ThematicBreak);
-        BindTheme(border, Border.BackgroundProperty, BorderLineBrushProperty);
-        return border;
-    }
-
-    private Thickness GetListParagraphMargin(bool firstParagraph)
-    {
-        return firstParagraph ? ListFirstParagraphMargin : ListNestedParagraphMargin;
-    }
-
-    private Control CreateFootnoteGroup(FootnoteGroup footnotes)
-    {
-        var panel = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            Spacing = 6,
-            Margin = new Thickness(0, 18, 0, 8)
-        };
-        AddMarkdownClass(panel, MarkdownStyleKeys.List);
-
-        panel.Children.Add(CreateThematicBreak());
-        foreach (var footnote in footnotes.OfType<Footnote>().OrderBy(note => note.Order))
-        {
-            panel.Children.Add(CreateFootnote(footnote));
-        }
-
-        return panel;
-    }
-
-    private Control CreateFootnote(Footnote footnote)
-    {
-        var grid = new Grid
-        {
-            ColumnDefinitions =
-            {
-                new ColumnDefinition(GridLength.Auto),
-                new ColumnDefinition(new GridLength(1, GridUnitType.Star))
-            }
-        };
-        AddMarkdownClass(grid, MarkdownStyleKeys.ListItem);
-
-        var marker = CreateSelectableText(MarkdownStyleKeys.ListMarker);
-        marker.Text = $"[{Math.Max(1, footnote.Order)}]";
-        marker.MinWidth = OrderedListMarkerMinWidth;
-        marker.TextAlignment = TextAlignment.Right;
-        marker.VerticalAlignment = VerticalAlignment.Top;
-        BindTheme(marker, SelectableTextBlock.ForegroundProperty, AccentBrushProperty);
-        BindTheme(marker, SelectableTextBlock.FontFamilyProperty, ContentFontFamilyProperty);
-        BindTheme(marker, SelectableTextBlock.FontSizeProperty, ParagraphFontSizeProperty);
-        BindTheme(marker, SelectableTextBlock.LineHeightProperty, ParagraphLineHeightProperty);
-        Grid.SetColumn(marker, 0);
-        grid.Children.Add(marker);
-
-        var content = new StackPanel { Orientation = Orientation.Vertical };
-        AddMarkdownClass(content, MarkdownStyleKeys.ListItemContent);
-        var firstParagraph = true;
-        foreach (var block in footnote)
-        {
-            var child = block is ParagraphBlock paragraph
-                ? CreateParagraph(paragraph, false, GetListParagraphMargin(firstParagraph))
-                : ConvertBlock(block);
-            firstParagraph = false;
-
-            if (child is not null)
-            {
-                content.Children.Add(child);
-            }
-        }
-
-        Grid.SetColumn(content, 1);
-        grid.Children.Add(content);
-        return grid;
     }
 
     private Control CreateHtmlBlock(string html)
@@ -2210,148 +2105,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         return new InlineUIContainer(control);
     }
 
-    private static IReadOnlyList<MarkdownLinkSpan> ExtractLinkSpans(ContainerInline? container, bool stripTaskPrefix = false)
-    {
-        var links = new List<MarkdownLinkSpan>();
-        CollectLinkSpans(container, 0, links, ref stripTaskPrefix);
-        return links;
-    }
-
-    private static int CollectLinkSpans(
-        ContainerInline? container,
-        int offset,
-        ICollection<MarkdownLinkSpan> links,
-        ref bool stripTaskPrefix)
-    {
-        var child = container?.FirstChild;
-        while (child is not null)
-        {
-            switch (child)
-            {
-                case LiteralInline literal:
-                    var literalText = literal.Content.ToString();
-                    if (stripTaskPrefix && MarkdownTaskListHelper.TryStripTaskPrefix(literalText, out var stripped))
-                    {
-                        stripTaskPrefix = false;
-                        if (!string.IsNullOrWhiteSpace(stripped))
-                        {
-                            offset += stripped.TrimStart().Length;
-                        }
-                    }
-                    else
-                    {
-                        stripTaskPrefix = false;
-                        offset += literalText.Length;
-                    }
-
-                    break;
-                case CodeInline code:
-                    stripTaskPrefix = false;
-                    offset += code.Content.Length;
-                    break;
-                case LineBreakInline:
-                    stripTaskPrefix = false;
-                    offset += Environment.NewLine.Length;
-                    break;
-                case TaskList:
-                    stripTaskPrefix = false;
-                    break;
-                case LinkInline { IsImage: true } image:
-                    stripTaskPrefix = false;
-                    offset += MarkdownPlainTextExtractor.ExtractImageText(image).Length;
-                    break;
-                case LinkInline { IsImage: false } link:
-                    stripTaskPrefix = false;
-                    var start = offset;
-                    offset = CollectLinkSpans(link, offset, links, ref stripTaskPrefix);
-                    if (offset == start && !string.IsNullOrWhiteSpace(link.Url))
-                    {
-                        offset += link.Url!.Length;
-                    }
-
-                    if (offset > start && !string.IsNullOrWhiteSpace(link.Url))
-                    {
-                        links.Add(new MarkdownLinkSpan(start, offset, link.Url!));
-                    }
-
-                    break;
-                case ContainerInline nested:
-                    stripTaskPrefix = false;
-                    offset = CollectLinkSpans(nested, offset, links, ref stripTaskPrefix);
-                    break;
-                default:
-                    stripTaskPrefix = false;
-                    var text = child.ToString() ?? string.Empty;
-                    if (!MarkdownPlainTextExtractor.IsTypeNameFallback(text, child.GetType()))
-                    {
-                        offset += text.Length;
-                    }
-
-                    break;
-            }
-
-            child = child.NextSibling;
-        }
-
-        return offset;
-    }
-
-    private static void AttachLinkInteraction(SelectableTextBlock textBlock, IReadOnlyList<MarkdownLinkSpan> links)
-    {
-        if (links.Count == 0)
-        {
-            return;
-        }
-
-        textBlock.Tag = links;
-        textBlock.PointerMoved += (_, e) =>
-        {
-            string? ignored;
-            textBlock.Cursor = TryGetLinkAtPointer(textBlock, e, out ignored)
-                ? new Cursor(StandardCursorType.Hand)
-                : null;
-        };
-        textBlock.PointerExited += (_, _) => textBlock.Cursor = null;
-        textBlock.PointerReleased += (_, e) =>
-        {
-            if (e.InitialPressMouseButton == MouseButton.Left
-                && string.IsNullOrEmpty(textBlock.SelectedText)
-                && TryGetLinkAtPointer(textBlock, e, out var url)
-                && !string.IsNullOrWhiteSpace(url))
-            {
-                UrlHelper.Open(url);
-                e.Handled = true;
-            }
-        };
-    }
-
-    private static bool TryGetLinkAtPointer(SelectableTextBlock textBlock, PointerEventArgs e, out string? url)
-    {
-        url = null;
-        if (textBlock.Tag is not IReadOnlyList<MarkdownLinkSpan> links || links.Count == 0)
-        {
-            return false;
-        }
-
-        var hit = textBlock.TextLayout.HitTestPoint(e.GetPosition(textBlock));
-        if (!hit.IsInside)
-        {
-            return false;
-        }
-
-        var textPosition = hit.TextPosition;
-        foreach (var link in links)
-        {
-            if (textPosition >= link.Start && textPosition < link.End)
-            {
-                url = link.Url;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private static SelectableTextBlock? FindSelectableTextBlock(Visual? source)
     {
         for (var current = source; current is not null; current = current.GetVisualParent())
@@ -2438,19 +2191,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         return false;
     }
 
-    private static StyledProperty<double> GetHeadingFontSizeProperty(int level)
-    {
-        return level switch
-        {
-            1 => Heading1FontSizeProperty,
-            2 => Heading2FontSizeProperty,
-            3 => Heading3FontSizeProperty,
-            4 => Heading4FontSizeProperty,
-            5 => Heading5FontSizeProperty,
-            _ => Heading6FontSizeProperty
-        };
-    }
-
     private IDisposable BindTheme<T>(
         AvaloniaObject target,
         AvaloniaProperty<T> targetProperty,
@@ -2508,7 +2248,15 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     SelectableTextBlock Rendering.IMarkdownRenderContext.CreateParagraph(ParagraphBlock paragraph, bool stripTaskPrefix, Thickness? marginOverride) =>
         CreateParagraph(paragraph, stripTaskPrefix, marginOverride);
 
-    private sealed record MarkdownLinkSpan(int Start, int End, string Url);
+    System.Collections.Generic.IEnumerable<Avalonia.Controls.Documents.Inline> Rendering.IMarkdownRenderContext.ConvertInlines(
+        Markdig.Syntax.Inlines.ContainerInline? container,
+        bool stripTaskPrefix) => ConvertInlines(container, stripTaskPrefix);
+
+    void Rendering.IMarkdownRenderContext.AttachLinkInteraction(
+        SelectableTextBlock textBlock,
+        Markdig.Syntax.Inlines.ContainerInline? container,
+        bool stripTaskPrefix) =>
+        MarkdownLinkInteraction.AttachLinkInteraction(textBlock, MarkdownLinkInteraction.ExtractLinkSpans(container, stripTaskPrefix));
 
     private sealed record RenderedBlock(
         int Start,
