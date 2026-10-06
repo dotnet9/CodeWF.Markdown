@@ -45,10 +45,12 @@ public partial class MainWindow : Window
         if (_viewModel.IsSidebarCollapsed)
         {
             SidebarBorder.Classes.Add("collapsed");
+            DocList.Classes.Add("collapsed");
         }
         else
         {
             SidebarBorder.Classes.Remove("collapsed");
+            DocList.Classes.Remove("collapsed");
         }
     }
 

@@ -263,6 +263,7 @@
                         Text="示例文档" />
                     <ListBox
                         Grid.Row="1"
+                        x:Name="DocList"
                         Classes="doc-list"
                         ItemsSource="{Binding MarkdownFiles}"
                         SelectedItem="{Binding SelectedFile}">
