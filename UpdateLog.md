@@ -1,11 +1,17 @@
 ﻿# 更新日志
 
+## 13.1.1 (2026-10-07)
+
+- 🐛[修复]-发布链路：v13.1.0 的 CI 在 Build 步骤失败（该 tag 与新依赖 `CodeWF.AvaloniaControls` 12.3.0 同批推送，runner 恢复时 nuget.org 尚未上架，NU1101），未产出 NuGet 包与 Release；本版依赖对齐到已上架的 12.3.1 并以 13.1.1 重新发布。
+- 🧪[测试]-修复测试进程内 Avalonia 初始化线程不一致导致的随机失败（离线渲染用例与主题资源用例相互影响，单独跑过、全量跑挂）：新增 `AvaloniaPlatform` 集合夹具统一初始化，全部 109 项测试稳定通过。
+
 ## 13.1.0 (2026-10-07)
 
 - 🚀[新增]-文档宿主改为虚拟化面板：块数达到阈值（默认 40，可调）后只物化视口 ± 2 屏内的块，代码块/表格/图片等大块始终物化；离屏块保留已测量高度占位，滚动离屏即释放控件，长文档不再一次性挂载全部控件。
 - 🚀[新增]-`MarkdownViewer.EnableVirtualization` / `VirtualizationThreshold` 开关与阈值（异常场景可退回非虚拟化宿主）；新增 `RealizedBlockCount` / `IsBlockRealized` 供宿主与诊断观察物化状态。
 - 🔨[优化]-偏移映射在虚拟化宿主下会先物化目标块再返回精确 Bounds。
 - 🔨[优化]-虚拟化宿主改为复用 `CodeWF.AvaloniaControls` 的 `WindowedStackPanel`（同源实现只维护一份），库内不再自带裁剪面板与重复单测。
+- 🔨[优化]-依赖 `CodeWF.AvaloniaControls` 对齐到已上架版本 12.3.1。
 
 
 ## 13.0.0.1 (2026-10-06)

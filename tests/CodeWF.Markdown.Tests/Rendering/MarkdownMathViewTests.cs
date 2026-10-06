@@ -19,6 +19,7 @@ namespace CodeWF.Markdown.Tests.Rendering;
 /// 这里以离屏渲染断言「公式确实产生了非空像素」。
 /// </para>
 /// </summary>
+[Collection("AvaloniaPlatform")]
 public sealed class MarkdownMathViewTests
 {
 	private const int Width = 320;

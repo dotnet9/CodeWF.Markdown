@@ -6,6 +6,8 @@ using Avalonia.Styling;
 
 using CodeWF.Markdown.Controls;
 
+using CodeWF.Markdown.Tests.Rendering;
+
 using Xunit;
 
 using MarkdownThemes = FullThemes::CodeWF.Markdown.Themes.MarkdownThemes;
@@ -15,6 +17,7 @@ using MarkdownTypographyThemes = FullThemes::CodeWF.Markdown.Themes.MarkdownTypo
 
 namespace CodeWF.Markdown.Tests.Themes;
 
+[Collection("AvaloniaPlatform")]
 public sealed class MarkdownThemesResourceTests
 {
 	[Fact]
