@@ -86,6 +86,28 @@
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Margin" Value="0 1" />
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                        <ContentPresenter
+                            Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem:pointerover /template/ Border">
+            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}" />
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem:selected /template/ Border">
+            <Setter Property="Background" Value="{DynamicResource ControlCheckedBackground}" />
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem:selected Border.doc-ico">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentDefaultBrush}" />
         </Style>
         <Style Selector="ListBox.doc-list ListBoxItem TextBlock.doc-name">
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -287,6 +309,7 @@
                                         CornerRadius="2"
                                         IsVisible="{Binding $parent[ListBoxItem].IsSelected}" />
                                     <Border
+                                        Classes="doc-ico"
                                         Width="30"
                                         Height="30"
                                         CornerRadius="7"
