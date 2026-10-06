@@ -458,7 +458,8 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
     /// <summary>
     /// 注册外部块级渲染器（能力包扩展点）：注册后创建的所有 Viewer 实例都会
-    /// 在内置渲染器之后尝试该渲染器。典型用法见 CodeWF.Markdown.Mermaid 包。
+    /// 优先尝试该渲染器，未受理再走内置渲染器（能力包可覆盖内置行为，
+    /// 未安装能力包时由内置实现降级）。典型用法见 CodeWF.Markdown.Mermaid 包。
     /// </summary>
     public static void RegisterBlockRenderer(Rendering.IMarkdownBlockRenderer renderer)
     {
@@ -475,6 +476,16 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
     private static MarkdownBlockRendererPipeline CreateDefaultPipeline()
     {
         var pipeline = new MarkdownBlockRendererPipeline();
+        lock (s_externalRenderersLock)
+        {
+            // 能力包渲染器优先（如 Mermaid 接管 mermaid 围栏块），内置渲染器兜底：
+            // 未安装能力包时由内置代码块渲染器降级显示，符合能力降级契约。
+            foreach (var renderer in s_externalRenderers)
+            {
+                pipeline.Register(renderer);
+            }
+        }
+
         pipeline.Register(new SpecialBlockRenderer());
         pipeline.Register(new ParagraphRenderer());
         pipeline.Register(new MathBlockRenderer());
@@ -486,14 +497,6 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         pipeline.Register(new HeadingRenderer());
         pipeline.Register(new FootnoteRenderer());
         pipeline.Register(new HtmlBlockRenderer());
-        lock (s_externalRenderersLock)
-        {
-            foreach (var renderer in s_externalRenderers)
-            {
-                pipeline.Register(renderer);
-            }
-        }
-
         return pipeline;
     }
 
