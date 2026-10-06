@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Export capability package for CodeWF.Markdown: PNG / PDF / Word export and social-platform clipboard HTML.</Description>
+    <PackageTags>avalonia;markdown;export;pdf;docx;png</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+    <PackageReference Include="Svg.Skia" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeWF.Markdown\CodeWF.Markdown.csproj" />
+    <ProjectReference Include="..\CodeWF.Markdown.Images\CodeWF.Markdown.Images.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -43,8 +43,11 @@ jobs:
           for project in \
             src/CodeWF.Markdown/CodeWF.Markdown.csproj \
             src/CodeWF.Markdown.Themes/CodeWF.Markdown.Themes.csproj \
-            src/CodeWF.Markdown.Lite/CodeWF.Markdown.Lite.csproj \
-            src/CodeWF.Markdown.Lite.Themes/CodeWF.Markdown.Lite.Themes.csproj; do
+            src/CodeWF.Markdown.Highlighting/CodeWF.Markdown.Highlighting.csproj \
+            src/CodeWF.Markdown.Math/CodeWF.Markdown.Math.csproj \
+            src/CodeWF.Markdown.Mermaid/CodeWF.Markdown.Mermaid.csproj \
+            src/CodeWF.Markdown.Images/CodeWF.Markdown.Images.csproj \
+            src/CodeWF.Markdown.Export/CodeWF.Markdown.Export.csproj; do
             dotnet pack "$project" --configuration Release --no-build --no-restore \
               -p:GeneratePackageOnBuild=false --output artifacts/ci-packages
           done

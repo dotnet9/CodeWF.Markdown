@@ -1,6 +1,6 @@
 namespace CodeWF.Markdown.Shared.Rendering;
 
-internal readonly record struct MarkdownRenderDiff(
+public readonly record struct MarkdownRenderDiff(
 	bool RequiresFullRender,
 	int ReplaceStartIndex,
 	int ReplaceEndIndex,
@@ -14,7 +14,7 @@ internal readonly record struct MarkdownRenderDiff(
 	public static MarkdownRenderDiff NoChange { get; } = new(false, 0, 0, 0, 0);
 }
 
-internal static class MarkdownDiffService
+public static class MarkdownDiffService
 {
 	private const int LargeDocumentThreshold = 4096;
 

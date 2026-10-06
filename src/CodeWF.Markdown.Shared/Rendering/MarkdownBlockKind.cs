@@ -4,7 +4,7 @@ using Markdig.Extensions.Tables;
 
 namespace CodeWF.Markdown.Shared.Rendering;
 
-internal enum MarkdownBlockKind
+public enum MarkdownBlockKind
 {
 	Unknown,
 	Paragraph,
@@ -25,7 +25,7 @@ internal enum MarkdownBlockKind
 }
 
 [Flags]
-internal enum MarkdownDependencyFlags
+public enum MarkdownDependencyFlags
 {
 	None = 0,
 	Toc = 1,

@@ -2,14 +2,14 @@ using Markdig.Syntax;
 
 namespace CodeWF.Markdown.Shared.Rendering;
 
-internal readonly record struct MarkdownTextSpan(int Start, int End)
+public readonly record struct MarkdownTextSpan(int Start, int End)
 {
 	public int Length => Math.Max(0, End - Start);
 
 	public static MarkdownTextSpan Empty { get; } = new(0, 0);
 }
 
-internal sealed record MarkdownDocumentBlock(
+public sealed record MarkdownDocumentBlock(
 	Block SyntaxBlock,
 	MarkdownTextSpan SourceSpan,
 	MarkdownTextSpan PlainTextSpan,
@@ -22,7 +22,7 @@ internal sealed record MarkdownDocumentBlock(
 	public bool HasGlobalDependency => (DependencyFlags & MarkdownDependencyFlags.Global) != 0;
 }
 
-internal sealed record MarkdownDocumentModel(
+public sealed record MarkdownDocumentModel(
 	string Source,
 	IReadOnlyList<MarkdownDocumentBlock> Blocks,
 	string PlainText,

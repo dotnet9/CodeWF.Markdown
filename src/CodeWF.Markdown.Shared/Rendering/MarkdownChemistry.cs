@@ -4,18 +4,18 @@ using Markdig.Extensions.Mathematics;
 
 namespace CodeWF.Markdown.Shared.Rendering;
 
-internal enum MarkdownChemInlineKind
+public enum MarkdownChemInlineKind
 {
 	Text,
 	Subscript,
 	Superscript
 }
 
-internal sealed record MarkdownChemInline(MarkdownChemInlineKind Kind, string Text);
+public sealed record MarkdownChemInline(MarkdownChemInlineKind Kind, string Text);
 
-internal sealed record MarkdownChemExpression(IReadOnlyList<MarkdownChemInline> Inlines, string PlainText);
+public sealed record MarkdownChemExpression(IReadOnlyList<MarkdownChemInline> Inlines, string PlainText);
 
-internal static class MarkdownChemistry
+public static class MarkdownChemistry
 {
 	private const string ChemCommand = @"\ce{";
 

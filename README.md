@@ -22,7 +22,11 @@
 
 - `CodeWF.Markdown`：完整 MarkdownViewer，支持常见 Markdown 元素、代码高亮、图片预览、SVG/图片、数学渲染扩展、多语言资源和增量渲染；内置块级渲染器管线，可注册外部渲染器扩展。
 - `CodeWF.Markdown.Themes`：`CodeWF.Markdown` 的默认控件模板和多套排版主题。
+- `CodeWF.Markdown.Highlighting`（可选能力包）：TextMate 代码语法高亮；不注册时代码块降级为单色等宽。
+- `CodeWF.Markdown.Math`（可选能力包）：CSharpMath 数学公式排版；不注册时公式降级为原文。
 - `CodeWF.Markdown.Mermaid`（可选能力包，net10.0+）：把 ```mermaid 围栏代码块渲染为图表，基于 Mermaider 纯 .NET 实现，无需 JavaScript。
+- `CodeWF.Markdown.Images`（可选能力包）：图片异步加载、SVG/GIF 预览与点击放大；不注册时图片降级为替代文本。
+- `CodeWF.Markdown.Export`（可选能力包）：PNG / PDF / Word 导出与微信公众号、知乎、掘金剪贴板 HTML。
 - `CodeWF.Markdown.Lite` / `CodeWF.Markdown.Lite.Themes`：**已在 13.0.0 退役**。轻量需求等待后续 Core 包（仅核心渲染，无高亮/数学/图片依赖）；迁移期间可暂留 12.x。
 
 ### 使用 Mermaid 能力包

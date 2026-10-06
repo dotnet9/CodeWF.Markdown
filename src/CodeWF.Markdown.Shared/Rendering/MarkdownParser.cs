@@ -10,7 +10,7 @@ using Markdig.Syntax.Inlines;
 
 namespace CodeWF.Markdown.Shared.Rendering;
 
-internal static class MarkdownParser
+public static class MarkdownParser
 {
 	public static MarkdownDocumentModel Parse(string? markdown, MarkdownPipeline pipeline)
 	{

@@ -17,5 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\CodeWF.Markdown\CodeWF.Markdown.csproj" />
     <ProjectReference Include="..\..\src\CodeWF.Markdown.Themes\CodeWF.Markdown.Themes.csproj" Aliases="FullThemes" />
+    <ProjectReference Include="..\..\src\CodeWF.Markdown.Export\CodeWF.Markdown.Export.csproj" />
   </ItemGroup>
 </Project>
