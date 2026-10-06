@@ -7,7 +7,7 @@ using CSharpMath.Avalonia;
 
 namespace CodeWF.Markdown.Controls;
 
-internal sealed class MarkdownMathView : Control
+public sealed class MarkdownMathView : Control
 {
 	private readonly MathPainter _painter = new();
 	private string? _appliedLatex;

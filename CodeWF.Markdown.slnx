@@ -4,6 +4,7 @@
     <Project Path="src/CodeWF.Markdown.Lite.Sample/CodeWF.Markdown.Lite.Sample.csproj" />
   </Folder>
   <Project Path="src/CodeWF.Markdown/CodeWF.Markdown.csproj" />
+  <Project Path="src/CodeWF.Markdown.Mermaid/CodeWF.Markdown.Mermaid.csproj" />
   <Project Path="src/CodeWF.Markdown.Lite/CodeWF.Markdown.Lite.csproj" />
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />

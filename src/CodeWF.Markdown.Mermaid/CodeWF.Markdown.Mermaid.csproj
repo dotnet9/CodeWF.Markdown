@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Mermaid diagram rendering capability package for CodeWF.Markdown (pure .NET via Mermaider, no JavaScript).</Description>
+    <PackageTags>avalonia;markdown;mermaid;diagram</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+    <PackageReference Include="Mermaider" />
+    <PackageReference Include="Svg.Controls.Skia.Avalonia" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeWF.Markdown\CodeWF.Markdown.csproj" />
+  </ItemGroup>
+
+</Project>

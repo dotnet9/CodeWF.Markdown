@@ -453,6 +453,21 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
 
     private readonly MarkdownBlockRendererPipeline _blockPipeline = CreateDefaultPipeline();
 
+    private static readonly List<Rendering.IMarkdownBlockRenderer> s_externalRenderers = [];
+    private static readonly object s_externalRenderersLock = new();
+
+    /// <summary>
+    /// 注册外部块级渲染器（能力包扩展点）：注册后创建的所有 Viewer 实例都会
+    /// 在内置渲染器之后尝试该渲染器。典型用法见 CodeWF.Markdown.Mermaid 包。
+    /// </summary>
+    public static void RegisterBlockRenderer(Rendering.IMarkdownBlockRenderer renderer)
+    {
+        lock (s_externalRenderersLock)
+        {
+            s_externalRenderers.Add(renderer);
+        }
+    }
+
     private MarkdownInlineRenderer? _inlineRenderer;
 
     private MarkdownInlineRenderer InlineRenderer => _inlineRenderer ??= new(this);
@@ -471,6 +486,14 @@ public class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRenderContext
         pipeline.Register(new HeadingRenderer());
         pipeline.Register(new FootnoteRenderer());
         pipeline.Register(new HtmlBlockRenderer());
+        lock (s_externalRenderersLock)
+        {
+            foreach (var renderer in s_externalRenderers)
+            {
+                pipeline.Register(renderer);
+            }
+        }
+
         return pipeline;
     }
 

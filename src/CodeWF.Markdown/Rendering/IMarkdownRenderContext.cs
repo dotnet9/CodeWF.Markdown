@@ -12,7 +12,7 @@ namespace CodeWF.Markdown.Rendering;
 /// 块级渲染器与宿主 MarkdownViewer 之间的服务契约：主题属性绑定、样式类
 /// 与共享控件构造。渲染器不直接依赖 Viewer 实例，能力包按此契约接入。
 /// </summary>
-internal interface IMarkdownRenderContext
+public interface IMarkdownRenderContext
 {
     double ParagraphLineHeight { get; }
 
