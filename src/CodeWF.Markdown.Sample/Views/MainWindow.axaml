@@ -17,7 +17,7 @@
     MinHeight="640"
     x:DataType="vm:MainWindowViewModel"
     Icon="/Assets/logo.ico"
-    Background="{DynamicResource SemiColorBg0}"
+    Background="{DynamicResource DemoBgWindow}"
     WindowStartupLocation="CenterScreen"
     ExtendClientAreaToDecorationsHint="True"
     mc:Ignorable="d">
@@ -38,8 +38,8 @@
         <!-- 自定义标题栏 -->
         <Style Selector="Border.titlebar">
             <Setter Property="Height" Value="48" />
-            <Setter Property="Background" Value="{DynamicResource SemiColorBg1}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
+            <Setter Property="Background" Value="{DynamicResource DemoBgTitlebar}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="0 0 0 1" />
             <Setter Property="Padding" Value="12 0 0 0" />
         </Style>
@@ -47,7 +47,12 @@
             <Setter Property="Width" Value="24" />
             <Setter Property="Height" Value="24" />
             <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Background" Value="{DynamicResource SemiColorPrimary}" />
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Color="#1677FF" Offset="0" />
+                    <GradientStop Color="#7C3AED" Offset="1" />
+                </LinearGradientBrush>
+            </Setter>
         </Style>
         <Style Selector="TextBlock.brand-name">
             <Setter Property="FontWeight" Value="Bold" />
@@ -56,22 +61,22 @@
         <Style Selector="Border.badge-demo">
             <Setter Property="Padding" Value="10 4" />
             <Setter Property="CornerRadius" Value="999" />
-            <Setter Property="Background" Value="{DynamicResource SemiColorFill1}" />
+            <Setter Property="Background" Value="{DynamicResource DemoAccentSoft}" />
         </Style>
         <Style Selector="Border.badge-demo TextBlock">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource SemiColorPrimary}" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoAccent}" />
         </Style>
         <Style Selector="Border.badge-version">
             <Setter Property="Padding" Value="10 4" />
             <Setter Property="CornerRadius" Value="999" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorderStrong}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Border.badge-version TextBlock">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{DynamicResource SemiColorText2}" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
         </Style>
         <Style Selector="Border.tb-doc">
             <Setter Property="Margin" Value="14 0 0 0" />
@@ -103,8 +108,8 @@
         <!-- 侧栏 -->
         <Style Selector="Border.sidebar">
             <Setter Property="Width" Value="216" />
-            <Setter Property="Background" Value="{DynamicResource SemiColorBg1}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
+            <Setter Property="Background" Value="{DynamicResource DemoBgSidebar}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="0 0 1 0" />
         </Style>
         <!-- 选中态主色左条（对应原型 .doc-item.active::before） -->
@@ -153,13 +158,13 @@
         <!-- 工具栏 -->
         <Style Selector="Border.toolbar">
             <Setter Property="Height" Value="44" />
-            <Setter Property="Background" Value="{DynamicResource SemiColorBg0}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
+            <Setter Property="Background" Value="{DynamicResource DemoBgToolbar}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="0 0 0 1" />
             <Setter Property="Padding" Value="12 0" />
         </Style>
         <Style Selector="Border.segment">
-            <Setter Property="Background" Value="{DynamicResource SemiColorFill0}" />
+            <Setter Property="Background" Value="{DynamicResource DemoBgHover}" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="3" />
         </Style>
@@ -171,8 +176,8 @@
             <Setter Property="Foreground" Value="{DynamicResource SemiColorText2}" />
         </Style>
         <Style Selector="Button.seg.on">
-            <Setter Property="Background" Value="{DynamicResource SemiColorBg0}" />
-            <Setter Property="Foreground" Value="{DynamicResource SemiColorPrimary}" />
+            <Setter Property="Background" Value="{DynamicResource DemoBgWindow}" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoAccent}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="Button.fmt-btn">
@@ -195,14 +200,14 @@
         <!-- 面板头 -->
         <Style Selector="Border.pane-head">
             <Setter Property="Height" Value="32" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="0 0 0 1" />
             <Setter Property="Padding" Value="12 0" />
         </Style>
         <Style Selector="Ellipse.pane-dot">
             <Setter Property="Width" Value="6" />
             <Setter Property="Height" Value="6" />
-            <Setter Property="Fill" Value="{DynamicResource SemiColorPrimary}" />
+            <Setter Property="Fill" Value="{DynamicResource DemoAccent}" />
         </Style>
         <Style Selector="TextBlock.pane-title">
             <Setter Property="FontSize" Value="11" />
@@ -213,8 +218,8 @@
         <!-- 状态栏 -->
         <Style Selector="Border.statusbar">
             <Setter Property="Height" Value="30" />
-            <Setter Property="Background" Value="{DynamicResource SemiColorBg1}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
+            <Setter Property="Background" Value="{DynamicResource DemoBgSidebar}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="0 1 0 0" />
             <Setter Property="Padding" Value="16 0" />
         </Style>

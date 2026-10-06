@@ -5,6 +5,14 @@
     xmlns:markdownThemes="https://codewf.com"
     xmlns:semi="https://irihi.tech/semi"
     RequestedThemeVariant="Light">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://CodeWF.Markdown.Sample/Themes/DesignTokens.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
         <semi:SemiTheme />

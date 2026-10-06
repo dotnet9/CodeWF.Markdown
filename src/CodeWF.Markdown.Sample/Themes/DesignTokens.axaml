@@ -1,0 +1,49 @@
+<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        设计令牌（亮/暗双变体）：与 design/prototype.html 的 :root 与 [data-theme="dark"] 一一对应。
+        主窗体各区（标题栏/侧栏/工具栏/面板头/状态栏）统一引用这里的令牌，而不是控件库默认色，
+        便于与原型并排比对时逐色核对。
+    -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="DemoBgWindow" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="DemoBgTitlebar" Color="#F7F8FA" />
+            <SolidColorBrush x:Key="DemoBgSidebar" Color="#F5F6F8" />
+            <SolidColorBrush x:Key="DemoBgToolbar" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="DemoBgHover" Color="#F2F4F7" />
+            <SolidColorBrush x:Key="DemoBgActive" Color="#E8F1FF" />
+            <SolidColorBrush x:Key="DemoBorder" Color="#E4E7EC" />
+            <SolidColorBrush x:Key="DemoBorderStrong" Color="#D0D5DD" />
+            <SolidColorBrush x:Key="DemoText" Color="#101828" />
+            <SolidColorBrush x:Key="DemoTextSecondary" Color="#475467" />
+            <SolidColorBrush x:Key="DemoTextMuted" Color="#98A2B3" />
+            <SolidColorBrush x:Key="DemoAccent" Color="#1677FF" />
+            <SolidColorBrush x:Key="DemoAccentHover" Color="#4096FF" />
+            <SolidColorBrush x:Key="DemoAccentSoft" Color="#E8F1FF" />
+            <SolidColorBrush x:Key="DemoCodeBg" Color="#1E1E2E" />
+            <SolidColorBrush x:Key="DemoDanger" Color="#E5484D" />
+            <SolidColorBrush x:Key="DemoPreviewBg" Color="#FFFFFF" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="DemoBgWindow" Color="#151B26" />
+            <SolidColorBrush x:Key="DemoBgTitlebar" Color="#1A2230" />
+            <SolidColorBrush x:Key="DemoBgSidebar" Color="#161D2A" />
+            <SolidColorBrush x:Key="DemoBgToolbar" Color="#151B26" />
+            <SolidColorBrush x:Key="DemoBgHover" Color="#232D3F" />
+            <SolidColorBrush x:Key="DemoBgActive" Color="#16233A" />
+            <SolidColorBrush x:Key="DemoBorder" Color="#26303F" />
+            <SolidColorBrush x:Key="DemoBorderStrong" Color="#3A4658" />
+            <SolidColorBrush x:Key="DemoText" Color="#EBF2FF" />
+            <SolidColorBrush x:Key="DemoTextSecondary" Color="#B7C1D2" />
+            <SolidColorBrush x:Key="DemoTextMuted" Color="#7E899C" />
+            <SolidColorBrush x:Key="DemoAccent" Color="#4096FF" />
+            <SolidColorBrush x:Key="DemoAccentHover" Color="#6CB0FF" />
+            <SolidColorBrush x:Key="DemoAccentSoft" Color="#16233A" />
+            <SolidColorBrush x:Key="DemoCodeBg" Color="#191C25" />
+            <SolidColorBrush x:Key="DemoDanger" Color="#E5484D" />
+            <SolidColorBrush x:Key="DemoPreviewBg" Color="#151B26" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>
