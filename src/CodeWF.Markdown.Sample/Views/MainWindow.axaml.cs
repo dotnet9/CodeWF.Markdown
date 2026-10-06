@@ -22,6 +22,54 @@ public partial class MainWindow : Window
         _viewModel = DataContext as MainWindowViewModel;
         _viewModel?.ConfigureHost(this);
         _viewModel?.PropertyChanged += ViewModel_PropertyChanged;
+        KeyDown += MainWindow_KeyDown;
+    }
+
+    private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.P && e.KeyModifiers == KeyModifiers.Control)
+        {
+            Vm?.ToggleQuickOpen();
+            e.Handled = true;
+            Avalonia.Threading.Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (this.GetControl<TextBox>("QuickOpenInput") is { } input)
+                {
+                    input.Focus();
+                }
+            }, Avalonia.Threading.DispatcherPriority.Input);
+        }
+    }
+
+    private void QuickOpenInput_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            Vm?.ToggleQuickOpen();
+            e.Handled = true;
+        }
+    }
+
+    private void QuickOpenList_DoubleTapped(object? sender, TappedEventArgs e)
+    {
+        Vm?.ToggleQuickOpen();
+    }
+
+    private void FormatBold(object? sender, RoutedEventArgs e) => WrapSelection("**", "**");
+
+    private void FormatItalic(object? sender, RoutedEventArgs e) => WrapSelection("*", "*");
+
+    private void FormatStrike(object? sender, RoutedEventArgs e) => WrapSelection("~~", "~~");
+
+    private void FormatCode(object? sender, RoutedEventArgs e) => WrapSelection("`", "`");
+
+    /// <summary>将编辑器选区用指定标记包裹。</summary>
+    private void WrapSelection(string prefix, string suffix)
+    {
+        if (this.GetControl<MarkdownEditorPreviewView>("EditorPreview") is { } view)
+        {
+            view.WrapSelection(prefix, suffix);
+        }
     }
 
     protected override void OnLoaded(RoutedEventArgs e)

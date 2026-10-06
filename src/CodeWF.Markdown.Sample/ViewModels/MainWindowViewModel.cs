@@ -176,6 +176,56 @@ public sealed class MainWindowViewModel : ObservableObject
 
     public string VersionText { get; }
 
+    // ---- Quick Open ----
+    public bool IsQuickOpenVisible
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public string QuickOpenFilter
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value ?? string.Empty))
+            {
+                OnPropertyChanged(nameof(FilteredFiles));
+            }
+        }
+    } = string.Empty;
+
+    public IEnumerable<MarkdownSampleFile> FilteredFiles =>
+        string.IsNullOrWhiteSpace(QuickOpenFilter)
+            ? MarkdownFiles
+            : MarkdownFiles.Where(f =>
+                f.Name.Contains(QuickOpenFilter, StringComparison.OrdinalIgnoreCase)
+                || f.Description.Contains(QuickOpenFilter, StringComparison.OrdinalIgnoreCase));
+
+    public void ToggleQuickOpen()
+    {
+        IsQuickOpenVisible = !IsQuickOpenVisible;
+        QuickOpenFilter = string.Empty;
+    }
+
+    public void OpenFilteredFile(MarkdownSampleFile? file)
+    {
+        IsQuickOpenVisible = false;
+        if (file is not null)
+        {
+            SelectedFile = MarkdownFiles.FirstOrDefault(f => f.Name == file.Name);
+        }
+    }
+
+    // ---- 浮动格式工具栏命令 ----
+    public void ApplyFormat(string format)
+    {
+        // 由视图层调用：获取选区并包裹 Markdown 标记
+        FormatRequested?.Invoke(this, format);
+    }
+
+    public event EventHandler<string>? FormatRequested;
+
     public bool IsSidebarCollapsed
     {
         get;

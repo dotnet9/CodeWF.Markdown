@@ -246,6 +246,31 @@ public partial class MarkdownEditorPreviewView : UserControl
         }
     }
 
+    /// <summary>将编辑器选区（或光标处）用指定 Markdown 标记包裹。</summary>
+    public void WrapSelection(string prefix, string suffix)
+    {
+        var caret = MarkdownEditor.CaretOffset;
+        var selectionLength = MarkdownEditor.SelectionLength;
+        var selectionStart = MarkdownEditor.SelectionStart;
+        var selected = selectionLength > 0 ? MarkdownEditor.SelectedText : string.Empty;
+
+        var insertText = prefix + (selectionLength > 0 ? selected : string.Empty) + suffix;
+        MarkdownEditor.Document.Insert(selectionStart, insertText);
+
+        if (selectionLength > 0)
+        {
+            MarkdownEditor.SelectionStart = selectionStart + prefix.Length;
+            MarkdownEditor.SelectionLength = selected.Length;
+            MarkdownEditor.CaretOffset = selectionStart + prefix.Length + selected.Length + suffix.Length;
+        }
+        else
+        {
+            MarkdownEditor.CaretOffset = caret + prefix.Length;
+        }
+
+        MarkdownEditor.Focus();
+    }
+
     private void SyncEditorFromViewModel()
     {
         if (_viewModel == null)

@@ -170,6 +170,18 @@
             <Setter Property="Foreground" Value="{DynamicResource SemiColorPrimary}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
+        <Style Selector="Button.fmt-btn">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Button.fmt-btn:hover">
+            <Setter Property="Background" Value="{DynamicResource SemiColorFill1}" />
+        </Style>
         <Style Selector="TextBlock.group-label">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{DynamicResource SemiColorText3}" />
@@ -419,6 +431,18 @@
                             <ComboBoxItem Content="标准" />
                             <ComboBoxItem Content="紧凑" />
                         </ComboBox>
+                        <Border
+                            Margin="4 0 0 0"
+                            Padding="6 0"
+                            CornerRadius="6"
+                            Background="{DynamicResource SemiColorFill0}">
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button Classes="fmt-btn" Click="FormatBold" Content="B" FontWeight="Bold" ToolTip.Tip="加粗" />
+                                <Button Classes="fmt-btn" Click="FormatItalic" Content="I" FontStyle="Italic" ToolTip.Tip="斜体" />
+                                <Button Classes="fmt-btn" Click="FormatStrike" Content="S̶" ToolTip.Tip="删除线" />
+                                <Button Classes="fmt-btn" Click="FormatCode" Content="&lt;/&gt;" FontFamily="Consolas" ToolTip.Tip="行内代码" />
+                            </StackPanel>
+                        </Border>
                         <Panel Margin="16 0 0 0" />
                         <DropDownButton VerticalContentAlignment="Center" Content="⚡ 性能演示">
                             <DropDownButton.Flyout>
@@ -464,6 +488,7 @@
                 <!-- ④⑤ 编辑 / 预览 -->
                 <Grid Grid.Row="1">
                     <views:MarkdownEditorPreviewView
+                        x:Name="EditorPreview"
                         IsVisible="{Binding IsEditorVisible}"
                         ViewMode="{Binding ViewMode}" />
                     <views:MarkdownViewerPairDemoView IsVisible="{Binding IsPairVisible}" />
@@ -492,5 +517,49 @@
                 </Border>
             </Grid>
         </Grid>
+
+        <!-- Quick Open 浮层 (Ctrl+P) -->
+        <Border
+            Grid.Row="0" Grid.RowSpan="3"
+            IsVisible="{Binding IsQuickOpenVisible}"
+            Background="#66000000"
+            ZIndex="200">
+            <Panel>
+                <Border
+                    HorizontalAlignment="Center" VerticalAlignment="Top"
+                    MaxWidth="480" MaxHeight="380"
+                    Margin="0 80 0 0"
+                    CornerRadius="10"
+                    Background="{DynamicResource SemiColorBg0}"
+                    BorderBrush="{DynamicResource SemiColorBorder}"
+                    BorderThickness="1"
+                    BoxShadow="0 12px 32px rgba(16,24,40,.2)">
+                    <StackPanel>
+                        <TextBox
+                            x:Name="QuickOpenInput"
+                            KeyDown="QuickOpenInput_KeyDown"
+                            Margin="12 12 12 0"
+                            Watermark="搜索文件…"
+                            Text="{Binding QuickOpenFilter, Mode=TwoWay}" />
+                        <ListBox
+                            x:Name="QuickOpenList"
+                            MaxHeight="280"
+                            Margin="8 8 8 8"
+                            ItemsSource="{Binding FilteredFiles}"
+                            SelectedItem="{Binding SelectedFile, Mode=TwoWay}"
+                            DoubleTapped="QuickOpenList_DoubleTapped">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:MarkdownSampleFile">
+                                    <StackPanel Margin="4 2">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                        <TextBlock FontSize="11" Foreground="{DynamicResource SemiColorText2}" Text="{Binding Description}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+            </Panel>
+        </Border>
     </Grid>
 </Window>
