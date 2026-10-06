@@ -12,7 +12,6 @@ using Xunit;
 
 using AvaloniaInline = Avalonia.Controls.Documents.Inline;
 using FullMarkdownViewer = CodeWF.Markdown.Controls.MarkdownViewer;
-using LiteMarkdownViewer = CodeWF.Markdown.Lite.Controls.MarkdownViewer;
 
 namespace CodeWF.Markdown.Tests.Rendering;
 
@@ -22,38 +21,32 @@ public sealed class MarkdownInlineStyleTests
 		.UseAdvancedExtensions()
 		.Build();
 
-	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public void MarkdownViewer_DefaultContentFontFamily_IncludesCjkFallbacks(bool useLiteViewer)
+	[Fact]
+	public void MarkdownViewer_DefaultContentFontFamily_IncludesCjkFallbacks()
 	{
-		var viewer = CreateViewer(useLiteViewer);
-		var viewerType = viewer.GetType();
-		var defaultFamily = useLiteViewer
-			? LiteMarkdownViewer.ContentFontFamilyProperty.GetMetadata(viewerType).DefaultValue
-			: FullMarkdownViewer.ContentFontFamilyProperty.GetMetadata(viewerType).DefaultValue;
+		var viewer = CreateViewer();
+		var defaultFamily = FullMarkdownViewer.ContentFontFamilyProperty
+			.GetMetadata(viewer.GetType())
+			.DefaultValue;
 		var familyName = defaultFamily.ToString();
 
 		Assert.Contains("Microsoft YaHei", familyName);
 		Assert.Contains("Noto Sans CJK SC", familyName);
 	}
 
-	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public void ConvertInlines_WhenParagraphHasMixedEmphasis_KeepsStylesScopedToInlineRuns(bool useLiteViewer)
+	[Fact]
+	public void ConvertInlines_WhenParagraphHasMixedEmphasis_KeepsStylesScopedToInlineRuns()
 	{
-		var viewer = CreateViewer(useLiteViewer);
-		var expectedBoldWeight = useLiteViewer ? FontWeight.SemiBold : FontWeight.Bold;
+		var viewer = CreateViewer();
 
 		var boldInlines = ConvertParagraphInlines(viewer, "**中华**人民共和国");
 		var boldSpan = Assert.IsType<Span>(boldInlines[0]);
 		var boldRuns = FlattenRuns(boldInlines);
-		Assert.NotEqual(expectedBoldWeight, boldSpan.FontWeight);
+		Assert.NotEqual(FontWeight.Bold, boldSpan.FontWeight);
 		Assert.Equal("中华", boldRuns[0].Text);
-		Assert.Equal(expectedBoldWeight, boldRuns[0].FontWeight);
+		Assert.Equal(FontWeight.Bold, boldRuns[0].FontWeight);
 		Assert.Equal("人民共和国", boldRuns[1].Text);
-		Assert.NotEqual(expectedBoldWeight, boldRuns[1].FontWeight);
+		Assert.NotEqual(FontWeight.Bold, boldRuns[1].FontWeight);
 
 		var italicInlines = ConvertParagraphInlines(viewer, "中华*人民*共和国");
 		var italicSpan = Assert.IsType<Span>(italicInlines[1]);
@@ -68,9 +61,9 @@ public sealed class MarkdownInlineStyleTests
 	}
 
 	[Fact]
-	public void ConvertInlines_WhenFullViewerHasMixedStrikethrough_KeepsDecorationScopedToInlineRuns()
+	public void ConvertInlines_WhenParagraphHasMixedStrikethrough_KeepsDecorationScopedToInlineRuns()
 	{
-		var viewer = CreateViewer(useLiteViewer: false);
+		var viewer = CreateViewer();
 
 		var inlines = ConvertParagraphInlines(viewer, "中华~~人民~~共和国");
 		var strikeSpan = Assert.IsType<Span>(inlines[1]);
@@ -102,12 +95,9 @@ public sealed class MarkdownInlineStyleTests
 		return ((IEnumerable<AvaloniaInline>)method.Invoke(viewer, parameters)!).ToList();
 	}
 
-	private static object CreateViewer(bool useLiteViewer)
+	private static object CreateViewer()
 	{
-		var viewerType = useLiteViewer
-			? typeof(LiteMarkdownViewer)
-			: typeof(FullMarkdownViewer);
-		return RuntimeHelpers.GetUninitializedObject(viewerType);
+		return RuntimeHelpers.GetUninitializedObject(typeof(FullMarkdownViewer));
 	}
 
 	private static IReadOnlyList<Run> FlattenRuns(IEnumerable<AvaloniaInline> inlines)
