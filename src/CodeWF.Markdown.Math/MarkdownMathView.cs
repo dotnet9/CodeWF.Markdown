@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 
 using CSharpMath.Atom;
-using CSharpMath.Avalonia;
+using CSharpMath.Rendering.FrontEnd;
 
 namespace CodeWF.Markdown.MathRendering;
 
@@ -86,7 +86,7 @@ public sealed class MarkdownMathView : Control
 	{
 		base.Render(context);
 		ApplyPainter();
-		var canvas = new AvaloniaCanvas(context, Bounds.Size);
+		var canvas = new AvaloniaMathCanvas(context, Bounds.Size);
 		_painter.Draw(canvas, CSharpMath.Rendering.FrontEnd.TextAlignment.Center);
 	}
 
@@ -141,5 +141,20 @@ public sealed class MarkdownMathView : Control
 		return brush is ISolidColorBrush solid
 			? solid.Color
 			: Colors.Black;
+	}
+
+	/// <summary>
+	/// 数学排版器：把输出目标换成 Avalonia 12 兼容画布
+	/// （官方 <c>MathPainter</c> 固定绑定官方的 <c>AvaloniaCanvas</c>）。
+	/// </summary>
+	private sealed class MathPainter : CSharpMath.Rendering.FrontEnd.MathPainter<AvaloniaMathCanvas, Color>
+	{
+		public override ICanvas WrapCanvas(AvaloniaMathCanvas canvas) => canvas;
+
+		public override System.Drawing.Color WrapColor(Color color) =>
+			System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B);
+
+		public override Color UnwrapColor(System.Drawing.Color color) =>
+			Color.FromArgb(color.A, color.R, color.G, color.B);
 	}
 }
