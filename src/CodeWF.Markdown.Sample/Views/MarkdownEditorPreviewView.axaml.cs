@@ -58,7 +58,7 @@ public partial class MarkdownEditorPreviewView : UserControl
                 LayoutGrid.ColumnDefinitions[2].MinWidth = 0;
                 break;
             default:
-                LayoutGrid.ColumnDefinitions[0].Width = new GridLength(460);
+                LayoutGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
                 LayoutGrid.ColumnDefinitions[0].MinWidth = 300;
                 LayoutGrid.ColumnDefinitions[1].Width = new GridLength(6);
                 LayoutGrid.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Star);

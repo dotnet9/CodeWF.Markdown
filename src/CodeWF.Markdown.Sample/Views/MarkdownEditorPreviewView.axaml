@@ -17,7 +17,7 @@
 
     <Grid x:Name="LayoutGrid">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="460" MinWidth="300" />
+            <ColumnDefinition Width="*" MinWidth="300" />
             <ColumnDefinition Width="6" />
             <ColumnDefinition Width="*" MinWidth="360" />
         </Grid.ColumnDefinitions>
@@ -52,14 +52,16 @@
 
         <Border
             Grid.Column="2"
-            Padding="34 28 34 0">
+            Padding="28 32 48 0">
             <ScrollViewer
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Auto">
-                <md:MarkdownViewer
-                    Markdown="{Binding Markdown}"
-                    TypographySize="{Binding CurrentTypographySize}"
-                    TypographyTheme="{Binding CurrentTypographyTheme}" />
+                <Border MaxWidth="820" HorizontalAlignment="Center">
+                    <md:MarkdownViewer
+                        Markdown="{Binding Markdown}"
+                        TypographySize="{Binding CurrentTypographySize}"
+                        TypographyTheme="{Binding CurrentTypographyTheme}" />
+                </Border>
             </ScrollViewer>
         </Border>
     </Grid>
