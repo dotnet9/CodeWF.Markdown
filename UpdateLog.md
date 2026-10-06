@@ -1,5 +1,18 @@
 # 更新日志
 
+## 13.0.0.0 (2026-10-06)
+
+### 大版本重构：能力包架构
+
+- **包矩阵重组**：主包聚焦核心渲染（渲染器管线 + 插件接缝 + 公共文档模型），高亮、数学、Mermaid、图片、导出全部拆为可选能力包；`CodeWF.Markdown.Lite` / `Lite.Themes` 退役——轻量需求等待 Core 包，过渡期可暂留 12.x。
+- **渲染器管线**：内置 11 个块级渲染器（特殊块/段落/数学/代码/列表/引用/表格/分割线/标题/脚注/HTML），`MarkdownViewer.RegisterBlockRenderer` 支持注册外部渲染器；内联转换引擎与链接交互拆为独立组件。
+- **新能力包 CodeWF.Markdown.Mermaid**（net10.0+）：```mermaid 围栏代码块渲染为图表，基于 Mermaider 纯 .NET 实现（无 JavaScript），后台渲染 + 主题跟随 + 失败回落源码。
+- **新能力包 CodeWF.Markdown.Export**：PNG / PDF / Word 导出与微信公众号、知乎、掘金剪贴板 HTML。
+- **升级**：Markdig 1.4.0、Mermaider 0.14.1、Lang.Avalonia.Json 12.1.2.15、Microsoft.NET.Test.Sdk 18.10.1。
+- **Demo 发布**：新增 publish-demo 工作流，为演示应用产出 win-x64（Inno Setup）/ linux-x64 / linux-arm64（deb）/ osx-x64 / osx-arm64（dmg）五平台安装包。
+- **已知问题**：Sylinko.CSharpMath.Avalonia 12.0.0 在 Avalonia 12.1.3 下公式字形不显示（12.x 同样，上游问题）——未注册 Math 能力包时公式以原文显示。
+- **破坏性变更**：主包不再内置高亮/数学/图片/导出，需按需引用对应能力包并一行注册（UseHighlighting / UseMath / UseImages / UseMermaid）。
+
 ## 12.1.2.13 (2026-10-01)
 
 - 🐛[修复]-修复标题等容器内含行内代码（自定义字号、基线对齐、背景）的文本被选中后渲染移位的问题：Avalonia 12.1 `SelectableTextBlock` 构造选区前景色覆盖时会用控件级 FontSize 与默认 BaselineAlignment 重建 Run 属性，导致选中的行内代码按容器字号放大并下沉、背景块丢失。新增 `MarkdownSelectableTextBlock` 子类只替换选中部分前景色，完整保留 Run 原有属性，主控件与 Lite 控件同步修复。关联：dotnet9/Vex#3。

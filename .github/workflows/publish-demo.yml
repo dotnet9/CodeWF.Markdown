@@ -1,0 +1,181 @@
+﻿name: publish-demo
+
+# 推送 v* 标签（或手动触发）发布 CodeWF.Markdown Demo 全平台安装包（5 个 RID）：
+# win-x64 用 Inno Setup 生成 setup.exe（SelfContained，非 AOT），
+# linux-x64 / linux-arm64 生成 deb，macOS 生成 dmg。
+# 注意：Demo 为能力包渲染演示，安装包体积优先保证可运行，不做 NativeAOT。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号（不含 v），例如 13.0.0'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: 发布 ${{ matrix.rid }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+            tfm: net11.0-windows
+          - rid: linux-x64
+            os: ubuntu-latest
+            tfm: net11.0
+          - rid: linux-arm64
+            os: ubuntu-24.04-arm
+            tfm: net11.0
+          - rid: osx-x64
+            os: macos-14
+            tfm: net11.0
+          - rid: osx-arm64
+            os: macos-14
+            tfm: net11.0
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: preview
+
+      - name: 计算版本号
+        id: version
+        shell: pwsh
+        run: |
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $version = '${{ inputs.version }}'.TrimStart('v', 'V')
+          } else {
+            $version = '${{ github.ref_name }}'.TrimStart('v', 'V')
+          }
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          Write-Host "版本：$version"
+
+      - name: 发布（SelfContained）
+        shell: pwsh
+        run: |
+          $rid = '${{ matrix.rid }}'
+          $tfm = '${{ matrix.tfm }}'
+          dotnet publish src/CodeWF.Markdown.Sample/CodeWF.Markdown.Sample.csproj `
+            -c Release -f $tfm -r $rid `
+            --self-contained true -p:PublishSingleFile=false `
+            -o "artifacts/publish/$rid/CodeWF.Markdown.Sample"
+          if ($LASTEXITCODE -ne 0) { throw "publish failed for $rid" }
+
+      - name: 打包 Linux deb + sha256
+        if: startsWith(matrix.rid, 'linux-')
+        shell: pwsh
+        run: pwsh scripts/package_demo_linux_deb.ps1 -RuntimeIdentifier '${{ matrix.rid }}' -Version $env:APP_VERSION -Force
+
+      - name: 打包 macOS dmg
+        if: startsWith(matrix.rid, 'osx-')
+        shell: bash
+        run: |
+          chmod +x scripts/package_demo_macos.sh
+          ./scripts/package_demo_macos.sh ${{ matrix.rid }}
+
+      - name: 构建 Windows 安装包
+        if: startsWith(matrix.rid, 'win-')
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: scripts/CodeWFMarkdownDemo.iss
+          options: >-
+            /DAppVersion=${{ env.APP_VERSION }}
+            /DSourceDir=${{ github.workspace }}\artifacts\publish\${{ matrix.rid }}\CodeWF.Markdown.Sample
+            /DOutputDir=${{ github.workspace }}\artifacts\release
+
+      - name: 计算安装包 SHA-256
+        if: startsWith(matrix.rid, 'win-')
+        shell: pwsh
+        run: |
+          $installerName = "CodeWFMarkdownDemo-v$env:APP_VERSION-win-x64-setup.exe"
+          $installerPath = Join-Path "artifacts/release" $installerName
+          if (-not (Test-Path -LiteralPath $installerPath -PathType Leaf)) {
+            throw "Installer was not produced: $installerName"
+          }
+          $sha = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$sha  $installerName" | Set-Content -LiteralPath "$installerPath.sha256" -Encoding ASCII
+
+      - name: 收集 macOS dmg 到发布目录
+        if: startsWith(matrix.rid, 'osx-')
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path artifacts/release -Force | Out-Null
+          Copy-Item -Path "artifacts/macos/*.dmg" -Destination artifacts/release/ -Force
+          Get-ChildItem artifacts/release | ForEach-Object { Write-Host $_.Name }
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodeWFMarkdownDemo-${{ matrix.rid }}
+          path: artifacts/release/*
+          if-no-files-found: error
+
+  release:
+    name: 创建 GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 下载构建产物
+        uses: actions/download-artifact@v4
+        with:
+          pattern: CodeWFMarkdownDemo-*
+          path: artifacts/release
+          merge-multiple: true
+
+      - name: 计算版本号
+        id: version
+        shell: pwsh
+        run: |
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $version = '${{ inputs.version }}'.TrimStart('v', 'V')
+            $tagName = "v$version"
+          } else {
+            $tagName = '${{ github.ref_name }}'
+            $version = $tagName.TrimStart('v', 'V')
+          }
+          "version=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "tag_name=$tagName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: 准备发布说明
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $body = New-Object System.Collections.Generic.List[string]
+          $body.Add("CodeWF.Markdown Demo v$env:VERSION")
+          $body.Add("")
+          $body.Add("Markdown 渲染能力演示应用（分栏预览、代码高亮、数学公式、Mermaid 图表、图片、多主题）。")
+          $body.Add("")
+          $body.Add("- Windows：CodeWFMarkdownDemo-v$env:VERSION-win-x64-setup.exe（Inno Setup 安装器）")
+          $body.Add("- Linux：CodeWFMarkdownDemo-v$env:VERSION-linux-x64/arm64.deb")
+          $body.Add("- macOS：CodeWFMarkdownDemo-v$env:VERSION-osx-x64/osx-arm64.dmg（未公证，首次打开需右键 -> 打开）")
+          $body | Set-Content -LiteralPath "artifacts/release-body.md" -Encoding utf8
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag_name }}
+          name: CodeWF.Markdown Demo v${{ steps.version.outputs.version }}
+          body_path: artifacts/release-body.md
+          generate_release_notes: true
+          files: |
+            artifacts/release/*.exe
+            artifacts/release/*.deb
+            artifacts/release/*.dmg
+            artifacts/release/*.sha256
