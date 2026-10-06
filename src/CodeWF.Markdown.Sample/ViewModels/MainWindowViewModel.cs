@@ -202,6 +202,12 @@ public sealed class MainWindowViewModel : ObservableObject
 
     public bool IsPairVisible => ViewMode == "pair";
 
+    public string ThemeIconText
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    } = "🌙";
+
     public string StatusMessage
     {
         get;
@@ -234,6 +240,7 @@ public sealed class MainWindowViewModel : ObservableObject
     {
         var targetKey = SelectedThemeVariant?.Key == "dark" ? "light" : "dark";
         SelectedThemeVariant = FindThemeVariantOption(targetKey) ?? SelectedThemeVariant;
+        ThemeIconText = targetKey == "dark" ? "☀️" : "🌙";
     }
 
     private async Task ExportCoreAsync(string? kind)

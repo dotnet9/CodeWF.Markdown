@@ -151,6 +151,16 @@
             <Setter Property="BorderThickness" Value="0 1 0 0" />
             <Setter Property="Padding" Value="16 0" />
         </Style>
+        <Style Selector="Border.sidebar.collapsed TextBlock.fb-text">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="Border.sidebar.collapsed Path.collapse-arrow">
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <RotateTransform Angle="180" />
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style Selector="Ellipse.status-ok">
             <Setter Property="Width" Value="7" />
             <Setter Property="Height" Value="7" />
@@ -218,7 +228,7 @@
                         Classes="icon-btn"
                         Command="{Binding ToggleDarkThemeCommand}"
                         ToolTip.Tip="明暗切换">
-                        <TextBlock Text="🌙" />
+                        <TextBlock Text="{Binding ThemeIconText}" />
                     </Button>
                 </StackPanel>
                 <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Stretch">
@@ -271,6 +281,12 @@
                             <DataTemplate x:DataType="vm:MarkdownSampleFile">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Border
+                                        Width="3"
+                                        Height="26"
+                                        Margin="-12 0 0 0"
+                                        CornerRadius="2"
+                                        IsVisible="{Binding $parent[ListBoxItem].IsSelected}" />
+                                    <Border
                                         Width="30"
                                         Height="30"
                                         CornerRadius="7"
@@ -301,6 +317,7 @@
                             ToolTip.Tip="折叠 / 展开侧栏">
                             <StackPanel Orientation="Horizontal" Spacing="7">
                                 <Path
+                                    Classes="collapse-arrow"
                                     Width="14"
                                     Height="14"
                                     Data="M11 17l-5-5 5-5M18 17l-5-5 5-5"
@@ -308,7 +325,10 @@
                                     StrokeThickness="2"
                                     StrokeLineCap="Round"
                                     StrokeJoin="Round" />
-                                <TextBlock Text="折叠侧栏" VerticalAlignment="Center" />
+                                <TextBlock
+                                    Classes="fb-text"
+                                    Text="折叠侧栏"
+                                    VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </Border>
@@ -428,6 +448,13 @@
                         <TextBlock Text="渲染：增量" />
                         <Panel Width="20" />
                         <TextBlock Text="{Binding VersionText, StringFormat='CodeWF.Markdown {0}'}" />
+                        <HyperlinkButton
+                            Padding="0"
+                            Background="Transparent"
+                            Content="⭐ GitHub"
+                            Cursor="Hand"
+                            Foreground="{DynamicResource TextBlockSecondaryForeground}"
+                            NavigateUri="https://github.com/dotnet9/CodeWF.Markdown" />
                     </StackPanel>
                 </Border>
             </Grid>
