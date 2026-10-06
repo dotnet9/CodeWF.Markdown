@@ -1,9 +1,21 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
 
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Input.Platform;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
+
+using CodeWF.Markdown;
+using CodeWF.Markdown.Shared.Rendering;
+using Markdig;
+
+using Avalonia.Media;
 
 using CodeWF.Markdown.Sample.Themes;
 using CodeWF.Markdown.Themes;
@@ -70,6 +82,10 @@ public sealed class MainWindowViewModel : ObservableObject
 
     private readonly DispatcherTimer _incrementalStressTimer;
     private readonly string _markdownBasePath;
+    private static readonly MarkdownPipeline ParseTimingPipeline =
+        new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+    private IStorageProvider? _storageProvider;
+    private IClipboard? _clipboard;
     private int _incrementalStressTick;
     private int _incrementalReplaceTick;
     private int _incrementalInsertTick;
@@ -118,6 +134,16 @@ public sealed class MainWindowViewModel : ObservableObject
                        ?? MarkdownFiles.FirstOrDefault();
         SelectLanguage = Languages.FirstOrDefault(l => l.CultureName == I18nManager.Instance.Culture?.Name)
                          ?? Languages.FirstOrDefault();
+
+        ToggleSidebarCommand = new RelayCommand(() => IsSidebarCollapsed = !IsSidebarCollapsed);
+        ToggleDarkThemeCommand = new RelayCommand(ToggleDarkTheme);
+        SetViewModeCommand = new RelayCommand<string?>(SetViewMode);
+        ExportPngCommand = new AsyncRelayCommand<string?>(_ => ExportCoreAsync("png"));
+        ExportPdfCommand = new AsyncRelayCommand<string?>(_ => ExportCoreAsync("pdf"));
+        ExportWordCommand = new AsyncRelayCommand<string?>(_ => ExportCoreAsync("word"));
+        CopySocialHtmlCommand = new AsyncRelayCommand<string?>(CopySocialHtmlAsync);
+        VersionText = "v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "13.0.0");
+        UpdateStatistics();
     }
 
     public ObservableCollection<ThemeVariantOption> ThemeVariants { get; }
@@ -133,6 +159,181 @@ public sealed class MainWindowViewModel : ObservableObject
     public List<SampleLanguage> Languages { get; }
 
     public RelayCommand ToggleIncrementalStressCommand { get; }
+
+    public RelayCommand ToggleSidebarCommand { get; }
+
+    public RelayCommand ToggleDarkThemeCommand { get; }
+
+    public RelayCommand<string?> SetViewModeCommand { get; }
+
+    public AsyncRelayCommand<string?> ExportPngCommand { get; }
+
+    public AsyncRelayCommand<string?> ExportPdfCommand { get; }
+
+    public AsyncRelayCommand<string?> ExportWordCommand { get; }
+
+    public AsyncRelayCommand<string?> CopySocialHtmlCommand { get; }
+
+    public string VersionText { get; }
+
+    public bool IsSidebarCollapsed
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public string ViewMode
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value ?? "split"))
+            {
+                OnPropertyChanged(nameof(IsEditorVisible));
+                OnPropertyChanged(nameof(IsPreviewVisible));
+                OnPropertyChanged(nameof(IsPairVisible));
+            }
+        }
+    } = "split";
+
+    public bool IsEditorVisible => ViewMode is not ("preview" or "pair");
+
+    public bool IsPreviewVisible => ViewMode is not ("edit" or "pair");
+
+    public bool IsPairVisible => ViewMode == "pair";
+
+    public string StatusMessage
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = "就绪";
+
+    public int WordCount
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public double ParseMilliseconds
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public string SampleName => SelectedFile?.Name ?? string.Empty;
+
+    public void SetViewMode(string? mode) => ViewMode = mode ?? "split";
+
+    public void ConfigureHost(TopLevel? topLevel)
+    {
+        _storageProvider = topLevel?.StorageProvider;
+        _clipboard = topLevel?.Clipboard;
+    }
+
+    private void ToggleDarkTheme()
+    {
+        var targetKey = SelectedThemeVariant?.Key == "dark" ? "light" : "dark";
+        SelectedThemeVariant = FindThemeVariantOption(targetKey) ?? SelectedThemeVariant;
+    }
+
+    private async Task ExportCoreAsync(string? kind)
+    {
+        if (_storageProvider is null || string.IsNullOrWhiteSpace(Markdown))
+        {
+            return;
+        }
+
+        var (label, extension, exportKind) = kind switch
+        {
+            "png" => ("PNG 图片", "png", ExportKind.Png),
+            "pdf" => ("PDF 文档", "pdf", ExportKind.Pdf),
+            _ => ("Word 文档", "docx", ExportKind.Word)
+        };
+
+        var suggestedName = Path.GetFileNameWithoutExtension(
+            SampleName is { Length: > 0 } ? SampleName : "demo") + "." + extension;
+        var file = await _storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "导出" + label,
+            SuggestedFileName = suggestedName,
+            FileTypeChoices = [new FilePickerFileType(label) { Patterns = ["*." + extension] }]
+        });
+        if (file is null)
+        {
+            StatusMessage = "导出已取消";
+            return;
+        }
+
+        try
+        {
+            StatusMessage = "正在导出" + label + "…";
+            var savePath = file.Path.LocalPath;
+            var themeName = SelectedTypographyTheme?.Key;
+            var typographySize = CurrentTypographySize;
+            await Task.Run(() => MarkdownDocumentExporter.ExportMarkdown(
+                Markdown, exportKind, themeName, savePath, typographySize));
+            StatusMessage = "已导出：" + Path.GetFileName(savePath);
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = "导出失败：" + exception.Message;
+        }
+    }
+
+    private async Task CopySocialHtmlAsync(string? target)
+    {
+        if (_clipboard is null)
+        {
+            return;
+        }
+
+        var targetName = target switch
+        {
+            "zhihu" => "知乎",
+            "juejin" => "掘金",
+            _ => "公众号"
+        };
+        var success = await _clipboard.TrySetMarkdownHtmlAsync(
+            Markdown, SelectedTypographyTheme?.Key, target);
+        StatusMessage = success ? "已复制" + targetName + "排版 HTML" : "复制失败：暂不支持该平台";
+    }
+
+    private void UpdateStatistics()
+    {
+        var text = Markdown ?? string.Empty;
+        WordCount = CountWords(text);
+        var stopwatch = Stopwatch.StartNew();
+        MarkdownParser.Parse(text, ParseTimingPipeline);
+        stopwatch.Stop();
+        ParseMilliseconds = Math.Round(stopwatch.Elapsed.TotalMilliseconds, 1);
+    }
+
+    private static int CountWords(string text)
+    {
+        var count = 0;
+        var inWord = false;
+        foreach (var character in text)
+        {
+            if (char.IsWhiteSpace(character) || char.IsPunctuation(character) || char.IsSymbol(character))
+            {
+                inWord = false;
+                continue;
+            }
+
+            if (character >= 0x4E00 && character <= 0x9FFF)
+            {
+                count++;
+                inWord = false;
+            }
+            else if (!inWord)
+            {
+                count++;
+                inWord = true;
+            }
+        }
+
+        return count;
+    }
 
     public bool IsCompactLayout
     {
@@ -224,7 +425,13 @@ public sealed class MainWindowViewModel : ObservableObject
     public string Markdown
     {
         get;
-        set => SetProperty(ref field, value ?? string.Empty);
+        set
+        {
+            if (SetProperty(ref field, value ?? string.Empty))
+            {
+                UpdateStatistics();
+            }
+        }
     } = string.Empty;
 
     public MarkdownSampleFile? SelectedFile
@@ -236,6 +443,7 @@ public sealed class MainWindowViewModel : ObservableObject
             {
                 StopIncrementalStress();
                 LoadMarkdown();
+                OnPropertyChanged(nameof(SampleName));
             }
         }
     }
@@ -353,6 +561,17 @@ public sealed class MainWindowViewModel : ObservableObject
             || string.Equals(Path.GetFileName(file.Path), nameOrPath, StringComparison.OrdinalIgnoreCase)
             || string.Equals(file.Path, nameOrPath, StringComparison.OrdinalIgnoreCase));
     }
+
+    private static string GetSampleDescription(string fileName) => Path.GetFileName(fileName) switch
+    {
+        var name when name.StartsWith("01") => "标题 · 表格 · 任务列表",
+        var name when name.StartsWith("02") => "18 套排版主题",
+        var name when name.StartsWith("03") => "TextMate 语法高亮",
+        var name when name.StartsWith("04") => "嵌套列表 · 引用块",
+        var name when name.StartsWith("05") => "SVG / GIF · 远程图片",
+        var name when name.StartsWith("06") => "性能演示专用",
+        _ => "Markdown 示例"
+    };
 
     private static string? GetEnvironmentValue(string variableName)
     {
@@ -481,7 +700,10 @@ public sealed class MainWindowViewModel : ObservableObject
 
         return Directory.GetFiles(_markdownBasePath, "*.md")
             .OrderBy(path => path)
-            .Select(path => new MarkdownSampleFile(Path.GetFileName(path), path))
+            .Select(path => new MarkdownSampleFile(
+                Path.GetFileName(path),
+                path,
+                GetSampleDescription(Path.GetFileName(path))))
             .ToList();
     }
 
@@ -734,4 +956,4 @@ public sealed record TypographyThemeChoice(string Name, string? Key);
 
 public sealed record CompactLayoutChoice(string Name, string? Size);
 
-public sealed record MarkdownSampleFile(string Name, string Path);
+public sealed record MarkdownSampleFile(string Name, string Path, string Description);

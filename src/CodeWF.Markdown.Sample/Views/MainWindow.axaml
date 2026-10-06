@@ -4,79 +4,24 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="https://codewf.com"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:sample="clr-namespace:CodeWF.Markdown.Sample"
     xmlns:l="clr-namespace:CodeWF.Markdown"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sample="using:CodeWF.Markdown.Sample"
     xmlns:views="using:CodeWF.Markdown.Sample.Views"
     xmlns:vm="using:CodeWF.Markdown.Sample.ViewModels"
     Title="{c:I18n {x:Static l:SampleL.WindowTitle}}"
-    Width="1280"
-    Height="820"
+    Width="1400"
+    Height="900"
     MinWidth="980"
     MinHeight="640"
     x:DataType="vm:MainWindowViewModel"
     Icon="/Assets/logo.ico"
+    Background="{DynamicResource WindowDefaultBackground}"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
-
-    <Window.Styles>
-        <Style Selector="Border.toolbar-shell">
-            <Setter Property="Background" Value="{DynamicResource WindowDefaultBackground}" />
-            <Setter Property="Padding" Value="14 10" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
-            <Setter Property="BorderThickness" Value="0 0 0 1" />
-        </Style>
-        <Style Selector="Border.toolbar-group">
-            <Setter Property="Background" Value="{DynamicResource BorderCardBackground}" />
-            <Setter Property="MinHeight" Value="42" />
-            <Setter Property="Margin" Value="0 0 10 0" />
-            <Setter Property="Padding" Value="10 6" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
-        </Style>
-        <Style Selector="TextBlock.label">
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource MenuItemInputGestureTextForeground}" />
-            <Setter Property="Opacity" Value="0.72" />
-        </Style>
-        <Style Selector="ComboBox.toolbar-combo">
-            <Setter Property="MinWidth" Value="150" />
-            <Setter Property="Height" Value="30" />
-        </Style>
-        <Style Selector="ComboBox.sample-combo">
-            <Setter Property="MinWidth" Value="260" />
-            <Setter Property="Height" Value="30" />
-        </Style>
-        <Style Selector="ComboBox.typography-combo">
-            <Setter Property="MinWidth" Value="190" />
-            <Setter Property="Height" Value="30" />
-        </Style>
-        <Style Selector="ComboBox.language-combo">
-            <Setter Property="MinWidth" Value="120" />
-            <Setter Property="Height" Value="30" />
-        </Style>
-        <Style Selector="ToggleSwitch.compact-toggle">
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="TabControl.preview-tabs">
-            <Setter Property="Margin" Value="12 8 12 12" />
-        </Style>
-        <Style Selector="TabItem">
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Padding" Value="14 8" />
-        </Style>
-        <Style Selector="Button.stress-toggle">
-            <Setter Property="MinWidth" Value="118" />
-            <Setter Property="Height" Value="32" />
-            <Setter Property="Padding" Value="12 0" />
-        </Style>
-    </Window.Styles>
 
     <Window.Resources>
         <DataTemplate x:Key="LanguageSelectionTemplate" x:DataType="sample:SampleLanguage">
@@ -87,78 +32,404 @@
         </DataTemplate>
     </Window.Resources>
 
-    <Grid RowDefinitions="Auto,*">
-        <Border Classes="toolbar-shell">
-            <Grid ColumnDefinitions="*,Auto">
-                <WrapPanel
-                    ItemHeight="42"
+    <Window.Styles>
+        <Style Selector="Border.titlebar">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Background" Value="{DynamicResource SidebarDefaultBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+        </Style>
+        <Style Selector="Border.brand-logo">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="{DynamicResource TextBlockDefaultForeground}" />
+        </Style>
+        <Style Selector="TextBlock.brand-name">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="13.5" />
+        </Style>
+        <Style Selector="TextBlock.tb-doc">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBlockSecondaryForeground}" />
+            <Setter Property="Margin" Value="14 0 0 0" />
+        </Style>
+        <Style Selector="Button.win-btn">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.win-btn.close:hover">
+            <Setter Property="Background" Value="#E5484D" />
+        </Style>
+        <Style Selector="Border.sidebar">
+            <Setter Property="Width" Value="216" />
+            <Setter Property="Background" Value="{DynamicResource SidebarDefaultBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 1 0" />
+        </Style>
+        <Style Selector="Border.sidebar.collapsed">
+            <Setter Property="Width" Value="56" />
+        </Style>
+        <Style Selector="Border.sidebar TextBlock.side-label">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBlockSecondaryForeground}" />
+            <Setter Property="Margin" Value="18 14 0 8" />
+        </Style>
+        <Style Selector="ListBox.doc-list">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="8 0" />
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem">
+            <Setter Property="Padding" Value="8 10" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Margin" Value="0 1" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem TextBlock.doc-name">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem TextBlock.doc-desc">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBlockSecondaryForeground}" />
+            <Setter Property="Margin" Value="0 1 0 0" />
+        </Style>
+        <Style Selector="Border.sidebar-foot">
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 1 0 0" />
+        </Style>
+        <Style Selector="Border.toolbar">
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Background" Value="{DynamicResource WindowDefaultBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+        </Style>
+        <Style Selector="Border.segment">
+            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="3" />
+        </Style>
+        <Style Selector="Button.seg">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="14 0" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBlockSecondaryForeground}" />
+        </Style>
+        <Style Selector="Button.seg.on">
+            <Setter Property="Background" Value="{DynamicResource WindowDefaultBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentDefaultBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.group-label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBlockSecondaryForeground}" />
+        </Style>
+        <Style Selector="Border.pane-head">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 0 1" />
+            <Setter Property="Padding" Value="14 0" />
+        </Style>
+        <Style Selector="Ellipse.pane-dot">
+            <Setter Property="Width" Value="6" />
+            <Setter Property="Height" Value="6" />
+            <Setter Property="Fill" Value="{DynamicResource AccentDefaultBrush}" />
+        </Style>
+        <Style Selector="TextBlock.pane-title">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBlockSecondaryForeground}" />
+        </Style>
+        <Style Selector="Border.statusbar">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Background" Value="{DynamicResource SidebarDefaultBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderCardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 1 0 0" />
+            <Setter Property="Padding" Value="16 0" />
+        </Style>
+        <Style Selector="Ellipse.status-ok">
+            <Setter Property="Width" Value="7" />
+            <Setter Property="Height" Value="7" />
+            <Setter Property="Fill" Value="#12B76A" />
+        </Style>
+    </Window.Styles>
+
+
+    <Grid RowDefinitions="44,*,30">
+        <!-- ① 自定义标题栏 -->
+        <Border
+            Grid.Row="0"
+            Classes="titlebar"
+            DoubleTapped="TitleBar_DoubleTapped"
+            PointerPressed="TitleBar_PointerPressed">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <Border Classes="brand-logo">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="White"
+                            Text="M" />
+                    </Border>
+                    <TextBlock
+                        Classes="brand-name"
+                        Text="CodeWF.Markdown"
+                        VerticalAlignment="Center" />
+                    <Border
+                        Padding="8 2"
+                        Background="{DynamicResource ControlCheckedBackground}"
+                        CornerRadius="999">
+                        <TextBlock
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource AccentDefaultBrush}"
+                            Text="Demo" />
+                    </Border>
+                    <Border
+                        Padding="8 2"
+                        BorderBrush="{DynamicResource BorderCardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="999">
+                        <TextBlock FontSize="11" Text="{Binding VersionText}" />
+                    </Border>
+                </StackPanel>
+                <TextBlock
+                    Grid.Column="1"
+                    Classes="tb-doc"
+                    VerticalAlignment="Center"
+                    Text="{Binding SampleName}" />
+                <StackPanel
+                    Grid.Column="3"
                     Orientation="Horizontal"
+                    Spacing="6"
                     VerticalAlignment="Center">
-                    <Border Classes="toolbar-group">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.AppTheme}}" />
-                            <ComboBox
-                                Classes="toolbar-combo"
-                                DisplayMemberBinding="{Binding Name}"
-                                ItemsSource="{Binding ThemeVariants}"
-                                SelectedItem="{Binding SelectedThemeVariant}" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Classes="toolbar-group">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.MarkdownSample}}" />
-                            <ComboBox
-                                Classes="sample-combo"
-                                DisplayMemberBinding="{Binding Name}"
-                                ItemsSource="{Binding MarkdownFiles}"
-                                SelectedItem="{Binding SelectedFile}" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Classes="toolbar-group">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.TypographyTheme}}" />
-                            <ComboBox
-                                Classes="typography-combo"
-                                DisplayMemberBinding="{Binding Name}"
-                                ItemsSource="{Binding TypographyThemes}"
-                                SelectedItem="{Binding SelectedTypographyTheme}" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Classes="toolbar-group">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.CompactLayout}}" />
-                            <ToggleSwitch Classes="compact-toggle" IsChecked="{Binding IsCompactLayout}" />
-                        </StackPanel>
-                    </Border>
-                </WrapPanel>
-
-                <Border Grid.Column="1" Classes="toolbar-group" Margin="8 0 0 0">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Classes="label" Text="{c:I18n {x:Static l:SampleL.Language}}" />
-                        <ComboBox
-                            Classes="language-combo"
-                            ItemTemplate="{StaticResource LanguageSelectionTemplate}"
-                            ItemsSource="{Binding Languages}"
-                            SelectedItem="{Binding SelectLanguage, Mode=TwoWay}"
-                            SelectionBoxItemTemplate="{StaticResource LanguageSelectionTemplate}" />
-                    </StackPanel>
-                </Border>
+                    <ComboBox
+                        MinWidth="110"
+                        Height="28"
+                        ItemTemplate="{StaticResource LanguageSelectionTemplate}"
+                        ItemsSource="{Binding Languages}"
+                        SelectedItem="{Binding SelectLanguage, Mode=TwoWay}"
+                        SelectionBoxItemTemplate="{StaticResource LanguageSelectionTemplate}" />
+                    <Button
+                        Classes="icon-btn"
+                        Command="{Binding ToggleDarkThemeCommand}"
+                        ToolTip.Tip="明暗切换">
+                        <TextBlock Text="🌙" />
+                    </Button>
+                </StackPanel>
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Stretch">
+                    <Button Classes="win-btn" Click="MinimizeClick" ToolTip.Tip="最小化">
+                        <Path
+                            Width="10"
+                            Height="10"
+                            Data="M0 5h10"
+                            Stroke="{DynamicResource TextBlockSecondaryForeground}"
+                            StrokeThickness="1.2" />
+                    </Button>
+                    <Button Classes="win-btn" Click="MaximizeClick" ToolTip.Tip="最大化 / 还原">
+                        <Path
+                            x:Name="MaxPath"
+                            Width="10"
+                            Height="10" />
+                    </Button>
+                    <Button Classes="win-btn close" Click="CloseClick" ToolTip.Tip="关闭">
+                        <Path
+                            Width="10"
+                            Height="10"
+                            Data="M1 1l8 8M9 1l-8 8"
+                            Stroke="{DynamicResource TextBlockSecondaryForeground}"
+                            StrokeThickness="1.2"
+                            StrokeLineCap="Round" />
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
-        <TabControl
-            x:Name="PreviewTabs"
-            Grid.Row="1"
-            Classes="preview-tabs">
-            <TabItem Header="编辑预览">
-                <views:MarkdownEditorPreviewView />
-            </TabItem>
-            <TabItem Header="多 Viewer">
-                <views:MarkdownViewerPairDemoView />
-            </TabItem>
-        </TabControl>
+        <!-- 主体：侧栏 + 内容列 -->
+        <Grid x:Name="BodyGrid" Grid.Row="1" ColumnDefinitions="Auto,*">
+            <!-- ② 侧栏 -->
+            <Border
+                x:Name="SidebarBorder"
+                Grid.Column="0"
+                Classes="sidebar">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <TextBlock
+                        Grid.Row="0"
+                        Classes="side-label"
+                        Text="示例文档" />
+                    <ListBox
+                        Grid.Row="1"
+                        Classes="doc-list"
+                        ItemsSource="{Binding MarkdownFiles}"
+                        SelectedItem="{Binding SelectedFile}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MarkdownSampleFile">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border
+                                        Width="30"
+                                        Height="30"
+                                        CornerRadius="7"
+                                        Background="{DynamicResource WindowDefaultBackground}"
+                                        BorderBrush="{DynamicResource BorderCardBorderBrush}"
+                                        BorderThickness="1">
+                                        <Path
+                                            Width="15"
+                                            Height="15"
+                                            Data="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6"
+                                            Stroke="{DynamicResource TextBlockSecondaryForeground}"
+                                            StrokeThickness="1.6"
+                                            StrokeLineCap="Round"
+                                            StrokeJoin="Round" />
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Classes="doc-name" Text="{Binding Name}" />
+                                        <TextBlock Classes="doc-desc" Text="{Binding Description}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Border Grid.Row="2" Classes="sidebar-foot">
+                        <Button
+                            Classes="foot-btn"
+                            Command="{Binding ToggleSidebarCommand}"
+                            ToolTip.Tip="折叠 / 展开侧栏">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <Path
+                                    Width="14"
+                                    Height="14"
+                                    Data="M11 17l-5-5 5-5M18 17l-5-5 5-5"
+                                    Stroke="{DynamicResource TextBlockSecondaryForeground}"
+                                    StrokeThickness="2"
+                                    StrokeLineCap="Round"
+                                    StrokeJoin="Round" />
+                                <TextBlock Text="折叠侧栏" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- 内容列 -->
+            <Grid Grid.Column="1" RowDefinitions="46,*,30">
+                <!-- ③ 工具栏 -->
+                <Border Grid.Row="0" Classes="toolbar">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border x:Name="ViewSegment" Classes="segment">
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    Classes="seg on"
+                                    Click="ViewModeButton_Click"
+                                    Content="编辑"
+                                    Tag="edit" />
+                                <Button
+                                    Classes="seg"
+                                    Click="ViewModeButton_Click"
+                                    Content="分栏"
+                                    Tag="split" />
+                                <Button
+                                    Classes="seg"
+                                    Click="ViewModeButton_Click"
+                                    Content="预览"
+                                    Tag="preview" />
+                                <Button
+                                    Classes="seg"
+                                    Click="ViewModeButton_Click"
+                                    Content="对比"
+                                    Tag="pair" />
+                            </StackPanel>
+                        </Border>
+                        <TextBlock
+                            Classes="group-label"
+                            VerticalAlignment="Center"
+                            Text="排版主题" />
+                        <ComboBox
+                            MinWidth="170"
+                            Height="30"
+                            DisplayMemberBinding="{Binding Name}"
+                            ItemsSource="{Binding TypographyThemes}"
+                            SelectedItem="{Binding SelectedTypographyTheme}" />
+                        <TextBlock
+                            Classes="group-label"
+                            VerticalAlignment="Center"
+                            Text="字号" />
+                        <ComboBox
+                            x:Name="FontSizeSelect"
+                            MinWidth="90"
+                            Height="30"
+                            SelectedIndex="0"
+                            SelectionChanged="FontSizeSelect_SelectionChanged">
+                            <ComboBoxItem Content="标准" />
+                            <ComboBoxItem Content="紧凑" />
+                        </ComboBox>
+                        <Panel Margin="16 0 0 0" />
+                        <DropDownButton VerticalContentAlignment="Center" Content="⚡ 性能演示">
+                            <DropDownButton.Flyout>
+                                <MenuFlyout>
+                                    <MenuItem Command="{Binding ToggleIncrementalStressCommand}" Header="开始 / 停止增量压力" />
+                                </MenuFlyout>
+                            </DropDownButton.Flyout>
+                        </DropDownButton>
+                        <DropDownButton VerticalContentAlignment="Center" Content="⬇ 导出">
+                            <DropDownButton.Flyout>
+                                <MenuFlyout>
+                                    <MenuItem
+                                        Command="{Binding ExportPngCommand}"
+                                        CommandParameter="png"
+                                        Header="导出 PNG 图片" />
+                                    <MenuItem
+                                        Command="{Binding ExportPdfCommand}"
+                                        CommandParameter="pdf"
+                                        Header="导出 PDF 文档" />
+                                    <MenuItem
+                                        Command="{Binding ExportWordCommand}"
+                                        CommandParameter="word"
+                                        Header="导出 Word 文档" />
+                                    <Separator />
+                                    <MenuItem
+                                        Command="{Binding CopySocialHtmlCommand}"
+                                        CommandParameter="wechat"
+                                        Header="复制为公众号 HTML" />
+                                    <MenuItem
+                                        Command="{Binding CopySocialHtmlCommand}"
+                                        CommandParameter="zhihu"
+                                        Header="复制为知乎 HTML" />
+                                    <MenuItem
+                                        Command="{Binding CopySocialHtmlCommand}"
+                                        CommandParameter="juejin"
+                                        Header="复制为掘金 HTML" />
+                                </MenuFlyout>
+                            </DropDownButton.Flyout>
+                        </DropDownButton>
+                    </StackPanel>
+                </Border>
+
+                <!-- ④⑤ 编辑 / 预览 -->
+                <Grid Grid.Row="1">
+                    <views:MarkdownEditorPreviewView
+                        IsVisible="{Binding IsEditorVisible}"
+                        ViewMode="{Binding ViewMode}" />
+                    <views:MarkdownViewerPairDemoView IsVisible="{Binding IsPairVisible}" />
+                </Grid>
+
+                <!-- ⑥ 状态栏 -->
+                <Border Grid.Row="2" Classes="statusbar">
+                    <StackPanel Orientation="Horizontal" Spacing="20">
+                        <Ellipse Classes="status-ok" ToolTip.Tip="文档无未保存更改" />
+                        <TextBlock Text="{Binding StatusMessage}" />
+                        <TextBlock Text="{Binding SampleName, StringFormat='示例：{0}'}" />
+                        <TextBlock Text="{Binding WordCount, StringFormat='字数 {0}'}" />
+                        <TextBlock Text="{Binding ParseMilliseconds, StringFormat='解析 {0} ms'}" />
+                        <TextBlock Text="渲染：增量" />
+                        <Panel Width="20" />
+                        <TextBlock Text="{Binding VersionText, StringFormat='CodeWF.Markdown {0}'}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>

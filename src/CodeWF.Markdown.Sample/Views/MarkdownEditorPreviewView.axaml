@@ -15,7 +15,7 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid>
+    <Grid x:Name="LayoutGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="460" MinWidth="300" />
             <ColumnDefinition Width="6" />
@@ -29,13 +29,6 @@
             BorderBrush="{DynamicResource BorderCardBorderBrush}"
             BorderThickness="0 0 1 0">
             <Grid RowDefinitions="Auto,*">
-                <Button
-                    Grid.Row="0"
-                    Margin="0 10 0 12"
-                    Classes="stress-toggle"
-                    Command="{Binding ToggleIncrementalStressCommand}"
-                    Content="{Binding IncrementalStressButtonText}"
-                    HorizontalAlignment="Left" />
                 <edit:TextEditor
                     x:Name="MarkdownEditor"
                     Grid.Row="1"

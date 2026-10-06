@@ -18,12 +18,15 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Lang.Avalonia.Json" />
+    <PackageReference Include="Markdig" />
     <PackageReference Include="Semi.Avalonia" />
     <PackageReference Include="Avalonia.AvaloniaEdit" />
     <PackageReference Include="VC-LTL" />
     <PackageReference Include="YY-Thunks" Condition="'$(TargetFramework)' == 'net11.0-windows'" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CodeWF.Markdown\CodeWF.Markdown.csproj" />
+    <ProjectReference Include="..\CodeWF.Markdown.Export\CodeWF.Markdown.Export.csproj" />
     <ProjectReference Include="..\CodeWF.Markdown.Themes\CodeWF.Markdown.Themes.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,8 @@
 using System.ComponentModel;
 
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Metadata;
 
 using AvaloniaEdit.Highlighting;
 
@@ -13,12 +15,65 @@ public partial class MarkdownEditorPreviewView : UserControl
     private bool _syncingEditor;
     private MainWindowViewModel? _viewModel;
 
+
+    public static readonly StyledProperty<string> ViewModeProperty =
+        AvaloniaProperty.Register<MarkdownEditorPreviewView, string>(
+            nameof(ViewMode), defaultValue: "split");
+
+    /// <summary>
+    /// 编辑 / 分栏 / 预览 / 对比：控制编辑器列与预览列的宽度分配。
+    /// </summary>
+    public string ViewMode
+    {
+        get => GetValue(ViewModeProperty);
+        set => SetValue(ViewModeProperty, value);
+    }
+
     public MarkdownEditorPreviewView()
     {
         InitializeComponent();
         ConfigureMarkdownEditor();
+        UpdateViewMode();
         DataContextChanged += (_, _) => AttachViewModel(DataContext as MainWindowViewModel);
         AttachViewModel(DataContext as MainWindowViewModel);
+    }
+
+    private void UpdateViewMode()
+    {
+        // pair（对比模式）由宿主整体切换到 MarkdownViewerPairDemoView，这里视同分栏。
+        switch (ViewMode)
+        {
+            case "edit":
+                LayoutGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+                LayoutGrid.ColumnDefinitions[0].MinWidth = 0;
+                LayoutGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                LayoutGrid.ColumnDefinitions[2].Width = new GridLength(0);
+                LayoutGrid.ColumnDefinitions[2].MinWidth = 0;
+                break;
+            case "preview":
+                LayoutGrid.ColumnDefinitions[0].Width = new GridLength(0);
+                LayoutGrid.ColumnDefinitions[0].MinWidth = 0;
+                LayoutGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                LayoutGrid.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Star);
+                LayoutGrid.ColumnDefinitions[2].MinWidth = 0;
+                break;
+            default:
+                LayoutGrid.ColumnDefinitions[0].Width = new GridLength(460);
+                LayoutGrid.ColumnDefinitions[0].MinWidth = 300;
+                LayoutGrid.ColumnDefinitions[1].Width = new GridLength(6);
+                LayoutGrid.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Star);
+                LayoutGrid.ColumnDefinitions[2].MinWidth = 360;
+                break;
+        }
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (e.Property == ViewModeProperty)
+        {
+            UpdateViewMode();
+        }
     }
 
     private void ConfigureMarkdownEditor()
