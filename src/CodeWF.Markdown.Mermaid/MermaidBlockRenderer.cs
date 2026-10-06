@@ -218,7 +218,9 @@ public sealed class MermaidBlockRenderer : IMarkdownBlockRenderer
             builder.Replace(token, Hex(color));
         }
 
-        builder.Replace("background:var(--bg)", $"background:{Hex(bg)}");
+        // 0.14.x 除样式块外还以属性形式（fill=\"var(--bg)\"、var(--fg)）引用根变量
+        builder.Replace("var(--bg)", Hex(bg));
+        builder.Replace("var(--fg)", Hex(fg));
 
         return builder.ToString();
 
