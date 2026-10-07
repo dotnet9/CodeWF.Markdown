@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <Description>AvaloniaEdit-based Markdown source editor capability package for CodeWF.Markdown: syntax colouring, format actions, smart new line, find/replace and auto pair.</Description>
+    <PackageTags>avalonia;markdown;editor;avaloniaedit</PackageTags>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageId>CodeWF.Markdown.Editor</PackageId>
+    <AssemblyName>CodeWF.Markdown.Editor</AssemblyName>
+    <RootNamespace>CodeWF.Markdown.Editor</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <!-- 自动配对复用控件库的纯逻辑实现，避免每个宿主各自维护一份 -->
+    <PackageReference Include="CodeWF.AvaloniaControls" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeWF.Markdown\CodeWF.Markdown.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\logo.png" Pack="true" PackagePath="" Link="logo.png" />
+  </ItemGroup>
+
+</Project>
