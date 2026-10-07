@@ -28,44 +28,45 @@
             <Setter Property="FontSize" Value="13.5" />
         </Style>
         <Style Selector="Border.badge-demo">
-            <Setter Property="Padding" Value="10 4" />
+            <Setter Property="Padding" Value="8 2" />
             <Setter Property="CornerRadius" Value="999" />
             <Setter Property="Background" Value="{DynamicResource DemoAccentSoft}" />
         </Style>
         <Style Selector="Border.badge-demo TextBlock">
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="{DynamicResource DemoAccent}" />
         </Style>
         <Style Selector="Border.badge-version">
-            <Setter Property="Padding" Value="10 4" />
+            <Setter Property="Padding" Value="8 2" />
             <Setter Property="CornerRadius" Value="999" />
             <Setter Property="BorderBrush" Value="{DynamicResource DemoBorderStrong}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Border.badge-version TextBlock">
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
         </Style>
         <Style Selector="Border.tb-doc">
             <Setter Property="Margin" Value="14 0 0 0" />
             <Setter Property="Padding" Value="14 0 0 0" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="1 0 0 0" />
         </Style>
         <Style Selector="Border.tb-doc TextBlock">
             <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="Foreground" Value="{DynamicResource SemiColorText2}" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
         </Style>
 
         <!-- 窗控键 -->
         <Style Selector="Button.win-btn">
             <Setter Property="Width" Value="44" />
-            <Setter Property="Height" Value="44" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
         </Style>
         <Style Selector="Button.win-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource SemiColorFill0}" />
+            <Setter Property="Background" Value="{DynamicResource DemoBgHover}" />
         </Style>
         <Style Selector="Button.win-btn.close:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="#E5484D" />
