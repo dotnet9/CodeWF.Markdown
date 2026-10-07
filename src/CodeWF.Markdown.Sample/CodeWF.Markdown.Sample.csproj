@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CodeWF.Markdown\CodeWF.Markdown.csproj" />
+    <ProjectReference Include="..\CodeWF.Markdown.Editor\CodeWF.Markdown.Editor.csproj" />
     <ProjectReference Include="..\CodeWF.Markdown.Export\CodeWF.Markdown.Export.csproj" />
     <ProjectReference Include="..\CodeWF.Markdown.Themes\CodeWF.Markdown.Themes.csproj" />
   </ItemGroup>

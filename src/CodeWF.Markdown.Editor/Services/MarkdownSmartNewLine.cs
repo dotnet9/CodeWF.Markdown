@@ -1,6 +1,7 @@
 namespace CodeWF.Markdown.Editor.Services;
 
-internal static class MarkdownSmartNewLine
+/// <summary>智能换行（Enter 续行）：按当前行前缀续写列表 / 任务项 / 引用。</summary>
+public static class MarkdownSmartNewLine
 {
     public static SmartNewLineChange CreateChange(string text, int selectionStart, int selectionLength)
     {
@@ -182,4 +183,5 @@ internal static class MarkdownSmartNewLine
     }
 }
 
-internal readonly record struct SmartNewLineChange(int Start, int Length, string Text);
+/// <summary>一次智能换行产生的文本替换（<see cref="Start"/> 与 <see cref="Length"/> 为被替换区间）。</summary>
+public readonly record struct SmartNewLineChange(int Start, int Length, string Text);

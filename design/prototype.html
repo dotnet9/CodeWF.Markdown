@@ -172,18 +172,7 @@ body.maximized .window {
 .doc-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .sidebar.collapsed .doc-item { justify-content: center; padding: 8px 4px; }
 .sidebar.collapsed .doc-text, .sidebar.collapsed .side-label { display: none; }
-.sidebar-foot { padding: 8px; border-top: 1px solid var(--border); }
-.foot-btn {
-  width: 100%; height: 32px; border-radius: 7px; border: none; background: transparent;
-  color: var(--text-muted); cursor: pointer; font-size: 12.5px; font-family: inherit;
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  transition: background .12s ease, color .12s ease;
-}
-.foot-btn:hover { background: var(--bg-hover); color: var(--text); }
-.foot-btn .fb-icon { display: inline-flex; transition: transform .18s ease; }
-.sidebar.collapsed .foot-btn { justify-content: center; }
-.sidebar.collapsed .foot-btn .fb-text { display: none; }
-.sidebar.collapsed .foot-btn .fb-icon { transform: rotate(180deg); }
+/* 侧栏底部折叠按钮的相关样式已随控件一并移除 */
 
 /* ================= ③ 工具栏 ================= */
 .toolbar {
@@ -404,12 +393,7 @@ body.maximized .window {
           <div class="doc-text"><div class="doc-name">增量渲染压力</div><div class="doc-desc">性能演示专用</div></div>
         </div>
       </div>
-      <div class="sidebar-foot">
-        <button class="foot-btn" onclick="toggleSidebar()" title="折叠 / 展开侧栏">
-          <span class="fb-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg></span>
-          <span class="fb-text">折叠侧栏</span>
-        </button>
-      </div>
+      <!-- 折叠侧栏按钮已按需求移除（原型与实现同时去掉） -->
     </div>
 
     <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
@@ -640,6 +624,8 @@ function setView(mode, btn) {
 
 /* 侧栏折叠（折叠后底部按钮只留图标） */
 function toggleSidebar() {
+  // 折叠按钮已移除：保留函数体以防其他调用点报错。
+  if (!document.querySelector('#sidebar .fb-text')) return;
   const sb = document.getElementById('sidebar');
   sb.classList.toggle('collapsed');
   document.querySelector('#sidebar .fb-text').textContent =

@@ -20,6 +20,8 @@
     Background="{DynamicResource DemoBgWindow}"
     WindowStartupLocation="CenterScreen"
     ExtendClientAreaToDecorationsHint="True"
+    ExtendClientAreaTitleBarHeightHint="-1"
+    WindowDecorations="BorderOnly"
     mc:Ignorable="d">
     <Design.DataContext>
         <vm:MainWindowViewModel />
@@ -39,7 +41,9 @@
         <StyleInclude Source="avares://CodeWF.Markdown.Sample/Themes/ShellStyles.axaml" />
     </Window.Styles>
 
-    <Grid RowDefinitions="44,*,30">
+    <!-- 下边距 -30：ExtendClientArea 窗口在 Windows 上会把 30px 状态栏高度重复计入窗口高度，
+         补偿后内容正好落在窗口底边，不会在状态栏下再留一条空白。 -->
+    <Grid Margin="0 0 0 -30" RowDefinitions="44,*,30">
         <!-- ① 自定义标题栏 -->
         <Border
             Grid.Row="0"
@@ -47,18 +51,21 @@
             DoubleTapped="TitleBar_DoubleTapped"
             PointerPressed="TitleBar_PointerPressed">
             <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                <StackPanel
+                    Grid.Column="0"
+                    Margin="12 0 0 0"
+                    Orientation="Horizontal"
+                    Spacing="10">
                     <Border Classes="brand-logo">
                         <TextBlock
+                            FontSize="11"
+                            FontWeight="Bold"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Foreground="White"
                             Text="M" />
                     </Border>
-                    <TextBlock
-                        Classes="brand-name"
-                        Text="CodeWF.Markdown"
-                        VerticalAlignment="Center" />
+                    <TextBlock Classes="brand-name" Text="CodeWF.Markdown" />
                     <Border Classes="badge-demo">
                         <TextBlock FontWeight="SemiBold" Text="Demo" />
                     </Border>
@@ -91,27 +98,32 @@
                         <TextBlock Text="🌙" />
                     </Button>
                 </StackPanel>
-                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Stretch">
+                <StackPanel
+                    Grid.Column="4"
+                    Margin="0 0 6 0"
+                    Orientation="Horizontal"
+                    Spacing="0"
+                    VerticalAlignment="Stretch">
                     <Button Classes="win-btn" Click="MinimizeClick" ToolTip.Tip="最小化">
                         <Path
-                            Width="12"
-                            Height="12"
+                            Width="10"
+                            Height="10"
                             Data="M0 5h10"
                             Stroke="{DynamicResource SemiColorText2}"
                             StrokeThickness="1.2" />
                     </Button>
                     <Button Classes="win-btn" Click="MaximizeClick" ToolTip.Tip="最大化 / 还原">
                         <Path
-                            Width="12"
-                            Height="12"
-                            Data="M1 1h8v8H1z"
+                            Width="10"
+                            Height="10"
+                            Data="M0.6 0.6h8.8v8.8H0.6z"
                             Stroke="{DynamicResource SemiColorText2}"
                             StrokeThickness="1.2" />
                     </Button>
                     <Button Classes="win-btn close" Click="CloseClick" ToolTip.Tip="关闭">
                         <Path
-                            Width="12"
-                            Height="12"
+                            Width="10"
+                            Height="10"
                             Data="M1 1l8 8M9 1l-8 8"
                             Stroke="{DynamicResource SemiColorText2}"
                             StrokeThickness="1.2"
@@ -128,7 +140,7 @@
                 x:Name="SidebarBorder"
                 Grid.Column="0"
                 Classes="sidebar">
-                <Grid RowDefinitions="Auto,*,Auto">
+                <Grid RowDefinitions="Auto,*">
                     <TextBlock
                         Grid.Row="0"
                         Classes="side-label"
@@ -185,24 +197,7 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <Border Grid.Row="2" Classes="sidebar-foot">
-                        <Button
-                            Classes="foot-btn"
-                            Command="{Binding ToggleSidebarCommand}"
-                            ToolTip.Tip="折叠 / 展开侧栏">
-                            <StackPanel Orientation="Horizontal" Spacing="7">
-                                <Path
-                                    Width="14"
-                                    Height="14"
-                                    Data="M11 17l-5-5 5-5M18 17l-5-5 5-5"
-                                    Stroke="{DynamicResource SemiColorText2}"
-                                    StrokeThickness="2"
-                                    StrokeLineCap="Round"
-                                    StrokeJoin="Round" />
-                                <TextBlock Text="折叠侧栏" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </Border>
+                    <!-- 折叠侧栏按钮按用户要求移除（原型与实现同时去掉，避免做不精细的控件） -->
                 </Grid>
             </Border>
 

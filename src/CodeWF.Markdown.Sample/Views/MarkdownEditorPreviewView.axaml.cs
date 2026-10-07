@@ -1,24 +1,21 @@
 using System.ComponentModel;
-using System.Linq;
-using System.Text.RegularExpressions;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Input.Platform;
-using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Metadata;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 
-using AvaloniaEdit.Highlighting;
-using AvaloniaEdit.Rendering;
+using CodeWF.Markdown.Editor.Controls;
+using CodeWF.Markdown.Editor.Services;
 
 using CodeWF.Markdown.Sample.ViewModels;
 
 namespace CodeWF.Markdown.Sample.Views;
 
+/// <summary>
+/// 编辑 / 预览视图：编辑器使用库控件 <see cref="MarkdownEditorView"/>（与 Vex 同一份实现），
+/// 这里只负责与 ViewModel 的数据同步、视图模式切换、焦点模式与打字机模式。
+/// </summary>
 public partial class MarkdownEditorPreviewView : UserControl
 {
     private bool _syncingEditor;
@@ -57,10 +54,10 @@ public partial class MarkdownEditorPreviewView : UserControl
     public MarkdownEditorPreviewView()
     {
         InitializeComponent();
-        ConfigureMarkdownEditor();
-        UpdateViewMode();
+        MarkdownEditor.MarkdownChanged += (_, text) => PushTextToViewModel(text);
         DataContextChanged += (_, _) => AttachViewModel(DataContext as MainWindowViewModel);
         AttachViewModel(DataContext as MainWindowViewModel);
+        UpdateViewMode();
     }
 
     private void UpdateViewMode()
@@ -100,120 +97,34 @@ public partial class MarkdownEditorPreviewView : UserControl
         }
         else if (e.Property == FocusModeProperty)
         {
-            // Focus Mode：高亮当前行 + 编辑器前景半透明弱化非当前行
-            MarkdownEditor.Options.HighlightCurrentLine = FocusMode;
+            // Focus Mode：高亮当前行 + 非当前行前景弱化（对齐原型）
+            MarkdownEditor.HighlightCurrentLine = FocusMode;
             MarkdownEditor.Foreground = FocusMode
                 ? new SolidColorBrush(Color.Parse("#50101828"))
                 : new SolidColorBrush(Color.Parse("#101828"));
-            MarkdownEditor.TextArea.TextView.InvalidateVisual();
         }
         else if (e.Property == TypewriterModeProperty)
         {
             if (TypewriterMode)
             {
-                MarkdownEditor.TextArea.Caret.PositionChanged += Caret_PositionChanged_Typewriter;
+                MarkdownEditor.SelectionChanged += OnTypewriterCaretChanged;
                 CenterCaretLine();
             }
             else
             {
-                MarkdownEditor.TextArea.Caret.PositionChanged -= Caret_PositionChanged_Typewriter;
+                MarkdownEditor.SelectionChanged -= OnTypewriterCaretChanged;
             }
         }
     }
 
-    private void Caret_PositionChanged_Typewriter(object? sender, EventArgs e)
-    {
+    private void OnTypewriterCaretChanged(object? sender, MarkdownCaretEventArgs e) =>
         Dispatcher.UIThread.Post(CenterCaretLine, DispatcherPriority.Background);
-    }
 
-    private void CenterCaretLine()
-    {
-        var docLine = MarkdownEditor.Document?.GetLineByOffset(MarkdownEditor.CaretOffset);
-        if (docLine is null) return;
-        var textview = MarkdownEditor.TextArea.TextView;
-        var visualLine = textview.GetVisualLine(docLine.LineNumber);
-        if (visualLine is null) return;
+    /// <summary>打字机模式：每次光标移动都把当前行带回视口。</summary>
+    private void CenterCaretLine() => MarkdownEditor.Editor.TextArea.Caret.BringCaretToView();
 
-        var scrollViewer = this.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-        if (scrollViewer is null) return;
-
-        var lineTop = visualLine.VisualTop - scrollViewer.Offset.Y;
-        var viewportHeight = scrollViewer.Bounds.Height;
-        if (lineTop < viewportHeight * 0.3 || lineTop > viewportHeight * 0.7)
-        {
-            var target = scrollViewer.Offset.Y + (lineTop - viewportHeight / 2);
-            scrollViewer.Offset = new Vector(scrollViewer.Offset.X, Math.Max(0, target));
-        }
-    }
-
-    private void ConfigureMarkdownEditor()
-    {
-        MarkdownEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("MarkDown");
-        MarkdownEditor.TextArea.TextView.Options.HighlightCurrentLine = true;
-
-        MarkdownEditor.TextChanged += (_, _) =>
-        {
-            if (_syncingEditor || _viewModel == null)
-            {
-                return;
-            }
-
-            var text = MarkdownEditor.Text ?? string.Empty;
-            if (_viewModel.Markdown != text)
-            {
-                _viewModel.Markdown = text;
-            }
-        };
-
-        // Auto Pair：括号/引号自动配对
-        MarkdownEditor.TextArea.TextInput += AutoPairOnTextInput;
-
-        // 右键菜单：Copy as Plain Text
-        var copyPlain = new MenuItem { Header = "复制为纯文本" };
-        copyPlain.Click += (_, _) =>
-        {
-            var text = string.IsNullOrEmpty(MarkdownEditor.SelectedText)
-                ? MarkdownEditor.Text
-                : MarkdownEditor.SelectedText;
-            TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(text ?? string.Empty);
-        };
-        var menu = new ContextMenu();
-        menu.Items.Add(copyPlain);
-        menu.Items.Add(new Separator());
-        menu.Items.Add(new MenuItem { Header = "复制" });
-        MarkdownEditor.ContextMenu = menu;
-    }
-
-    private void AutoPairOnTextInput(object? sender, TextInputEventArgs e)
-    {
-        if (string.IsNullOrEmpty(e.Text))
-        {
-            return;
-        }
-
-        var closing = e.Text switch
-        {
-            "(" => ")",
-            "[" => "]",
-            "{" => "}",
-            "\"" => "\"",
-            "'" => "'",
-            _ => null
-        };
-
-        if (closing is null)
-        {
-            return;
-        }
-
-        var caret = MarkdownEditor.CaretOffset;
-        var hasSelection = MarkdownEditor.SelectionLength > 0;
-        var selectedText = hasSelection ? MarkdownEditor.SelectedText : string.Empty;
-
-        MarkdownEditor.Document.Insert(caret, e.Text + (hasSelection ? selectedText : string.Empty) + closing);
-        MarkdownEditor.CaretOffset = caret + 1 + (hasSelection ? selectedText.Length : 0);
-        e.Handled = true;
-    }
+    /// <summary>将编辑器选区（或光标处）用指定 Markdown 标记包裹。</summary>
+    public void WrapSelection(string prefix, string suffix) => MarkdownEditor.WrapSelection(prefix, suffix);
 
     private void AttachViewModel(MainWindowViewModel? viewModel)
     {
@@ -246,29 +157,17 @@ public partial class MarkdownEditorPreviewView : UserControl
         }
     }
 
-    /// <summary>将编辑器选区（或光标处）用指定 Markdown 标记包裹。</summary>
-    public void WrapSelection(string prefix, string suffix)
+    private void PushTextToViewModel(string text)
     {
-        var caret = MarkdownEditor.CaretOffset;
-        var selectionLength = MarkdownEditor.SelectionLength;
-        var selectionStart = MarkdownEditor.SelectionStart;
-        var selected = selectionLength > 0 ? MarkdownEditor.SelectedText : string.Empty;
-
-        var insertText = prefix + (selectionLength > 0 ? selected : string.Empty) + suffix;
-        MarkdownEditor.Document.Insert(selectionStart, insertText);
-
-        if (selectionLength > 0)
+        if (_syncingEditor || _viewModel is null)
         {
-            MarkdownEditor.SelectionStart = selectionStart + prefix.Length;
-            MarkdownEditor.SelectionLength = selected.Length;
-            MarkdownEditor.CaretOffset = selectionStart + prefix.Length + selected.Length + suffix.Length;
-        }
-        else
-        {
-            MarkdownEditor.CaretOffset = caret + prefix.Length;
+            return;
         }
 
-        MarkdownEditor.Focus();
+        if (_viewModel.Markdown != text)
+        {
+            _viewModel.Markdown = text;
+        }
     }
 
     private void SyncEditorFromViewModel()
@@ -285,7 +184,7 @@ public partial class MarkdownEditorPreviewView : UserControl
         }
 
         _syncingEditor = true;
-        MarkdownEditor.Text = text;
+        MarkdownEditor.SetText(text);
         _syncingEditor = false;
     }
 }

@@ -176,6 +176,9 @@ public sealed class MainWindowViewModel : ObservableObject
 
     public string VersionText { get; }
 
+    /// <summary>示例文档编码（状态栏展示，对应原型的 UTF-8）。</summary>
+    public string CurrentEncodingText => "UTF-8";
+
     // ---- Quick Open ----
     public bool IsQuickOpenVisible
     {
@@ -513,6 +516,7 @@ public sealed class MainWindowViewModel : ObservableObject
             if (SetProperty(ref field, value))
             {
                 OnPropertyChanged(nameof(CurrentTypographyTheme));
+                OnPropertyChanged(nameof(CurrentTypographyName));
                 OnPropertyChanged(nameof(FirstViewerTypographyTheme));
                 OnPropertyChanged(nameof(SecondViewerTypographyTheme));
             }
@@ -987,6 +991,9 @@ public sealed class MainWindowViewModel : ObservableObject
     }
 
     public string? CurrentTypographyTheme => SelectedTypographyTheme?.Key;
+
+    /// <summary>排版主题显示名（状态栏芯片用）。</summary>
+    public string CurrentTypographyName => SelectedTypographyTheme?.Name ?? string.Empty;
 
     public string CurrentTypographySize => IsCompactLayout
         ? MarkdownTypographySizes.Small

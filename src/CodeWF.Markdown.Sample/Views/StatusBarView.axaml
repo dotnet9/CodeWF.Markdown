@@ -4,31 +4,44 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:CodeWF.Markdown.Sample.ViewModels"
     x:DataType="vm:MainWindowViewModel">
-    <!-- 状态栏分区（原型 .statusbar 30px）：左集为状态与统计，右集为版本与仓库链接
-         （对应原型里 .sp 撑开后右对齐的版本徽章与 GitHub 链接）。 -->
+    <!-- 状态栏（对应 design/prototype.html ⑥ 状态栏）：
+         左：绿点 + 状态 + 示例名 + 字数 + 解析耗时 + 渲染方式；右：编码 + 版本 + GitHub 链接。
+         全部为 12px 次级文字，间距 20，样式见 Themes/ShellStyles.axaml。 -->
     <Border Classes="statusbar">
-        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
             <StackPanel Orientation="Horizontal" Spacing="20">
-                <Ellipse Classes="status-ok" ToolTip.Tip="文档无未保存更改" />
-                <TextBlock Text="{Binding StatusMessage}" />
-                <TextBlock Text="{Binding SampleName, StringFormat='示例：{0}'}" />
-                <TextBlock Text="{Binding WordCount, StringFormat='字数 {0}'}" />
-                <TextBlock Text="{Binding ParseMilliseconds, StringFormat='解析 {0} ms'}" />
-                <TextBlock Text="渲染：增量" />
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Ellipse Classes="status-ok" ToolTip.Tip="文档无未保存更改" />
+                    <TextBlock Classes="status-text" Text="{Binding StatusMessage}" />
+                </StackPanel>
+                <TextBlock Classes="status-text" Text="{Binding SampleName, StringFormat='示例：{0}'}" />
+                <TextBlock Classes="status-text" Text="{Binding WordCount, StringFormat='{}{0} 字'}" />
+                <TextBlock Classes="status-text" Text="{Binding ParseMilliseconds, StringFormat='解析 {0} ms'}" />
+                <TextBlock Classes="status-text" Text="渲染：增量" />
             </StackPanel>
+
             <StackPanel
-                Grid.Column="1"
+                Grid.Column="2"
                 Orientation="Horizontal"
-                Spacing="20">
-                <TextBlock Text="{Binding VersionText, StringFormat='CodeWF.Markdown {0}'}" />
+                Spacing="20"
+                VerticalAlignment="Center">
+                <TextBlock Classes="status-text" Text="{Binding CurrentEncodingText}" />
+                <TextBlock Classes="status-text" Text="{Binding VersionText}" />
                 <Button
-                    Padding="0"
-                    Background="Transparent"
-                    BorderThickness="0"
+                    Classes="status-link"
                     Click="GitHubClick"
-                    Content="去 GitHub"
                     Cursor="Hand"
-                    Foreground="{DynamicResource SemiColorText2}" />
+                    ToolTip.Tip="打开项目主页">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <Path
+                            Width="13"
+                            Height="13"
+                            Data="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-1.96c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.18-1.49 3.14-1.18 3.14-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.77 1.05.77 2.12v3.14c0 .31.21.68.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"
+                            Fill="{DynamicResource DemoTextMuted}"
+                            Stretch="Uniform" />
+                        <TextBlock Classes="status-text" Text="GitHub" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Grid>
     </Border>

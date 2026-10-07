@@ -30,6 +30,7 @@ for %%P in (
     "src\CodeWF.Markdown.Mermaid\CodeWF.Markdown.Mermaid.csproj"
     "src\CodeWF.Markdown.Images\CodeWF.Markdown.Images.csproj"
     "src\CodeWF.Markdown.Export\CodeWF.Markdown.Export.csproj"
+    "src\CodeWF.Markdown.Editor\CodeWF.Markdown.Editor.csproj"
 ) do (
     dotnet pack %%~P -c %CONFIGURATION% --no-build -o "%PACKAGES_DIR%" /p:MSBuildNodeReuse=false
     if errorlevel 1 goto :error

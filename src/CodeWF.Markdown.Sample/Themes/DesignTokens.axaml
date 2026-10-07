@@ -3,8 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
         设计令牌（亮/暗双变体）：与 design/prototype.html 的 :root 与 [data-theme="dark"] 一一对应。
-        主窗体各区（标题栏/侧栏/工具栏/面板头/状态栏）统一引用这里的令牌，而不是控件库默认色，
-        便于与原型并排比对时逐色核对。
+        主窗体各区（标题栏/侧栏/工具栏/面板头/状态栏/编辑器）统一引用这里的令牌，
+        而不是控件库默认色，便于与原型并排比对时逐色核对。
     -->
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
@@ -23,8 +23,19 @@
             <SolidColorBrush x:Key="DemoAccentHover" Color="#4096FF" />
             <SolidColorBrush x:Key="DemoAccentSoft" Color="#E8F1FF" />
             <SolidColorBrush x:Key="DemoCodeBg" Color="#1E1E2E" />
+            <SolidColorBrush x:Key="DemoCodeBrush" Color="#C678DD" />
+            <SolidColorBrush x:Key="DemoImageBrush" Color="#7C3AED" />
             <SolidColorBrush x:Key="DemoDanger" Color="#E5484D" />
+            <SolidColorBrush x:Key="DemoDangerHover" Color="#DC2626" />
+            <SolidColorBrush x:Key="DemoSuccess" Color="#067647" />
+            <SolidColorBrush x:Key="DemoBadgeBg" Color="#F8FAFC" />
+            <SolidColorBrush x:Key="DemoBadgeBorder" Color="#D8DEE8" />
+            <SolidColorBrush x:Key="DemoValue" Color="#1D2939" />
             <SolidColorBrush x:Key="DemoPreviewBg" Color="#FFFFFF" />
+            <LinearGradientBrush x:Key="DemoTitleGrad" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#1677FF" Offset="0" />
+                <GradientStop Color="#69B1FF" Offset="1" />
+            </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush x:Key="DemoBgWindow" Color="#151B26" />
@@ -42,8 +53,19 @@
             <SolidColorBrush x:Key="DemoAccentHover" Color="#6CB0FF" />
             <SolidColorBrush x:Key="DemoAccentSoft" Color="#16233A" />
             <SolidColorBrush x:Key="DemoCodeBg" Color="#191C25" />
+            <SolidColorBrush x:Key="DemoCodeBrush" Color="#C678DD" />
+            <SolidColorBrush x:Key="DemoImageBrush" Color="#C4B5FD" />
             <SolidColorBrush x:Key="DemoDanger" Color="#E5484D" />
+            <SolidColorBrush x:Key="DemoDangerHover" Color="#DC2626" />
+            <SolidColorBrush x:Key="DemoSuccess" Color="#12B76A" />
+            <SolidColorBrush x:Key="DemoBadgeBg" Color="#1B2533" />
+            <SolidColorBrush x:Key="DemoBadgeBorder" Color="#334155" />
+            <SolidColorBrush x:Key="DemoValue" Color="#F3F4F6" />
             <SolidColorBrush x:Key="DemoPreviewBg" Color="#151B26" />
+            <LinearGradientBrush x:Key="DemoTitleGrad" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#4096FF" Offset="0" />
+                <GradientStop Color="#69B1FF" Offset="1" />
+            </LinearGradientBrush>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

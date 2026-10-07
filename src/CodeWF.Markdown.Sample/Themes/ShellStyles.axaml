@@ -6,7 +6,7 @@
          从 Views/MainWindow.axaml 抽出，便于分区视图与样式各自维护。 -->
         <!-- 自定义标题栏 -->
         <Style Selector="Border.titlebar">
-            <Setter Property="Height" Value="48" />
+            <Setter Property="Height" Value="44" />
             <Setter Property="Background" Value="{DynamicResource DemoBgTitlebar}" />
             <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="0 0 0 1" />
@@ -24,13 +24,16 @@
             </Setter>
         </Style>
         <Style Selector="TextBlock.brand-name">
-            <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoText}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="Border.badge-demo">
-            <Setter Property="Padding" Value="8 2" />
+            <Setter Property="Padding" Value="8 1.5" />
             <Setter Property="CornerRadius" Value="999" />
             <Setter Property="Background" Value="{DynamicResource DemoAccentSoft}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="Border.badge-demo TextBlock">
             <Setter Property="FontSize" Value="11" />
@@ -38,18 +41,19 @@
             <Setter Property="Foreground" Value="{DynamicResource DemoAccent}" />
         </Style>
         <Style Selector="Border.badge-version">
-            <Setter Property="Padding" Value="8 2" />
+            <Setter Property="Padding" Value="8 1.5" />
             <Setter Property="CornerRadius" Value="999" />
             <Setter Property="BorderBrush" Value="{DynamicResource DemoBorderStrong}" />
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="Border.badge-version TextBlock">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
         </Style>
         <Style Selector="Border.tb-doc">
-            <Setter Property="Margin" Value="14 0 0 0" />
-            <Setter Property="Padding" Value="14 0 0 0" />
+            <Setter Property="Margin" Value="10 0 0 0" />
+            <Setter Property="Padding" Value="10 0 0 0" />
             <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="1 0 0 0" />
         </Style>
@@ -61,18 +65,43 @@
         <!-- 窗控键 -->
         <Style Selector="Button.win-btn">
             <Setter Property="Width" Value="44" />
-            <Setter Property="Height" Value="48" />
+            <Setter Property="Height" Value="44" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.win-btn:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource DemoBgHover}" />
         </Style>
         <Style Selector="Button.win-btn.close:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#E5484D" />
+            <Setter Property="Background" Value="{DynamicResource DemoDanger}" />
         </Style>
         <Style Selector="Button.win-btn.close:pointerover Path">
             <Setter Property="Stroke" Value="White" />
+        </Style>
+
+        <!-- 标题栏右侧控件（对应原型 .titlebar select / .icon-btn） -->
+        <Style Selector="Border.titlebar ComboBox">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Padding" Value="0 6" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Background" Value="{DynamicResource DemoBgWindow}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.icon-btn">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Button.icon-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DemoBgHover}" />
         </Style>
 
         <!-- 侧栏 -->
@@ -167,7 +196,7 @@
             <Setter Property="Foreground" Value="{DynamicResource SemiColorText3}" />
         </Style>
 
-        <!-- 面板头 -->
+        <!-- 面板头（对应原型 .pane-head：高 32、内边距 0 12、11px 粗体字距 .8、次级色） -->
         <Style Selector="Border.pane-head">
             <Setter Property="Height" Value="32" />
             <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
@@ -182,10 +211,17 @@
         <Style Selector="TextBlock.pane-title">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{DynamicResource SemiColorText3}" />
+            <Setter Property="LetterSpacing" Value="0.8" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
+        </Style>
+        <!-- 面板头右侧信息（对应原型 .ph-right：常规字重、无字距） -->
+        <Style Selector="TextBlock.pane-info">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
         </Style>
 
-        <!-- 状态栏 -->
+        <!-- 状态栏（对应原型 .statusbar：高 30、gap 20、内边距 0 16、字号 12、顶部 1px 描边） -->
         <Style Selector="Border.statusbar">
             <Setter Property="Height" Value="30" />
             <Setter Property="Background" Value="{DynamicResource DemoBgSidebar}" />
@@ -193,10 +229,26 @@
             <Setter Property="BorderThickness" Value="0 1 0 0" />
             <Setter Property="Padding" Value="16 0" />
         </Style>
+        <Style Selector="Border.statusbar TextBlock.status-text">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
         <Style Selector="Ellipse.status-ok">
             <Setter Property="Width" Value="7" />
             <Setter Property="Height" Value="7" />
-            <Setter Property="Fill" Value="{DynamicResource SemiColorSuccess}" />
+            <Setter Property="Fill" Value="{DynamicResource DemoSuccess}" />
         </Style>
-    
+        <!-- 状态栏链接（对应原型 .statusbar a：默认次级色，悬停主色） -->
+        <Style Selector="Button.status-link">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Button.status-link:pointerover TextBlock.status-text">
+            <Setter Property="Foreground" Value="{DynamicResource DemoAccent}" />
+        </Style>
+        <Style Selector="Button.status-link:pointerover Path">
+            <Setter Property="Fill" Value="{DynamicResource DemoAccent}" />
+        </Style>
 </Styles>

@@ -14,6 +14,9 @@ public sealed class MarkdownEditorMutationService : IMarkdownEditorMutationServi
         var selected = length > 0 ? text.Substring(start, length) : placeholder;
         var replacement = $"{prefix}{selected}{suffix}";
         editor.Text = text[..start] + replacement + text[(start + length)..];
+        // 先把选区收窄到 0 再定位：AvaloniaEdit.Select 会用当前 SelectionLength 校验区间，
+        // 直接先设 SelectionStart 会拿旧长度越界抛异常。
+        editor.SelectionLength = 0;
         editor.SelectionStart = start + prefix.Length;
         editor.SelectionLength = selected.Length;
         editor.CaretOffset = start + replacement.Length;
