@@ -23,14 +23,10 @@ if errorlevel 1 goto :error
 
 echo [3/3] Packing libraries...
 for %%P in (
+    "src\CodeWF.Markdown.Lite\CodeWF.Markdown.Lite.csproj"
     "src\CodeWF.Markdown\CodeWF.Markdown.csproj"
+    "src\CodeWF.Markdown.Lite.Themes\CodeWF.Markdown.Lite.Themes.csproj"
     "src\CodeWF.Markdown.Themes\CodeWF.Markdown.Themes.csproj"
-    "src\CodeWF.Markdown.Highlighting\CodeWF.Markdown.Highlighting.csproj"
-    "src\CodeWF.Markdown.Math\CodeWF.Markdown.Math.csproj"
-    "src\CodeWF.Markdown.Mermaid\CodeWF.Markdown.Mermaid.csproj"
-    "src\CodeWF.Markdown.Images\CodeWF.Markdown.Images.csproj"
-    "src\CodeWF.Markdown.Export\CodeWF.Markdown.Export.csproj"
-    "src\CodeWF.Markdown.Editor\CodeWF.Markdown.Editor.csproj"
 ) do (
     dotnet pack %%~P -c %CONFIGURATION% --no-build -o "%PACKAGES_DIR%" /p:MSBuildNodeReuse=false
     if errorlevel 1 goto :error

@@ -20,15 +20,21 @@ namespace CodeWF.Markdown.Tests.Themes;
 [Collection("AvaloniaPlatform")]
 public sealed class MarkdownThemesResourceTests
 {
-	[Fact]
-	public void MarkdownTypographyThemes_DoesNotExposeThemeList()
-	{
-		Assert.Null(typeof(MarkdownTypographyThemes).GetProperty("All"));
-	}
+	private readonly AvaloniaPlatformFixture _platform;
+
+	public MarkdownThemesResourceTests(AvaloniaPlatformFixture platform) => _platform = platform;
 
 	[Fact]
-	public void OverrideTypographyResources_WhenViewerOverridesOnlySize_DoesNotReuseInheritedDictionary()
+	public void MarkdownTypographyThemes_DoesNotExposeThemeList() => _platform.Run(() =>
 	{
+		EnsureThemesLoaded();
+		Assert.Null(typeof(MarkdownTypographyThemes).GetProperty("All"));
+	});
+
+	[Fact]
+	public void OverrideTypographyResources_WhenViewerOverridesOnlySize_DoesNotReuseInheritedDictionary() => _platform.Run(() =>
+	{
+		EnsureThemesLoaded();
 		var parent = new Border();
 		var viewer = new MarkdownViewer();
 		parent.Child = viewer;
@@ -42,11 +48,12 @@ public sealed class MarkdownThemesResourceTests
 
 		Assert.Null(exception);
 		Assert.NotEmpty(viewer.Resources.MergedDictionaries);
-	}
+	});
 
 	[Fact]
-	public void OverrideTypographyResources_WhenAppliedToContainer_DoesNotExposeSemiPaletteKeys()
+	public void OverrideTypographyResources_WhenAppliedToContainer_DoesNotExposeSemiPaletteKeys() => _platform.Run(() =>
 	{
+		EnsureThemesLoaded();
 		var parent = new Border();
 
 		MarkdownThemes.OverrideTypographyResources(parent, MarkdownTypographyThemes.GeekBlack, MarkdownTypographySizes.Normal);
@@ -55,11 +62,12 @@ public sealed class MarkdownThemesResourceTests
 		Assert.True(parent.Resources.TryGetResource(MarkdownStyleKeys.ParagraphFontSizeResource, ThemeVariant.Light, out _));
 		Assert.False(parent.Resources.TryGetResource(MarkdownStyleKeys.AccentBrushResource, ThemeVariant.Light, out _));
 		Assert.False(parent.Resources.TryGetResource(MarkdownStyleKeys.QuoteBackgroundBrushResource, ThemeVariant.Light, out _));
-	}
+	});
 
 	[Fact]
-	public void OverrideTypographyResources_WhenAppliedToContainer_KeepsPaletteOnViewerOnly()
+	public void OverrideTypographyResources_WhenAppliedToContainer_KeepsPaletteOnViewerOnly() => _platform.Run(() =>
 	{
+		EnsureThemesLoaded();
 		var parent = new Border();
 		var viewer = new MarkdownViewer();
 		parent.Child = viewer;
@@ -69,7 +77,7 @@ public sealed class MarkdownThemesResourceTests
 		Assert.False(parent.Resources.TryGetResource(MarkdownStyleKeys.AccentBrushResource, ThemeVariant.Light, out _));
 		Assert.True(viewer.Resources.TryGetResource(MarkdownStyleKeys.AccentBrushResource, ThemeVariant.Light, out var accentBrush));
 		Assert.IsType<SolidColorBrush>(accentBrush);
-	}
+	});
 
 	[Theory]
 	[InlineData(MarkdownTypographyThemes.Simple, "#3E64FF", "#F6F8FA", "#F6F7F9", "#F6F7F9")]
@@ -79,19 +87,21 @@ public sealed class MarkdownThemesResourceTests
 		string accentColor,
 		string codeBackgroundColor,
 		string inlineCodeBackgroundColor,
-		string quoteBackgroundColor)
+		string quoteBackgroundColor) => _platform.Run(() =>
 	{
+		EnsureThemesLoaded();
 		var style = MarkdownThemes.CreateExportStyle(themeName);
 
 		Assert.Equal(accentColor, style.LinkColor);
 		Assert.Equal(codeBackgroundColor, style.CodeBackgroundColor);
 		Assert.Equal(inlineCodeBackgroundColor, style.InlineCodeBackgroundColor);
 		Assert.Equal(quoteBackgroundColor, style.QuoteBackgroundColor);
-	}
+	});
 
 	[Fact]
-	public void CreateExportStyle_WhenWeChatFormatTheme_ResolvesDocumentPalette()
+	public void CreateExportStyle_WhenWeChatFormatTheme_ResolvesDocumentPalette() => _platform.Run(() =>
 	{
+		EnsureThemesLoaded();
 		var style = MarkdownThemes.CreateExportStyle(MarkdownTypographyThemes.WeChatFormat);
 
 		Assert.Contains(MarkdownTypographyThemes.WeChatFormat, MarkdownTypographyThemeRegistry.ThemeNames);
@@ -102,11 +112,12 @@ public sealed class MarkdownThemesResourceTests
 		Assert.Equal("#9E9E9E", style.QuoteBorderColor);
 		Assert.Equal("#1A9E9E9E", style.QuoteBackgroundColor);
 		Assert.Equal(1.625d, style.LineHeightRatio);
-	}
+	});
 
 	[Fact]
-	public void CreateExportStyle_WhenCustomThemeRegistered_UsesThemeResources()
+	public void CreateExportStyle_WhenCustomThemeRegistered_UsesThemeResources() => _platform.Run(() =>
 	{
+		EnsureThemesLoaded();
 		var themeName = $"UnitTestTheme{Guid.NewGuid():N}";
 		MarkdownTypographyThemeRegistry.Register(
 			themeName,
@@ -129,5 +140,15 @@ public sealed class MarkdownThemesResourceTests
 		Assert.Equal(1.667d, style.LineHeightRatio);
 		Assert.Equal("#123456", style.BodyColor);
 		Assert.Equal("#0E88EB", style.LinkColor);
+	});
+
+	/// <summary>
+	/// 主题入口的静态构造会加载并注册全部排版主题；必须在平台线程上完成，否则跨线程访问资源会抛异常。
+	/// </summary>
+	private static void EnsureThemesLoaded()
+	{
+		_ = ThemesLoaded.Value;
 	}
+
+	private static readonly Lazy<MarkdownThemes> ThemesLoaded = new(() => new MarkdownThemes());
 }

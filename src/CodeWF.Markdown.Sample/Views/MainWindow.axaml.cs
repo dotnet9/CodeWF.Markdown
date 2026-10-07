@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -145,6 +145,7 @@ public partial class MainWindow : Window
         {
             Vm?.SetViewMode(mode);
             SetViewSegment(mode);
+            // 「实时」= 单栏所见即所得：同一文档在源码编辑器与实时视图之间切换。
         }
     }
 

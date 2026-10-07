@@ -66,7 +66,7 @@ public class MarkdownThemes : Styles
     /// <summary>
     /// 全局默认排版主题。默认 Basic；单个 MarkdownViewer 可通过同名属性覆盖。
     /// </summary>
-    public string? TypographyTheme
+    public virtual string? TypographyTheme
     {
         get => _typographyTheme;
         set
@@ -79,7 +79,7 @@ public class MarkdownThemes : Styles
     /// <summary>
     /// 排版尺寸。默认 Normal；设置为 Small 时会在当前排版主题上叠加紧凑字号、行高和间距资源。
     /// </summary>
-    public string? TypographySize
+    public virtual string? TypographySize
     {
         get => _typographySize;
         set

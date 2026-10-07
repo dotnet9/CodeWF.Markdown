@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -12,13 +12,12 @@ using CodeWF.Markdown.Sample.ViewModels;
 
 namespace CodeWF.Markdown.Sample.Views;
 
-/// <summary>
 /// 编辑 / 预览视图：编辑器使用库控件 <see cref="MarkdownEditorView"/>（与 Vex 同一份实现），
 /// 这里只负责与 ViewModel 的数据同步、视图模式切换、焦点模式与打字机模式。
-/// </summary>
 public partial class MarkdownEditorPreviewView : UserControl
 {
     private bool _syncingEditor;
+    private bool _liveMode;
     private MainWindowViewModel? _viewModel;
 
     public static readonly StyledProperty<string> ViewModeProperty =
@@ -55,6 +54,7 @@ public partial class MarkdownEditorPreviewView : UserControl
     {
         InitializeComponent();
         MarkdownEditor.MarkdownChanged += (_, text) => PushTextToViewModel(text);
+        LiveEditor.MarkdownChanged += (_, text) => PushTextToViewModel(text);
         DataContextChanged += (_, _) => AttachViewModel(DataContext as MainWindowViewModel);
         AttachViewModel(DataContext as MainWindowViewModel);
         UpdateViewMode();
@@ -62,9 +62,13 @@ public partial class MarkdownEditorPreviewView : UserControl
 
     private void UpdateViewMode()
     {
+        // 「实时」= 单栏所见即所得：编辑列里在源码编辑器与实时视图之间互换显示（对应原型 setView('live')）。
+        SetLiveMode(string.Equals(ViewMode, "live", StringComparison.Ordinal));
+
         switch (ViewMode)
         {
             case "edit":
+            case "live":
                 LayoutGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
                 LayoutGrid.ColumnDefinitions[0].MinWidth = 0;
                 LayoutGrid.ColumnDefinitions[1].Width = new GridLength(0);
@@ -122,6 +126,32 @@ public partial class MarkdownEditorPreviewView : UserControl
 
     /// <summary>打字机模式：每次光标移动都把当前行带回视口。</summary>
     private void CenterCaretLine() => MarkdownEditor.Editor.TextArea.Caret.BringCaretToView();
+
+    /// <summary>切换「源码 / 实时（所见即所得）」编辑视图。</summary>
+    public void SetLiveMode(bool live)
+    {
+        if (_liveMode == live)
+        {
+            // 编辑 / 分栏 / 预览 之间切换不该重置源码编辑器（否则会丢光标与撤销栈）。
+            return;
+        }
+
+        _liveMode = live;
+        MarkdownEditor.IsVisible = !live;
+        LiveEditor.IsVisible = live;
+        if (live)
+        {
+            LiveEditor.SetText(_viewModel?.Markdown ?? string.Empty);
+            LiveEditor.FocusEditor();
+        }
+        else
+        {
+            MarkdownEditor.SetText(_viewModel?.Markdown ?? string.Empty);
+        }
+    }
+
+    /// <summary>当前是否处于实时（所见即所得）编辑模式。</summary>
+    public bool IsLiveMode => _liveMode;
 
     /// <summary>将编辑器选区（或光标处）用指定 Markdown 标记包裹。</summary>
     public void WrapSelection(string prefix, string suffix) => MarkdownEditor.WrapSelection(prefix, suffix);
@@ -185,6 +215,7 @@ public partial class MarkdownEditorPreviewView : UserControl
 
         _syncingEditor = true;
         MarkdownEditor.SetText(text);
+        LiveEditor.SetText(text);
         _syncingEditor = false;
     }
 }

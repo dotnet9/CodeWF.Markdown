@@ -1,9 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Headless;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Threading;
 
 using CodeWF.Markdown.MathRendering;
 
@@ -25,8 +23,9 @@ public sealed class MarkdownMathViewTests
 	private const int Width = 320;
 	private const int Height = 120;
 
-	private static readonly object SetupLock = new();
-	private static bool _initialized;
+	private readonly AvaloniaPlatformFixture _platform;
+
+	public MarkdownMathViewTests(AvaloniaPlatformFixture platform) => _platform = platform;
 
 	[Theory]
 	[InlineData("x^2+y^2")]
@@ -35,8 +34,6 @@ public sealed class MarkdownMathViewTests
 	[InlineData(@"\mathrm{C}\mathrm{O}_{2}")]
 	public void Render_WhenFormulaIsValid_DrawsGlyphPixels(string latex)
 	{
-		EnsureAvaloniaInitialized();
-
 		var painted = RenderMath(latex);
 
 		// 分式横线约 88 像素：只画横线即为缺陷复现，因此要求显著多于它。
@@ -46,9 +43,7 @@ public sealed class MarkdownMathViewTests
 	[Fact]
 	public void Measure_WhenFormulaIsValid_ReturnsPositiveSize()
 	{
-		EnsureAvaloniaInitialized();
-
-		var size = Dispatcher.UIThread.Invoke(() =>
+		var size = _platform.Run(() =>
 		{
 			var view = new MarkdownMathView { LaTeX = "x^2+y^2", FontSize = 20 };
 			view.Measure(new Size(Width, Height));
@@ -59,9 +54,9 @@ public sealed class MarkdownMathViewTests
 		Assert.True(size.Height > 1);
 	}
 
-	private static int RenderMath(string latex)
+	private int RenderMath(string latex)
 	{
-		return Dispatcher.UIThread.Invoke(() =>
+		return _platform.Run(() =>
 		{
 			var view = new MarkdownMathView
 			{
@@ -100,26 +95,5 @@ public sealed class MarkdownMathViewTests
 
 			return painted;
 		});
-	}
-
-	private static void EnsureAvaloniaInitialized()
-	{
-		lock (SetupLock)
-		{
-			if (_initialized)
-			{
-				return;
-			}
-
-			if (Application.Current is null)
-			{
-				AppBuilder.Configure<Application>()
-					.UseSkia()
-					.UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
-					.SetupWithoutStarting();
-			}
-
-			_initialized = true;
-		}
 	}
 }

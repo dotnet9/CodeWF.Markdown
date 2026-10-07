@@ -1,0 +1,8 @@
+<Styles
+    x:Class="CodeWF.Markdown.Themes.MarkdownFullThemes"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- 基类（CodeWF.Markdown.Lite.Themes 的 MarkdownThemes）已加载控件模板与 18 套排版主题，
+         这里只叠加完整包特有的图片能力控件外观。 -->
+    <StyleInclude Source="Themes/MarkdownImage.axaml" />
+</Styles>

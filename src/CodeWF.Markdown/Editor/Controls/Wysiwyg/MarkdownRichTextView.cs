@@ -1,0 +1,127 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Documents;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
+
+namespace CodeWF.Markdown.Editor.Controls.Wysiwyg;
+
+/// <summary>
+/// 富文本显示单元：按 <see cref="MarkdownTextRun"/> 渲染粗体/斜体/删除线/行内代码/链接，
+/// 并提供“点击处 → 纯文本偏移”的命中测试，供所见即所得视图点入时定位光标。
+/// </summary>
+internal sealed class MarkdownRichTextView : TextBlock
+{
+    private IReadOnlyList<MarkdownTextRun> _runs = [];
+    private MarkdownBlockViewOptions _options = new();
+    private double _fontSize = 15;
+
+    public MarkdownRichTextView()
+    {
+        TextWrapping = TextWrapping.Wrap;
+        VerticalAlignment = VerticalAlignment.Top;
+    }
+
+    /// <summary>注入块视图配色（由 <see cref="MarkdownBlockView"/> 传入）。</summary>
+    public void BindPalette(MarkdownBlockViewOptions options) => _options = options;
+
+    public double RunFontSize
+    {
+        get => _fontSize;
+        set
+        {
+            _fontSize = value;
+            ApplyRuns();
+        }
+    }
+
+    /// <summary>设置富文本内容。</summary>
+    public void SetRuns(IReadOnlyList<MarkdownTextRun> runs)
+    {
+        _runs = runs;
+        ApplyRuns();
+    }
+
+    /// <summary>把控件坐标映射为纯文本偏移（用于点入编辑时定位光标）。</summary>
+    public int GetTextOffset(Point point)
+    {
+        var plain = MarkdownTextRunParser.ToPlainText(_runs);
+        if (plain.Length == 0 || TextLayout is not { } layout)
+        {
+            return 0;
+        }
+
+        var bestIndex = 0;
+        var bestDistance = double.MaxValue;
+        for (var index = 0; index <= plain.Length; index++)
+        {
+            var rect = layout.HitTestTextPosition(index);
+            var centerX = rect.X;
+            var centerY = rect.Y + (rect.Height / 2);
+            var distance = Math.Abs(point.X - centerX) + (Math.Abs(point.Y - centerY) * 0.25);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestIndex = index;
+            }
+        }
+
+        return bestIndex;
+    }
+
+    private void ApplyRuns()
+    {
+        var inlines = new InlineCollection();
+        foreach (var run in _runs)
+        {
+            if (run.Text.Length == 0)
+            {
+                continue;
+            }
+
+            var textRun = new Run(run.Text)
+            {
+                FontSize = _fontSize,
+                Foreground = run.LinkUrl is null ? _options.TextBrush : _options.LinkBrush
+            };
+
+            if (run.Bold)
+            {
+                textRun.FontWeight = FontWeight.SemiBold;
+            }
+
+            if (run.Italic)
+            {
+                textRun.FontStyle = FontStyle.Italic;
+            }
+
+            if (run.LinkUrl is { Length: > 0 })
+            {
+                textRun.TextDecorations = CreateDecoration(TextDecorationLocation.Underline);
+            }
+            else if (run.Strike)
+            {
+                textRun.TextDecorations = CreateDecoration(TextDecorationLocation.Strikethrough);
+            }
+
+            if (run.Code)
+            {
+                textRun.FontFamily = MarkdownWysiwygPalette.CodeFontFamily;
+                textRun.Foreground = _options.CodeBrush;
+                textRun.Background = _options.CodeBackgroundBrush;
+            }
+
+            inlines.Add(textRun);
+        }
+
+        Inlines = inlines;
+    }
+
+    private static TextDecorationCollection CreateDecoration(TextDecorationLocation location)
+    {
+        var collection = new TextDecorationCollection();
+        collection.Add(new TextDecoration { Location = location });
+        return collection;
+    }
+}

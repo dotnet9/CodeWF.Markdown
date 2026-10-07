@@ -1,6 +1,8 @@
 using CodeWF.Markdown.Editor.Controls;
 using CodeWF.Markdown.Editor.Services;
 
+using CodeWF.Markdown.Tests.Rendering;
+
 using Xunit;
 
 namespace CodeWF.Markdown.Tests.Editor;
@@ -18,8 +20,12 @@ namespace CodeWF.Markdown.Tests.Editor;
 [Collection("AvaloniaPlatform")]
 public sealed class MarkdownEditorViewSyncTests
 {
+    private readonly AvaloniaPlatformFixture _platform;
+
+    public MarkdownEditorViewSyncTests(AvaloniaPlatformFixture platform) => _platform = platform;
+
     [Fact]
-    public void SetText_DoesNotRaiseMarkdownChanged()
+    public void SetText_DoesNotRaiseMarkdownChanged() => _platform.Run(() =>
     {
         var view = new MarkdownEditorView();
         var raised = 0;
@@ -30,10 +36,10 @@ public sealed class MarkdownEditorViewSyncTests
 
         Assert.Equal("# second document", view.Text);
         Assert.Equal(0, raised);
-    }
+    });
 
     [Fact]
-    public void InsertText_RaisesMarkdownChanged()
+    public void InsertText_RaisesMarkdownChanged() => _platform.Run(() =>
     {
         var view = new MarkdownEditorView();
         var payloads = new List<string>();
@@ -45,10 +51,10 @@ public sealed class MarkdownEditorViewSyncTests
 
         Assert.Equal("XYabc", view.Text);
         Assert.Contains("XYabc", payloads);
-    }
+    });
 
     [Fact]
-    public void ApplyExternalEdit_ReplaceInPlace_RaisesMarkdownChangedOnce()
+    public void ApplyExternalEdit_ReplaceInPlace_RaisesMarkdownChangedOnce() => _platform.Run(() =>
     {
         var view = new MarkdownEditorView();
         view.SetText("- [ ] task");
@@ -61,10 +67,10 @@ public sealed class MarkdownEditorViewSyncTests
 
         Assert.Equal("- [x] task", view.Text);
         Assert.Equal(1, raised);
-    }
+    });
 
     [Fact]
-    public void ExecuteAsync_Bold_WrapsSelectionAndRaisesChanged()
+    public void ExecuteAsync_Bold_WrapsSelectionAndRaisesChanged() => _platform.Run(() =>
     {
         var view = new MarkdownEditorView();
         view.SetText("word");
@@ -79,5 +85,5 @@ public sealed class MarkdownEditorViewSyncTests
 
         Assert.Equal("**word**", view.Text);
         Assert.Equal(1, raised);
-    }
+    });
 }

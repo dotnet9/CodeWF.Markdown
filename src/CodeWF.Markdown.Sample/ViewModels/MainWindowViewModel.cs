@@ -517,6 +517,7 @@ public sealed class MainWindowViewModel : ObservableObject
             {
                 OnPropertyChanged(nameof(CurrentTypographyTheme));
                 OnPropertyChanged(nameof(CurrentTypographyName));
+                OnPropertyChanged(nameof(PreviewThemeText));
                 OnPropertyChanged(nameof(FirstViewerTypographyTheme));
                 OnPropertyChanged(nameof(SecondViewerTypographyTheme));
             }
@@ -531,6 +532,7 @@ public sealed class MainWindowViewModel : ObservableObject
             if (SetProperty(ref field, value) && value is not null && Application.Current is { } app)
             {
                 app.RequestedThemeVariant = value.ThemeVariant;
+                OnPropertyChanged(nameof(PreviewThemeText));
             }
         }
     }
@@ -998,6 +1000,10 @@ public sealed class MainWindowViewModel : ObservableObject
     public string CurrentTypographySize => IsCompactLayout
         ? MarkdownTypographySizes.Small
         : MarkdownTypographySizes.Normal;
+
+    /// <summary>预览窗格头右侧信息（对应原型 #pvThemeName：排版主题 · 亮色/暗色）。</summary>
+    public string PreviewThemeText =>
+        $"{CurrentTypographyName} · {SelectedThemeVariant?.Name ?? string.Empty}".Trim();
 
     private static string ResolveMarkdownBasePath()
     {

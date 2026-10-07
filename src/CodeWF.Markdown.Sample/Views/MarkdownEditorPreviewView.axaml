@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="CodeWF.Markdown.Sample.Views.MarkdownEditorPreviewView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -21,25 +21,13 @@
             <ColumnDefinition Width="*" MinWidth="360" />
         </Grid.ColumnDefinitions>
 
-        <!-- 编辑器与 Vex 共用库控件 CodeWF.Markdown.Editor，Demo 侧只做数据同步与预览联动 -->
-        <Grid Grid.Column="0" RowDefinitions="32,*">
-            <Border Classes="pane-head">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Ellipse Classes="pane-dot" VerticalAlignment="Center" />
-                        <TextBlock Classes="pane-title" Text="编辑器 · AvaloniaEdit" />
-                    </StackPanel>
-                    <TextBlock
-                        Grid.Column="1"
-                        Classes="pane-title"
-                        Foreground="{DynamicResource DemoTextMuted}"
-                        Text="Markdown" />
-                </Grid>
-            </Border>
+        <!-- 编辑列：源码编辑器与单栏实时编辑（所见即所得）共用同一列，
+             窗格头由控件自带（对应原型 .pane-head），切到「实时」时互换显示。 -->
+        <Grid Grid.Column="0">
             <editor:MarkdownEditorView
                 x:Name="MarkdownEditor"
-                Grid.Row="1"
                 AccentKey="DemoAccent"
+                ChipText="Markdown"
                 CodeKey="DemoCodeBrush"
                 CurrentLineBackgroundKey="DemoBgHover"
                 CurrentLineBorderKey="DemoBorder"
@@ -47,11 +35,19 @@
                 EditorBackgroundKey="DemoBgWindow"
                 EditorForegroundKey="DemoText"
                 Foreground="{DynamicResource DemoText}"
+                HeaderText="编辑器 · AvaloniaEdit"
                 ImageKey="DemoImageBrush"
                 LinkKey="DemoAccent"
                 QuoteKey="DemoTextMuted"
                 SeparatorKey="DemoBorder"
                 WarningKey="DemoDanger" />
+            <editor:MarkdownLiveEditorView
+                x:Name="LiveEditor"
+                ChipText="所见即所得"
+                EditorBackgroundKey="DemoBgWindow"
+                EditorForegroundKey="DemoText"
+                HeaderText="实时编辑 · MarkdownLiveEditorView"
+                IsVisible="False" />
         </Grid>
 
         <GridSplitter
@@ -61,19 +57,35 @@
             Background="{DynamicResource DemoBorder}"
             ResizeDirection="Columns" />
 
-        <Border
-            Grid.Column="2"
-            Padding="28 32 48 0">
-            <ScrollViewer
-                HorizontalScrollBarVisibility="Disabled"
-                VerticalScrollBarVisibility="Auto">
-                <Border MaxWidth="820" HorizontalAlignment="Center">
-                    <md:MarkdownViewer
-                        Markdown="{Binding Markdown}"
-                        TypographySize="{Binding CurrentTypographySize}"
-                        TypographyTheme="{Binding CurrentTypographyTheme}" />
+        <Border Grid.Column="2">
+            <Grid RowDefinitions="32,*">
+                <!-- 预览窗格头（对应原型 #panePreview 的 .pane-head + .ph-right） -->
+                <Border Classes="pane-head">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Classes="pane-dot" VerticalAlignment="Center" />
+                            <TextBlock Classes="pane-title" Text="预览 · MarkdownViewer" />
+                        </StackPanel>
+                        <TextBlock
+                            Grid.Column="1"
+                            Classes="pane-info"
+                            Text="{Binding PreviewThemeText}" />
+                    </Grid>
                 </Border>
-            </ScrollViewer>
+                <ScrollViewer
+                    Grid.Row="1"
+                    Padding="28 32 48 0"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <Border MaxWidth="820" HorizontalAlignment="Center">
+                        <!-- 只读渲染结果：MarkdownViewer 不接受输入，编辑一律在左侧编辑器或实时视图里进行 -->
+                        <md:MarkdownViewer
+                            Markdown="{Binding Markdown}"
+                            TypographySize="{Binding CurrentTypographySize}"
+                            TypographyTheme="{Binding CurrentTypographyTheme}" />
+                    </Border>
+                </ScrollViewer>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

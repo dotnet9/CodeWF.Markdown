@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>14.0</LangVersion>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
@@ -17,10 +18,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\CodeWF.Markdown.Lite\CodeWF.Markdown.Lite.csproj" />
+    <!-- 主题类型集中在 Lite.Themes：用别名引用，避免与完整包 Themes 的同名命名空间混用。 -->
+    <ProjectReference Include="..\..\src\CodeWF.Markdown.Lite.Themes\CodeWF.Markdown.Lite.Themes.csproj" Aliases="FullThemes" />
     <ProjectReference Include="..\..\src\CodeWF.Markdown\CodeWF.Markdown.csproj" />
-    <ProjectReference Include="..\..\src\CodeWF.Markdown.Themes\CodeWF.Markdown.Themes.csproj" Aliases="FullThemes" />
-    <ProjectReference Include="..\..\src\CodeWF.Markdown.Export\CodeWF.Markdown.Export.csproj" />
-    <ProjectReference Include="..\..\src\CodeWF.Markdown.Editor\CodeWF.Markdown.Editor.csproj" />
-    <ProjectReference Include="..\..\src\CodeWF.Markdown.Math\CodeWF.Markdown.Math.csproj" />
+    <ProjectReference Include="..\..\src\CodeWF.Markdown.Themes\CodeWF.Markdown.Themes.csproj" />
   </ItemGroup>
 </Project>

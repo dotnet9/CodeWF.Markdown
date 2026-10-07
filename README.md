@@ -1,14 +1,68 @@
-# CodeWF.Markdown
+﻿# CodeWF.Markdown
 
 基于 Avalonia 12 的 Markdown 渲染控件、排版主题和可运行示例。该仓库从 `CodeWF.AvaloniaControls` 拆分而来，只保留 Markdown 相关代码与文档。
 
 
 更新日志：[UpdateLog.md](UpdateLog.md)
-
 | 名称 | NuGet | 下载量 |
 | --- | --- | --- |
+| CodeWF.Markdown.Lite | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Lite.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Lite.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite/) |
 | CodeWF.Markdown | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.svg)](https://www.nuget.org/packages/CodeWF.Markdown/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.svg)](https://www.nuget.org/packages/CodeWF.Markdown/) |
+| CodeWF.Markdown.Lite.Themes | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Lite.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite.Themes/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Lite.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Lite.Themes/) |
 | CodeWF.Markdown.Themes | [![NuGet](https://img.shields.io/nuget/v/CodeWF.Markdown.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Themes/) | [![NuGet](https://img.shields.io/nuget/dt/CodeWF.Markdown.Themes.svg)](https://www.nuget.org/packages/CodeWF.Markdown.Themes/) |
+
+## 仓库规范
+
+- 当前版本：`14.0.0`，版本号统一维护在根目录 `Directory.Build.props` 的 `<Version>` 节点。
+- **14.0.0 起所有 NuGet 包只支持 `net10.0`**（Mermaid 依赖仅提供 net10 资产）；Demo、App 使用 `net11.0` / `net11.0-windows`，可正常引用 net10 包。
+- `net11.0` 当前使用 preview SDK，CI 通过 `actions/setup-dotnet` 显式安装 preview SDK；发布稳定版本前应同步调整目标框架和 CI 配置。
+- 根目录 `logo.svg`、`logo.png`、`logo.ico` 是唯一图标源，子工程只通过 MSBuild `Link` 引用，不维护图标副本。
+- 运行时帮助、Markdown 示例、内置备忘录、设计说明等业务文档按功能保留；仓库级入口文档使用根目录 `README.md` 和 `UpdateLog.md`。
+
+## 包线说明（14.0.0 起，四个包）
+
+按「是否引入第三方能力依赖」切分，基础与完整共用**同一份渲染实现**，不存在两套渲染代码：
+
+| 包 | 依赖 | 能力 |
+| --- | --- | --- |
+| `CodeWF.Markdown.Lite` | Avalonia、Markdig、CodeWF.AvaloniaControls | 唯一一份渲染引擎：标题/段落/列表/引用/表格/链接/代码块（单色）/图片（替代文本）/公式（原文）；不含任何第三方能力依赖 |
+| `CodeWF.Markdown` | Lite + AvaloniaEdit + TextMateSharp + Sylinko.CSharpMath.Avalonia + Mermaider + AnimatedImage.Avalonia + Svg.Skia + SkiaSharp | 能力增量：代码高亮、数学公式、Mermaid 图表、图片（GIF/SVG/预览窗）、PNG/PDF/Word/公众号 HTML 导出；**并含编辑器控件**（源码编辑器 `MarkdownEditorView` + 单栏实时编辑 `MarkdownLiveEditorView`） |
+| `CodeWF.Markdown.Lite.Themes` | Lite | 控件模板 + 全部排版令牌 + 18 套排版主题 |
+| `CodeWF.Markdown.Themes` | Lite.Themes + Markdown | 完整包的样式入口（`MarkdownFullThemes`）：在 Lite.Themes 之上叠加图片能力控件外观 |
+
+**安装组合**
+
+- 基础能力：只装 `CodeWF.Markdown.Lite.Themes`（自动引入 Lite）→ 18 套排版主题可用，代码块单色、公式显示原文、图片显示替代文本。
+- 完整能力：只装 `CodeWF.Markdown.Themes`（自动引入 Markdown + Lite.Themes + Lite）→ 全能力 + 编辑器。
+- 编辑器随完整包提供，无需单独安装。
+
+```xml
+<!-- App.axaml：完整包样式入口（含 Lite.Themes 的模板与 18 套主题 + 图片控件外观） -->
+<Application.Styles>
+  <FluentTheme />
+  <markdownThemes:MarkdownFullThemes TypographyTheme="Simple" />
+</Application.Styles>
+```
+
+```csharp
+// 注册完整包能力（命名空间与 13.x 完全一致，调用代码零改动）
+CodeWF.Markdown.Highlighting.CodeWFMarkdownHighlightingExtensions.UseHighlighting();
+CodeWF.Markdown.Images.CodeWFMarkdownImagesExtensions.UseImages();
+CodeWF.Markdown.MathRendering.CodeWFMarkdownMathExtensions.UseMath();
+CodeWF.Markdown.Mermaid.CodeWFMarkdownMermaidExtensions.EnsureRegistered();
+```
+
+### 13.x → 14.0.0 迁移
+
+| 13.x | 14.0.0 |
+| --- | --- |
+| `CodeWF.Markdown`（核心渲染） | `CodeWF.Markdown.Lite`（仅基础渲染时）或 `CodeWF.Markdown`（要完整能力时） |
+| `CodeWF.Markdown.Highlighting` / `.Math` / `.Mermaid` / `.Images` / `.Export` 五个可选能力包 | 合并为 `CodeWF.Markdown` 一个包 |
+| `CodeWF.Markdown.Themes` | 基础用 `CodeWF.Markdown.Lite.Themes`，完整用 `CodeWF.Markdown.Themes` |
+| `CodeWF.Markdown.Editor`（13.2.0 新增） | 并入 `CodeWF.Markdown` |
+| `MarkdownThemes`（样式入口） | 完整包改用 `MarkdownFullThemes`（`MarkdownThemes` 仍在 Lite.Themes） |
+| 能力扩展方法调用（`UseHighlighting()` 等） | **不变**（命名空间与扩展方法名全部保留） |
+| 目标框架 `net8.0;net10.0;net11.0` | **统一 `net10.0`**，net8 消费者需先升级 |
 
 ## 仓库规范
 

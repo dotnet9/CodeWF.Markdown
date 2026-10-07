@@ -17,7 +17,7 @@
         <FluentTheme />
         <semi:SemiTheme />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
-        <markdownThemes:MarkdownThemes />
+        <markdownThemes:MarkdownFullThemes TypographyTheme="Simple" />
         <Style Selector="Window">
             <Setter Property="Background" Value="{DynamicResource WindowDefaultBackground}" />
         </Style>

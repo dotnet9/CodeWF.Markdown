@@ -60,14 +60,6 @@
                     </ControlTemplate>
                 </Setter>
             </ControlTheme>
-
-            <ControlTheme x:Key="{x:Type md:MarkdownImage}" TargetType="md:MarkdownImage">
-                <Setter Property="Template">
-                    <ControlTemplate TargetType="{x:Type md:MarkdownImage}">
-                        <ContentControl Name="PART_ContentHost" />
-                    </ControlTemplate>
-                </Setter>
-            </ControlTheme>
         </ResourceDictionary>
     </Styles.Resources>
 

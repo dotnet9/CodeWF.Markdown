@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Title>CodeWF.Markdown.Themes</Title>
+    <Title>CodeWF.Markdown.Lite.Themes</Title>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>14.0</LangVersion>
     <OutputType>Library</OutputType>
     <IsPackable>true</IsPackable>
-    <Description>CodeWF.Markdown 完整包的样式入口：在 CodeWF.Markdown.Lite.Themes 的控件模板与 18 套排版主题之上，叠加图片能力控件外观。Styles entry point for the full CodeWF.Markdown package.</Description>
-    <PackageId>CodeWF.Markdown.Themes</PackageId>
-    <AssemblyName>CodeWF.Markdown.Themes</AssemblyName>
+    <Description>CodeWF.Markdown.Lite 的控件模板与 18 套排版主题（公众号/技术文档风格，适配 Avalonia 明暗变体），不含图片/公式等能力相关外观。Control templates and typography themes for CodeWF.Markdown.Lite.</Description>
+    <PackageId>CodeWF.Markdown.Lite.Themes</PackageId>
+    <AssemblyName>CodeWF.Markdown.Lite.Themes</AssemblyName>
     <RootNamespace>CodeWF.Markdown.Themes</RootNamespace>
     <PackageIcon>logo.png</PackageIcon>
-    <PackageTags>avalonia ui markdown themes typography codewf</PackageTags>
+    <PackageTags>avalonia ui markdown themes typography codewf lite</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <IncludeSymbols>true</IncludeSymbols>
@@ -23,8 +23,7 @@
     <PackageReference Include="Avalonia" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CodeWF.Markdown\CodeWF.Markdown.csproj" />
-    <ProjectReference Include="..\CodeWF.Markdown.Lite.Themes\CodeWF.Markdown.Lite.Themes.csproj" />
+    <ProjectReference Include="..\CodeWF.Markdown.Lite\CodeWF.Markdown.Lite.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="" />

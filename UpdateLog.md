@@ -1,5 +1,19 @@
 ﻿# 更新日志
 
+
+## 14.0.0 (2026-10-07)
+
+- 💥[破坏性]-包线重组为 4 个包（按「是否引入第三方能力依赖」切分，基础与完整**共用同一份渲染实现**，不再有 Lite/完整两套冗余代码）：
+  - `CodeWF.Markdown.Lite`：唯一渲染引擎（常规元素 + 代码块单色 + 图片替代文本 + 公式原文），零第三方能力依赖。
+  - `CodeWF.Markdown`：在 Lite 之上提供代码高亮 / 数学公式 / Mermaid / 图片(GIF·SVG·预览) / PNG·PDF·Word·公众号 HTML 导出，**并含编辑器控件**。
+  - `CodeWF.Markdown.Lite.Themes`：控件模板 + 全部排版令牌 + 18 套排版主题。
+  - `CodeWF.Markdown.Themes`：完整包样式入口 `MarkdownFullThemes`（Lite.Themes + 图片能力外观）。
+- 💥[破坏性]-原能力包 `CodeWF.Markdown.Highlighting` / `.Math` / `.Mermaid` / `.Images` / `.Export` 与 `CodeWF.Markdown.Editor` 停止发布，能力与编辑器并入 `CodeWF.Markdown`；能力扩展方法命名空间保持不变，调用代码零改动。
+- 💥[破坏性]-所有 NuGet 包统一为 `net10.0` 单目标（Mermaid 依赖仅提供 net10 资产），net8 消费者需先升级目标框架。
+- 🚀[新增]-编辑器并入 `CodeWF.Markdown`，并新增**单栏实时编辑（所见即所得）控件 `MarkdownLiveEditorView`**：每个块渲染为富文本（粗体/斜体/删除线/行内代码/链接），点入该块就地按源码编辑、离开即回渲染；表格直接渲染为表格并可编辑单元格，任务列表可直接勾选；与源码编辑器共享格式化动作、本地化与 `SetText`/`ApplyExternalEdit` 同步语义（载入不回抛 `MarkdownChanged`）。
+- 🔨[优化]-编辑器视图逐块解析与回写（`MarkdownBlockParser` + `MarkdownTextRunParser`），解析/回写往返幂等，新增 21 项编辑器与所见即所得测试（累计 141 项全通过）。
+- 🔨[优化]-测试基建：Avalonia headless 平台改为「首次调用线程初始化 + 串行测试」，彻底消除跨线程持有控件导致的随机失败。
+
 ## 13.1.1 (2026-10-07)
 
 - 🐛[修复]-发布链路：v13.1.0 的 CI 在 Build 步骤失败（该 tag 与新依赖 `CodeWF.AvaloniaControls` 12.3.0 同批推送，runner 恢复时 nuget.org 尚未上架，NU1101），未产出 NuGet 包与 Release；本版依赖对齐到已上架的 12.3.1 并以 13.1.1 重新发布。
@@ -187,3 +201,5 @@
 - 统一版本维护入口：包版本只在仓库根目录 `Directory.Build.props` 的 `<Version>` 节点维护，移除散落的程序集版本配置。
 - 不再维护 `global.json`，SDK 选择交给本机或 CI 环境；NuGet 包和应用的目标框架在项目文件中明确声明。
 - 统一 NuGet 包文档入口：包 README 统一引用仓库根 `README.md`，更新日志统一引用仓库根 `UpdateLog.md`。
+
+
