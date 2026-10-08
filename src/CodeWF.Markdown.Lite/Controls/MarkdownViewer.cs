@@ -839,7 +839,8 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
             if (control is null)
             {
                 DisposePendingBlockDisposables(previousDisposableCount);
-                continue;
+                // 差分和源位置映射使用模型索引；不可见块也必须保留对应的控件槽位。
+                control = new Border { Height = 0, IsHitTestVisible = false };
             }
 
             var blockDisposables = ExtractCurrentBlockDisposables(previousDisposableCount);
@@ -1352,7 +1353,7 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
         {
             LinkReferenceDefinitionGroup => null,
             LinkReferenceDefinition => null,
-            _ => CreateUnknownBlock(block)
+            _ => CreateUnknownBlock(block, sourceMarkdown)
         };
     }
 
@@ -1399,12 +1400,22 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
         return textBlock;
     }
 
-    private Control? CreateUnknownBlock(Block block)
+    private Control? CreateUnknownBlock(Block block, string? sourceMarkdown)
     {
         var text = block.ToString() ?? string.Empty;
-        return MarkdownPlainTextExtractor.IsTypeNameFallback(text, block.GetType())
-            ? null
-            : CreateFallbackText(text, MarkdownStyleKeys.UnknownBlock);
+        if (MarkdownPlainTextExtractor.IsTypeNameFallback(text, block.GetType()))
+        {
+            // 扩展块（如 ::: warning）的 ToString() 可能只返回类型名，回退到实际源码。
+            if (sourceMarkdown is null || block.Span.Start < 0 || block.Span.End < block.Span.Start
+                || block.Span.End >= sourceMarkdown.Length)
+            {
+                return null;
+            }
+
+            text = sourceMarkdown[block.Span.Start..(block.Span.End + 1)];
+        }
+
+        return CreateFallbackText(text, MarkdownStyleKeys.UnknownBlock);
     }
 
     private static SelectableTextBlock? FindSelectableTextBlock(Visual? source)
