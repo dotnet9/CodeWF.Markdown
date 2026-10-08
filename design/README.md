@@ -1,111 +1,49 @@
-# CodeWF.Markdown Demo 界面重设计
+# CodeWF.Markdown Demo 原型与实现维护
 
-> 状态：**原型评审稿（未提交）**。`prototype.html` 可直接双击在浏览器打开查看高保真原型；
-> 确认设计后再按「落地建议」实施到 `src/CodeWF.Markdown.Sample`。
+`prototype.html` 是 Demo 的交互原型，可直接在浏览器中打开。尺寸和颜色以当前 HTML/CSS 为准；Vex 使用自己的 `design/`，两个应用的规格分别维护。
 
----
+## 布局规格
 
-## 一、现状问题清单
+基准窗口为 1400×900，窄窗回归尺寸为 980×640。
 
-基于当前 `MainWindow.axaml`（1280×820）与运行截图：
+| 区域 | 原型规格 | 实现位置 |
+| --- | --- | --- |
+| 标题栏 | 44px、1px 下边框、左留白 12px；logo 24px、品牌 13px、gap 10px | `src/CodeWF.Markdown.Sample/Views/MainWindow.axaml` |
+| 文档名/窗控 | 文档名左 margin/padding 各 14px、左分隔线；窗控宽 44px、组右留白 10px | `MainWindow.axaml`、`Themes/ShellStyles.axaml` |
+| 侧栏 | 216px、右边框 1px；标题横向留白 18px | `MainWindow.axaml`、`ShellStyles.axaml` |
+| 文件卡片 | 列表 padding 8px、卡片 padding 8px 10px、圆角 8px、底 margin 2px | `ShellStyles.axaml` |
+| 选中态 | 图标 30px、圆角 7px、accent 描边；左条 3px、上下各 9px；背景 bg-active | `MainWindow.axaml`、`ShellStyles.axaml` |
+| 工具栏 | 44px、左右 padding 12px、gap 10px；视图按钮 28px、横向 padding 14px | `MainWindow.axaml`、`ShellStyles.axaml` |
+| 面板头 | 32px；accent 圆点 6px、标题 11px | `Views/MarkdownEditorPreviewView.axaml`、`ShellStyles.axaml` |
+| 源码 | 字号 13px、行高 22.1px、padding 14px 16px、不折行、允许横向滚动 | `MarkdownEditorPreviewView.axaml` 和代码后置 |
+| 默认预览 | 最大宽度 820px、padding 28px 32px 48px；正文 14px、行高 25.9px | `MarkdownEditorPreviewView.axaml` |
+| 默认标题 | H1/H2/H3 为 28/21/17px；上下 margin 为 8/20、30/14、22/10px | `MarkdownEditorPreviewView.axaml` |
+| 默认引用 | accent 左线、accent-soft 背景、padding 10px 16px、上下 margin 14px、右圆角 8px | `MarkdownEditorPreviewView.axaml` |
+| 状态栏 | 全宽 30px、1px 上边框、左右留白 16px；字数、解析耗时、编码和版本使用真实数据 | `MainWindow.axaml`、`ShellStyles.axaml` |
 
-| # | 问题 | 影响 |
-|---|---|---|
-| 1 | 无品牌区：窗口顶部直接是下拉框，没有 logo、产品名、版本号 | 不像产品，像调试工具 |
-| 2 | 工具栏平铺 5 个「标签+下拉框」组合（应用主题/示例/排版主题/紧凑布局/语言），视觉权重相同、无语义分组 | 拥挤，重点不突出 |
-| 3 | 库的核心卖点在壳上不可见：能力包（高亮/数学/Mermaid/图片/导出）、增量渲染性能没有任何入口或展示 | 演示价值打折 |
-| 4 | 示例切换用 ComboBox：六篇精品示例文档被藏进下拉里 | 示例本身是内容资产，应该被展示 |
-| 5 | 无导出/复制入口：Export 能力包（PNG/PDF/Word/社交 HTML）在 Demo 里完全缺席 | 能力包白做了 |
-| 6 | 无状态栏：解析耗时、渲染模式（增量/全量）、字数、版本号无处安放 | 性能演示缺乏数据支撑 |
-| 7 | 「紧凑布局」开关混在全局设置里 | 语义错位 |
-| 8 | Tab 命名开发者视角：「编辑预览」「多 Viewer」 | 访客看不懂 |
+主题令牌集中在 `src/CodeWF.Markdown.Sample/Themes/DesignTokens.axaml`，对应原型的 `--bg-*`、`--text-*`、`--border-*`、`--accent-*`、`--code-bg`。修改颜色时同时核对 Light/Dark，使用语义资源键，避免通用控件样式覆盖选中态。
 
-## 二、窗体形态（v2 原型新增）
+## 编辑与能力入口
 
-原型以**桌面软件窗体**呈现，而非网页页面：
+- 工具栏保留「编辑 / 分栏 / 实时 / 预览」四模式；窄窗隐藏辅助标签，模式和下拉入口仍可用。
+- 源码使用 `MarkdownEditorView`；`EditorLineHeight` 指定设备无关像素行高，默认 NaN 沿用 AvaloniaEdit 行距。控件根据实测字体高度设置 `Options.LineHeightFactor`，不放大字号。
+- 实时模式使用 `MarkdownLiveEditorView`，渲染块复用完整 `MarkdownViewer`。点击进入块编辑，输入立即回写源码，Esc 返回渲染态；浅层多段引用共用容器，段落可分别编辑。
+- 完整包注册代码高亮、数学公式、Mermaid、图片和导出能力；性能演示支持增量压力、中部插入、尾部追加、停止，「对比模式」保留双预览。
+- `docs/MarkdownSamples/` 是实际样例；`Regression/微信公众号教程.md` 和 `images/codewf.png` 保留作回归内容及本地图片依赖。
 
-- **自定义窗体边框**：悬浮于深色桌面背景之上，圆角 12px + 大投影；标题栏为应用自绘（logo + 名称 + 版本徽章 + 文档名 + 语言/明暗切换 + 最小化/最大化/关闭），Windows 规范——关闭键悬停红色；
-- **最大化/还原**可点（悬浮态 ↔ 全屏态切换），模拟真实窗体行为；
-- **低负担原则**：全部按钮 ≥30px 命中高度、统一 0.12s 悬停过渡、图标+文字双通道、快捷键提示写在菜单右侧、状态栏常驻"已保存/解析耗时"等安心信号；主色仅一种（蓝），其余全部中性色，渲染内容是唯一的视觉主角。
+## 验证方法
 
-## 三、设计目标
-
-1. **像产品**：品牌区 + 版本徽章 + 完整的标题栏生态，第一眼是「一个渲染引擎的官方演示」。
-2. **展示能力**：Mermaid/数学/代码高亮在预览内容里呈现；导出/复制/性能演示在工具栏有一键入口；状态栏用真实数据说话。
-3. **示例即内容**：侧栏示例库（带图标与描述）替代下拉框，让六篇示例文档成为导览。
-4. **克制的专业感**：跟随明暗变体、Semi 风格语义色、8pt 间距体系、单一主色（蓝），装饰最少化——渲染内容才是主角。
-
-## 四、布局规格（基准 1280×800，可缩放）
-
-```
-┌────────────────────────────────────────────────────────────────────┐
-│ ① 标题栏 48px                                                       │
-│  [logo] CodeWF.Markdown ·Demo· [v13.0.0]      🌐语言  ☀/🌙  ─ □ ×  │
-├──────────┬─────────────────────────────────────────────────────────┤
-│ ② 侧栏    │ ③ 工具栏 44px                                            │
-│ 200px    │  [编辑|分栏|预览]  排版:Simple▾  字号:标准▾               │
-│ (可折叠)  │                    [▶性能演示▾]      [导出▾] [复制HTML]  │
-│          ├───────────────────────┬─────────────────────────────────┤
-│ 示例文档  │  ④ 编辑器             │  ⑤ 预览（MarkdownViewer）        │
-│ ●01 基础 │  （AvaloniaEdit，      │  （库真实渲染输出，                │
-│  02 排版  │   等宽字体+行号）      │   本原型为 CSS 仿真）             │
-│  03 代码  │                       │                                 │
-│  04 列表  │                       │                                 │
-│  05 图片  │                       │                                 │
-│  06 增量  │                       │                                 │
-│          │                       │                                 │
-│ ──────── │                       │                                 │
-│ [◀ 折叠] │                       │                                 │
-├──────────┴───────────────────────┴─────────────────────────────────┤
-│ ⑥ 状态栏 28px：示例 01 · 445 字 · 解析 1.8ms · 渲染 增量 · v13.0.0  │
-└────────────────────────────────────────────────────────────────────┘
+```powershell
+dotnet build CodeWF.Markdown.slnx -c Release
+dotnet test tests/CodeWF.Markdown.Tests/CodeWF.Markdown.Tests.csproj -c Release
 ```
 
-## 五、组件清单与交互
+跨仓库离屏验证器位于 Vex 的 [scripts/ui-verification](https://github.com/dotnet9/Vex/tree/codex/prototype-live-editing/scripts/ui-verification)，运行方法见该目录 README。它加载实际 App/XAML/ViewModel，通过 Avalonia.Headless + Skia 绘制并发送输入，覆盖明暗主题、1400/980 宽度和四模式，以及源码行高、点击定位、键盘移动、实时标题/共享引用编辑和源码同步。截图、日志与构建输出可随时重新生成，属于临时产物。
 
-| 分区 | 组件 | 交互 |
-|---|---|---|
-| ① 标题栏 | logo（Assets/logo）+ 名称 + `Demo` 徽标 + 版本徽章；语言下拉；**明暗切换**（太阳/月亮，替代原「应用主题」下拉）；系统按钮 | 明暗切换即 `RequestedThemeVariant`，排版主题资源随变体自动切换 |
-| ② 侧栏 | 示例文档列表（图标+名称+一句话描述，选中高亮主色左条）；底部折叠按钮 | 点击切换文档（替代原 ComboBox）；折叠后 48px 图标态 |
-| ③ 工具栏 | 视图模式**分段控件**（编辑 / 分栏 / 预览，替代 Tab）；排版主题下拉（18 套）；字号（紧凑/标准，收编原「紧凑布局」）；**性能演示**下拉按钮（增量压力/中部插入/尾部追加——现有功能收编）；**导出**下拉按钮（PNG/PDF/Word）；复制 HTML 按钮 | 视图模式控制编辑器列宽 0/star；性能演示按现有 DispatcherTimer 逻辑 |
-| ④ 编辑器 | AvaloniaEdit + 行号；无格式工具栏（本产品是渲染演示，编辑保持克制） | 与预览滚动同步（已有能力） |
-| ⑤ 预览 | 库真实输出；示例内容覆盖全部能力：标题/表格/任务列表/代码高亮/**Mermaid 图**/**数学公式**/图片/引用 | 排版主题切换即时生效（库已有） |
-| ⑥ 状态栏 | 示例名 · 字数 · **解析耗时** · 渲染模式（增量/全量） · 库版本 · GitHub 链接 | 解析耗时可由 MarkdownParser 计时提供（落地时加一个轻量计时） |
+最近回归：182 项 Release 测试通过，Demo 四模式离屏验证通过。首次运行 Vex 联调前需将库当前版本的四包打入本地源；改库代码必须升开发版本，覆盖同版本 nupkg 不会刷新 NuGet 缓存。
 
-**多 Viewer 对比页保留**：第二 Tab 改名「对比模式」，用于同文档多主题并排（现有 MarkdownViewerPairDemoView）。
+## 验证边界
 
-## 六、颜色 Token（跟随明暗变体）
+原型浏览器截图未在本环境获得；CSS/结构、实际布局和离屏截图共同用于核对，不能据此宣称全页逐像素一致。原生滚动条与字体度量仍可能与网页不同；Windows 窗控、拖动/最大化、多 DPI、中文 IME 连续组字需实机验证。
 
-| Token | 亮色 | 暗色 | 用途 |
-|---|---|---|---|
-| `BgWindow` | #FFFFFF | #151B26 | 窗口底 |
-| `BgSidebar` | #F5F6F8 | #1A2230 | 侧栏/标题栏底 |
-| `BgToolbar` | #FFFFFF | #151B26 | 工具栏底（与标题栏同层） |
-| `Border` | #E4E7EC | #2A3342 | 分隔线 |
-| `TextPrimary` | #101828 | #EBF2FF | 主文字 |
-| `TextMuted` | #667085 | #8A94A6 | 次文字/标签 |
-| `Accent` | #1677FF | #4096FF | 主色（选中态/按钮/链接） |
-| `AccentSoft` | #E8F1FF | #16233A | 主色浅底（选中背景） |
-| `CodeBg` | #1E1E2E | #1E1E2E | 代码块底（明暗同用深底） |
-
-> 与 `MarkdownStyleKeys`/排版主题的 Semi 风格资源键对齐，落地时直接映射 DynamicResource。
-
-## 七、落地建议（Avalonia 控件映射）
-
-| 原型元素 | Avalonia 实现 |
-|---|---|
-| 视图分段控件 | RadioButton + `:checked` 样式（或 Semi 的 Segment） |
-| 明暗切换 | `ToggleButton` + 图标 Path 切换 |
-| 侧栏折叠 | GridLength 动画（0↔200，参考 Vex 侧栏做法） |
-| 性能演示/导出下拉 | `SplitButton` / `DropDownButton`（Semi/Ursa 均有） |
-| 状态栏计时 | `MarkdownParser.Parse` 外层 Stopwatch（可提为库 API `ParseWithTiming`） |
-| 版本徽章 | `Assembly.GetEntryAssembly().GetName().Version` 或反射库包版本 |
-
-预估工作量：MainWindow 布局重写 + 新增 1 个侧栏视图 + 工具栏重组，约 1~1.5 天（含明暗两套验证）；多 Viewer 页不动。
-
-## 八、评审要点
-
-1. 品牌区与版本徽章是否需要？
-2. 侧栏示例库 vs 现有下拉框的取舍。
-3. 性能演示/导出放进工具栏的优先级是否合适。
-4. 明暗切换位置（标题栏）是否符合习惯。
+嵌套/混合引用仍按编辑块显示；修改列表/引用成员会规范化该组 Markdown，未改动组严格保留原文。实时控件提供块编辑，尚非完整 Typora 行内编辑。复杂嵌套续行、远程图片失败重试和全部导出格式未穷尽实测。开发包联调不等于正式 NuGet、标签或安装包发布。

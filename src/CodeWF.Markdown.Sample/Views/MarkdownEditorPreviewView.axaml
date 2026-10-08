@@ -28,6 +28,7 @@
                 x:Name="MarkdownEditor"
                 EditorPadding="14 16"
                 EditorFontSize="13"
+                EditorLineHeight="22.1"
                 AccentKey="DemoAccent"
                 ChipText="Markdown"
                 CodeKey="DemoCodeBrush"
@@ -84,7 +85,7 @@
                     Margin="32 28 32 0"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
-                    <Border MaxWidth="820" HorizontalAlignment="Center">
+                    <Border MaxWidth="820" Margin="0 0 0 48" HorizontalAlignment="Center">
                         <!-- 只读渲染结果：MarkdownViewer 不接受输入，编辑一律在左侧编辑器或实时视图里进行 -->
                         <md:MarkdownViewer
                             ImageBasePath="{Binding ImageBasePath}"

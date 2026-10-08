@@ -48,6 +48,7 @@ public class MarkdownEditorView : UserControl
     private readonly IMarkdownEditorSearchService _search;
     private readonly Border _container;
     private readonly TextEditor _editor;
+    private readonly double _defaultLineHeightFactor;
     private readonly Border _paneHead;
     private readonly Border _chipHost;
     private readonly TextBlock _paneTitle;
@@ -62,6 +63,7 @@ public class MarkdownEditorView : UserControl
         {
             if (view._container is not null) view._container.Padding = view.EditorPadding;
         });
+        EditorLineHeightProperty.Changed.AddClassHandler<MarkdownEditorView>((view, _) => view.UpdateEditorLineHeight());
     }
 
     public MarkdownEditorView()
@@ -93,6 +95,7 @@ public class MarkdownEditorView : UserControl
             VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
             WordWrap = true
         };
+        _defaultLineHeightFactor = _editor.Options.LineHeightFactor;
 
         // 每个编辑器拥有独立配色，避免不同主题的并存编辑器改写全局语法定义。
         _codeHighlighting = LoadHighlighting("CSharp-Mode", HighlightingManager.Instance);
@@ -113,7 +116,11 @@ public class MarkdownEditorView : UserControl
 
         Content = BuildContent();
         ActualThemeVariantChanged += (_, _) => ApplyThemedVisuals();
-        AttachedToVisualTree += (_, _) => ApplyThemedVisuals();
+        AttachedToVisualTree += (_, _) =>
+        {
+            ApplyThemedVisuals();
+            UpdateEditorLineHeight();
+        };
         ApplyThemedVisuals();
     }
 
@@ -150,6 +157,17 @@ public class MarkdownEditorView : UserControl
     {
         get => GetValue(EditorPaddingProperty);
         set => SetValue(EditorPaddingProperty, value);
+    }
+
+    /// <summary>源码行高（设备无关像素）；NaN 使用 AvaloniaEdit 默认行距，不改变字号。</summary>
+    public static readonly StyledProperty<double> EditorLineHeightProperty =
+        AvaloniaProperty.Register<MarkdownEditorView, double>(nameof(EditorLineHeight), double.NaN,
+            validate: value => double.IsNaN(value) || double.IsFinite(value) && value > 0);
+
+    public double EditorLineHeight
+    {
+        get => GetValue(EditorLineHeightProperty);
+        set => SetValue(EditorLineHeightProperty, value);
     }
 
     /// <summary>设计令牌键：编辑器背景色。</summary>
@@ -314,7 +332,11 @@ public class MarkdownEditorView : UserControl
     public double EditorFontSize
     {
         get => _editor.FontSize;
-        set => _editor.FontSize = value;
+        set
+        {
+            _editor.FontSize = value;
+            UpdateEditorLineHeight();
+        }
     }
 
     /// <summary>自动配对开关（成对符号插入、选区包裹、空配对退格删除）。</summary>
@@ -559,6 +581,19 @@ public class MarkdownEditorView : UserControl
         }
 
         _chipHost.IsVisible = !string.IsNullOrEmpty(chip);
+    }
+
+    private void UpdateEditorLineHeight()
+    {
+        if (double.IsNaN(EditorLineHeight))
+        {
+            _editor.Options.LineHeightFactor = _defaultLineHeightFactor;
+            return;
+        }
+
+        // LineHeightFactor 相对字体实测高度，而 CSS 行距相对字号，需先去掉当前倍率。
+        var textHeight = _editor.TextArea.TextView.DefaultLineHeight / _editor.Options.LineHeightFactor;
+        _editor.Options.LineHeightFactor = EditorLineHeight / textHeight;
     }
 
     private void ApplyThemedVisuals()
