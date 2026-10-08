@@ -4,6 +4,7 @@
 
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -48,7 +49,8 @@ public sealed class MermaidBlockRenderer : IMarkdownBlockRenderer
         var image = new Image
         {
             Stretch = Stretch.Uniform,
-            HorizontalAlignment = HorizontalAlignment.Left
+            StretchDirection = StretchDirection.DownOnly,
+            HorizontalAlignment = HorizontalAlignment.Center
         };
 
         var border = new Border { Child = image };
@@ -155,8 +157,8 @@ public sealed class MermaidBlockRenderer : IMarkdownBlockRenderer
     private static MermaidRenderOptions GetRenderOptions()
     {
         var app = Application.Current;
-        var isDark = app?.ActualThemeVariant == ThemeVariant.Dark;
         var theme = app?.ActualThemeVariant ?? ThemeVariant.Light;
+        var isDark = IsDarkTheme(theme);
 
         return new MermaidRenderOptions
         {
@@ -165,6 +167,13 @@ public sealed class MermaidBlockRenderer : IMarkdownBlockRenderer
             Accent = ResolveHex(app, theme, "CodeWFMarkdownMermaidAccent", isDark ? "#60A5FA" : "#3B82F6"),
             Transparent = false
         };
+    }
+
+    internal static bool IsDarkTheme(ThemeVariant variant)
+    {
+        for (ThemeVariant? current = variant; current is not null; current = current.InheritVariant)
+            if (current == ThemeVariant.Dark) return true;
+        return false;
     }
 
     private static string ResolveHex(Application? app, ThemeVariant theme, string resourceKey, string fallback)
@@ -186,7 +195,7 @@ public sealed class MermaidBlockRenderer : IMarkdownBlockRenderer
     /// 把 Mermaider 的 CSS 自定义属性引用（var(--_xxx)）替换为计算后的 hex 色值，
     /// 公式镜像自 Mermaider 样式块中的 color-mix 定义。
     /// </summary>
-    private static string InlineCssVariables(string svg, MermaidRenderOptions options)
+    internal static string InlineCssVariables(string svg, MermaidRenderOptions options)
     {
         var bg = Parse(options.Bg ?? "#FFFFFF");
         var fg = Parse(options.Fg ?? "#27272A");
@@ -221,8 +230,17 @@ public sealed class MermaidBlockRenderer : IMarkdownBlockRenderer
         // 0.14.x 除样式块外还以属性形式（fill=\"var(--bg)\"、var(--fg)）引用根变量
         builder.Replace("var(--bg)", Hex(bg));
         builder.Replace("var(--fg)", Hex(fg));
+        builder.Replace("var(--fs-xs)", "12");
+        builder.Replace("var(--fs-s)", "14");
+        builder.Replace("var(--fs-m)", "16");
+        builder.Replace("var(--fs-l)", "18");
 
-        return builder.ToString();
+        // Mermaider 0.14.x 在节点 fill 属性里也直接输出 color-mix，Skia 会将
+        // 不支持的颜色当作黑色。变量替换后将这些具体混色表达式一并计算。
+        return Regex.Replace(builder.ToString(),
+            @"color-mix\(\s*in\s+srgb,\s*(#[0-9a-fA-F]{6})\s+(\d+(?:\.\d+)?)%,\s*(#[0-9a-fA-F]{6})\s*\)",
+            match => Hex(Mix(Parse(match.Groups[1].Value),
+                double.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture), Parse(match.Groups[3].Value))));
 
         static Rgb Parse(string hex)
         {
@@ -234,9 +252,9 @@ public sealed class MermaidBlockRenderer : IMarkdownBlockRenderer
         }
 
         // color-mix(in srgb, a N%, b) —— sRGB 空间线性插值
-        static Rgb Mix(Rgb a, int aPercent, Rgb b)
+        static Rgb Mix(Rgb a, double aPercent, Rgb b)
         {
-            int bPercent = 100 - aPercent;
+            double bPercent = 100 - aPercent;
             return new Rgb(
                 (byte)(a.R * aPercent / 100 + b.R * bPercent / 100),
                 (byte)(a.G * aPercent / 100 + b.G * bPercent / 100),

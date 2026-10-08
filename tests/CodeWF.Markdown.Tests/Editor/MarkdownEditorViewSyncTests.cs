@@ -2,6 +2,10 @@ using CodeWF.Markdown.Editor.Controls;
 using CodeWF.Markdown.Editor.Services;
 
 using CodeWF.Markdown.Tests.Rendering;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Styling;
+using Avalonia.Threading;
 
 using Xunit;
 
@@ -85,5 +89,43 @@ public sealed class MarkdownEditorViewSyncTests
 
         Assert.Equal("**word**", view.Text);
         Assert.Equal(1, raised);
+    });
+
+    [Fact]
+    public void SimultaneousLightAndDarkEditors_KeepIndependentHighlighting() => _platform.Run(() =>
+    {
+        var light = new MarkdownEditorView();
+        var dark = new MarkdownEditorView();
+        var window = new Window
+        {
+            Content = new StackPanel
+            {
+                Children =
+                {
+                    new ThemeVariantScope { RequestedThemeVariant = ThemeVariant.Light, Child = light },
+                    new ThemeVariantScope { RequestedThemeVariant = ThemeVariant.Dark, Child = dark }
+                }
+            }
+        };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        try
+        {
+            var lightColor = light.Editor.SyntaxHighlighting.GetNamedColor("Heading").Foreground!.GetColor(null);
+            var darkColor = dark.Editor.SyntaxHighlighting.GetNamedColor("Heading").Foreground!.GetColor(null);
+            Assert.NotEqual(lightColor, darkColor);
+            Assert.NotSame(light.Editor.SyntaxHighlighting, dark.Editor.SyntaxHighlighting);
+            foreach (var editor in new[] { light, dark })
+            {
+                var definition = editor.Editor.SyntaxHighlighting;
+                var visibility = definition.MainRuleSet.Spans.Select(span => span.RuleSet)
+                    .Where(rules => rules is not null).SelectMany(rules => rules!.Rules)
+                    .First(rule => rule.Color?.Name == "Visibility").Color!;
+                Assert.Equal(definition.GetNamedColor("Link").Foreground!.GetColor(null), visibility.Foreground!.GetColor(null));
+                Assert.Equal(definition.GetNamedColor("Link").Foreground!.GetColor(null),
+                    Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(editor.Editor.TextArea.TextView.LinkTextForegroundBrush).Color);
+            }
+        }
+        finally { window.Close(); }
     });
 }

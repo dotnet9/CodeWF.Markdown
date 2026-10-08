@@ -8,52 +8,26 @@ namespace CodeWF.Markdown.Tests.Rendering;
 /// <summary>
 /// 需要真实 Avalonia 平台（Skia 离屏绘制、控件构造）的测试集合夹具。
 /// <para>
-/// Headless 平台每个进程只能初始化一次，且 Dispatcher 归属初始化线程。测试程序集通过
-/// <c>DisableTestParallelization</c> 保证所有测试在同一个线程上串行执行，
-/// 因此这里在**首次调用线程**上初始化平台，<see cref="Run(Action)"/> 直接内联执行，
-/// 不会出现跨线程持有控件（The calling thread cannot access this object）。
+/// xUnit 串行执行仍可能更换工作线程。所有控件操作通过官方 Headless 会话
+/// 调度到同一个 UI 线程，避免主题资源与控件跨线程访问。
 /// </para>
 /// </summary>
 public sealed class AvaloniaPlatformFixture
 {
-    private static readonly object SyncRoot = new();
-    private static bool _initialized;
+    private static readonly HeadlessUnitTestSession Session =
+        HeadlessUnitTestSession.StartNew(typeof(TestEntryPoint), AvaloniaTestIsolationLevel.PerAssembly);
 
-    public AvaloniaPlatformFixture() => EnsureInitialized();
-
-    /// <summary>在平台线程上执行（串行测试下即当前线程）。</summary>
-    public void Run(Action action)
-    {
-        EnsureInitialized();
-        action();
-    }
+    /// <summary>在专用 UI 线程上执行。</summary>
+    public void Run(Action action) => Session.Dispatch(action, CancellationToken.None).GetAwaiter().GetResult();
 
     /// <summary>在平台线程上执行并取回结果。</summary>
-    public T Run<T>(Func<T> action)
+    public T Run<T>(Func<T> action) => Session.Dispatch(action, CancellationToken.None).GetAwaiter().GetResult();
+
+    public sealed class TestEntryPoint
     {
-        EnsureInitialized();
-        return action();
-    }
-
-    private static void EnsureInitialized()
-    {
-        lock (SyncRoot)
-        {
-            if (_initialized)
-            {
-                return;
-            }
-
-            if (Application.Current is null)
-            {
-                AppBuilder.Configure<Application>()
-                    .UseSkia()
-                    .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
-                    .SetupWithoutStarting();
-            }
-
-            _initialized = true;
-        }
+        public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<Application>()
+            .UseSkia()
+            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
     }
 }
 

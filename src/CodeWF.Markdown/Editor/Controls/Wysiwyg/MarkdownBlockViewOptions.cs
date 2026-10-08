@@ -8,6 +8,12 @@ namespace CodeWF.Markdown.Editor.Controls.Wysiwyg;
 /// </summary>
 internal sealed class MarkdownBlockViewOptions
 {
+    public string? ImageBasePath { get; set; }
+    public string? TypographyTheme { get; set; }
+    public string? TypographySize { get; set; }
+    public double FontSize { get; set; } = 15;
+    public IBrush? TableHeaderBackgroundBrush { get; set; }
+
     public IBrush TextBrush { get; private set; } = Brushes.Black;
 
     public IBrush MutedBrush { get; private set; } = Brushes.Gray;
@@ -32,7 +38,13 @@ internal sealed class MarkdownBlockViewOptions
         IBrush? codeBackground,
         IBrush? separator)
     {
-        var changed = text is not null && !ReferenceEquals(TextBrush, text);
+        var changed = text is not null && !ReferenceEquals(TextBrush, text)
+            || muted is not null && !ReferenceEquals(MutedBrush, muted)
+            || accent is not null && !ReferenceEquals(AccentBrush, accent)
+            || code is not null && !ReferenceEquals(CodeBrush, code)
+            || link is not null && !ReferenceEquals(LinkBrush, link)
+            || codeBackground is not null && !ReferenceEquals(CodeBackgroundBrush, codeBackground)
+            || separator is not null && !ReferenceEquals(SeparatorBrush, separator);
         TextBrush = text ?? TextBrush;
         MutedBrush = muted ?? MutedBrush;
         AccentBrush = accent ?? AccentBrush;

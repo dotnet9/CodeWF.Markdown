@@ -9,7 +9,8 @@ using Xunit;
 
 namespace CodeWF.Markdown.Tests.Rendering;
 
-public sealed class MarkdownSelectableTextBlockTests
+[Collection("AvaloniaPlatform")]
+public sealed class MarkdownSelectableTextBlockTests(AvaloniaPlatformFixture platform)
 {
     private static TextCharacters CreateRun(string text, double fontSize,
         BaselineAlignment baseline = BaselineAlignment.Baseline, IBrush? background = null)
@@ -22,7 +23,7 @@ public sealed class MarkdownSelectableTextBlockTests
     }
 
     [Fact]
-    public void BuildSelectionOverrides_PreservesRunFontSizeAndBaselineAlignment()
+    public void BuildSelectionOverrides_PreservesRunFontSizeAndBaselineAlignment() => platform.Run(() =>
     {
         var selectionForeground = Brushes.White;
         var codeBackground = Brushes.LightGray;
@@ -55,10 +56,10 @@ public sealed class MarkdownSelectableTextBlockTests
         Assert.Equal(26, textOverride.Value.FontRenderingEmSize);
         Assert.Equal(BaselineAlignment.Baseline, textOverride.Value.BaselineAlignment);
         Assert.Same(selectionForeground, textOverride.Value.ForegroundBrush);
-    }
+    });
 
     [Fact]
-    public void BuildSelectionOverrides_OnlyCoversSelectedRange()
+    public void BuildSelectionOverrides_OnlyCoversSelectedRange() => platform.Run(() =>
     {
         var runs = new[]
         {
@@ -75,10 +76,10 @@ public sealed class MarkdownSelectableTextBlockTests
         Assert.Equal(0, single.Start);
         Assert.Equal(6, single.Length);
         Assert.Equal(26, single.Value.FontRenderingEmSize);
-    }
+    });
 
     [Fact]
-    public void BuildSelectionOverrides_NoSelectionOrNoForeground_ReturnsNull()
+    public void BuildSelectionOverrides_NoSelectionOrNoForeground_ReturnsNull() => platform.Run(() =>
     {
         var runs = new[] { CreateRun("问题", 26) };
 
@@ -86,5 +87,5 @@ public sealed class MarkdownSelectableTextBlockTests
             runs, 0, 0, Brushes.White, Typeface.Default, 26, null));
         Assert.Null(MarkdownSelectableTextBlock.BuildSelectionOverrides(
             runs, 0, 2, null, Typeface.Default, 26, null));
-    }
+    });
 }

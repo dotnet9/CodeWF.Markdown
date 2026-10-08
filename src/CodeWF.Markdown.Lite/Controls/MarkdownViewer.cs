@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
@@ -473,6 +474,9 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
         TypographyThemeProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Full));
         TypographySizeProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Full));
         ImageBasePathProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Full));
+        // 高亮 token 的颜色在生成时固定；代码背景资源变更也需重建，
+        // 防止主题切换后仍保留与新底色相反的 token 配色。
+        CodeBackgroundBrushProperty.Changed.AddClassHandler<MarkdownViewer>((viewer, _) => viewer.QueueRenderDocument(MarkdownRenderMode.Full));
     }
 
     private MenuItem? _viewerCopyMenuItem;
@@ -1492,9 +1496,10 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
     private IDisposable BindTheme<T>(
         AvaloniaObject target,
         AvaloniaProperty<T> targetProperty,
-        StyledProperty<T> sourceProperty)
+        StyledProperty<T> sourceProperty,
+        BindingPriority priority = BindingPriority.LocalValue)
     {
-        var disposable = target.Bind(targetProperty, this.GetObservable(sourceProperty));
+        var disposable = target.Bind(targetProperty, this.GetObservable(sourceProperty), priority);
         _currentBlockDisposables.Add(disposable);
         return disposable;
     }
@@ -1503,6 +1508,10 @@ public partial class MarkdownViewer : TemplatedControl, Rendering.IMarkdownRende
         AvaloniaObject target,
         AvaloniaProperty<T> targetProperty,
         StyledProperty<T> sourceProperty) => BindTheme(target, targetProperty, sourceProperty);
+
+    IDisposable Rendering.IMarkdownRenderContext.BindTheme<T>(AvaloniaObject target,
+        AvaloniaProperty<T> targetProperty, StyledProperty<T> sourceProperty, BindingPriority priority) =>
+        BindTheme(target, targetProperty, sourceProperty, priority);
 
     SelectableTextBlock Rendering.IMarkdownRenderContext.CreateSelectableText(params string[] classes) =>
         CreateSelectableText(classes);

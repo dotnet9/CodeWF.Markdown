@@ -11,13 +11,15 @@ public readonly record struct MarkdownTextRun(
     bool Italic = false,
     bool Strike = false,
     bool Code = false,
-    string? LinkUrl = null);
+    string? LinkUrl = null,
+    int SourceStart = 0);
 
 /// <summary>把行内 Markdown 文本切成带样式的 <see cref="MarkdownTextRun"/> 列表。</summary>
 public static class MarkdownTextRunParser
 {
     private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UseEmphasisExtras()
+        .UsePreciseSourceLocation()
         .Build();
 
     /// <summary>解析行内 Markdown（支持 **粗**、*斜*、`码`、~~删~~、[链接](url)）。</summary>
@@ -67,12 +69,25 @@ public static class MarkdownTextRunParser
         return builder.ToString();
     }
 
+    /// <summary>把可见文字偏移映射回行内 Markdown，跳过隐藏的格式标记。</summary>
+    public static int GetSourceOffset(string markdown, int textOffset)
+    {
+        var remaining = Math.Max(0, textOffset);
+        foreach (var run in Parse(markdown))
+        {
+            if (remaining <= run.Text.Length) return Math.Clamp(run.SourceStart + remaining, 0, markdown.Length);
+            remaining -= run.Text.Length;
+        }
+        return markdown.Length;
+    }
+
     private static bool AppendInlines(
         List<MarkdownTextRun> runs,
         Markdig.Syntax.Inlines.ContainerInline? container,
         bool bold,
         bool italic,
-        bool strike)
+        bool strike,
+        string? linkUrl = null)
     {
         if (container is null)
         {
@@ -82,7 +97,7 @@ public static class MarkdownTextRunParser
         var added = false;
         foreach (var inline in container)
         {
-            added |= Append(runs, inline, bold, italic, strike);
+            added |= Append(runs, inline, bold, italic, strike, linkUrl);
         }
 
         return added;
@@ -93,16 +108,17 @@ public static class MarkdownTextRunParser
         Markdig.Syntax.Inlines.Inline inline,
         bool bold,
         bool italic,
-        bool strike)
+        bool strike,
+        string? linkUrl)
     {
         switch (inline)
         {
             case Markdig.Syntax.Inlines.LiteralInline literal:
-                runs.Add(new MarkdownTextRun(literal.Content.ToString(), bold, italic, strike));
+                runs.Add(new MarkdownTextRun(literal.Content.ToString(), bold, italic, strike, LinkUrl: linkUrl, SourceStart: literal.Span.Start));
                 return true;
 
             case Markdig.Syntax.Inlines.CodeInline code:
-                runs.Add(new MarkdownTextRun(code.Content, bold, italic, strike, Code: true));
+                runs.Add(new MarkdownTextRun(code.Content, bold, italic, strike, Code: true, LinkUrl: linkUrl, SourceStart: code.Span.Start + 1));
                 return true;
 
             case Markdig.Syntax.Inlines.EmphasisInline emphasis:
@@ -114,23 +130,18 @@ public static class MarkdownTextRunParser
                     emphasis,
                     bold || isBold,
                     italic || isItalic,
-                    strike || isStrike);
+                    strike || isStrike,
+                    linkUrl);
 
             case Markdig.Syntax.Inlines.LinkInline link:
-                var linkRuns = Parse(CollectText(link));
-                foreach (var run in linkRuns)
-                {
-                    runs.Add(run with { LinkUrl = link.Url });
-                }
+                return AppendInlines(runs, link, bold, italic, strike, link.IsImage ? null : link.Url);
 
-                return true;
-
-            case Markdig.Syntax.Inlines.LineBreakInline:
-                runs.Add(new MarkdownTextRun(" "));
+            case Markdig.Syntax.Inlines.LineBreakInline lineBreak:
+                runs.Add(new MarkdownTextRun(lineBreak.IsHard ? "\n" : " "));
                 return true;
 
             case Markdig.Syntax.Inlines.ContainerInline nested:
-                return AppendInlines(runs, nested, bold, italic, strike);
+                return AppendInlines(runs, nested, bold, italic, strike, linkUrl);
 
             default:
                 return false;

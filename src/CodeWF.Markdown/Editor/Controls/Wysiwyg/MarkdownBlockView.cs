@@ -1,8 +1,11 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
+using CodeWF.Markdown.Controls;
 
 namespace CodeWF.Markdown.Editor.Controls.Wysiwyg;
 
@@ -16,35 +19,47 @@ internal sealed class MarkdownBlockView : UserControl
     private readonly MarkdownRichTextView _richText = new();
     private readonly TextBox _editor = new();
     private readonly Border _root;
-    private readonly string _sourceText;
+    private readonly MarkdownViewer _preview = new() { DocumentBottomPadding = 0 };
     private readonly bool _isCode;
+    private readonly bool _isTableCell;
     private readonly MarkdownBlockViewOptions _options;
     private double _runFontSize = 15;
 
     private bool _editing;
+    private bool _syncingText;
 
-    public MarkdownBlockView(MarkdownBlockModel model, bool isCode, MarkdownBlockViewOptions options)
+    public MarkdownBlockView(MarkdownBlockModel model, bool isCode, MarkdownBlockViewOptions options, bool isTableCell = false)
     {
         Model = model;
         _isCode = isCode;
-        _sourceText = model.Text;
+        _isTableCell = isTableCell;
         _options = options;
 
-        _editor.AcceptsReturn = isCode;
+        _editor.AcceptsReturn = true;
         _editor.TextWrapping = TextWrapping.Wrap;
         _editor.FontFamily = isCode ? MarkdownWysiwygPalette.CodeFontFamily : FontFamily.Default;
         _editor.FontSize = _runFontSize;
         _editor.Foreground = options.TextBrush;
         _editor.CaretBrush = options.AccentBrush;
         _editor.HorizontalAlignment = HorizontalAlignment.Stretch;
-        _editor.Text = model.Text;
+        _editor.Text = ModelText;
+        _editor.TextChanged += (_, _) =>
+        {
+            if (!_editing || _syncingText) return;
+            var text = _editor.Text ?? string.Empty;
+            if (string.Equals(ModelText, text, StringComparison.Ordinal)) return;
+            ModelText = text;
+            TextCommitted?.Invoke(this, ModelText);
+        };
         _editor.LostFocus += (_, _) => CommitAndRender();
         _editor.KeyDown += OnEditorKeyDown;
 
         _root = new Border { Child = _richText };
         Content = _root;
 
-        PointerPressed += OnPointerPressed;
+        // 先接管渲染块的点击，避免 SelectableTextBlock 在冒泡前后抢回焦点，
+        // 导致刚打开的编辑框立即触发 LostFocus 并消失。
+        AddHandler(PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
         UpdateRichText();
     }
 
@@ -54,20 +69,32 @@ internal sealed class MarkdownBlockView : UserControl
     /// <summary>请求把焦点移到相邻块（参数为相对方向：-1 上一块，+1 下一块）。</summary>
     public Action<int>? NavigateRequested { get; set; }
 
+    public Action<MarkdownBlockView>? EditingStarted { get; set; }
+
+    public Action<MarkdownBlockView, int>? SplitRequested { get; set; }
+
     public MarkdownBlockModel Model { get; }
 
-    /// <summary>姝ｆ枃瀛楀彿锛堟爣棰?浠ｇ爜鍧楃敱瑙嗗浘鎸夊潡绫诲瀷璁剧疆锛夈€?/summary>
+    private bool _renderQuoteAsParagraph;
+    internal bool RenderQuoteAsParagraph
+    {
+        get => _renderQuoteAsParagraph;
+        set { _renderQuoteAsParagraph = value; UpdateRichText(); }
+    }
+
+    /// <summary>正文字号；标题与代码块按类型设置。</summary>
     public double RunFontSize
     {
         get => _runFontSize;
         set
         {
             _runFontSize = value;
+            _editor.FontSize = value;
             UpdateRichText();
         }
     }
 
-    /// <summary>妯″瀷琚閮ㄤ慨鏀癸紙濡備换鍔″嬀閫夛級鍚庡埛鏂版樉绀恒€?/summary>
+    /// <summary>外部修改模型后刷新显示并通知宿主。</summary>
     public void NotifyModelChanged()
     {
         RefreshFromModel();
@@ -76,14 +103,29 @@ internal sealed class MarkdownBlockView : UserControl
 
     public bool IsEditing => _editing;
 
+    public void InsertText(string text)
+    {
+        if (!_editing) BeginEditAtEnd();
+        var start = Math.Min(_editor.SelectionStart, _editor.SelectionEnd);
+        var length = Math.Abs(_editor.SelectionEnd - _editor.SelectionStart);
+        _editor.Text = CurrentText.Remove(start, length).Insert(start, text);
+        _editor.CaretIndex = start + text.Length;
+    }
+
     /// <summary>正在编辑时的底层文本框（用于格式化动作），否则为 null。</summary>
     internal TextBox? ActiveEditor => _editing ? _editor : null;
 
     /// <summary>当前编辑文本（非编辑态返回模型文本）。</summary>
-    internal string CurrentText => _editing ? _editor.Text ?? string.Empty : Model.Text;
+    internal string CurrentText => _editing ? _editor.Text ?? string.Empty : ModelText;
+
+    private string ModelText
+    {
+        get => Model.Kind == MarkdownBlockKind.Raw ? Model.Raw : Model.Text;
+        set { if (Model.Kind == MarkdownBlockKind.Raw) Model.Raw = value; else Model.Text = value; }
+    }
 
     /// <summary>进入编辑态并把光标放到行尾（等价于点入该块）。</summary>
-    public void BeginEditAtEnd() => BeginEdit(_editor.Text?.Length ?? 0);
+    public void BeginEditAtEnd() => BeginEdit(ModelText.Length);
 
     /// <summary>进入编辑态，并把光标放到指定偏移。</summary>
     public void BeginEdit(int caretIndex)
@@ -95,11 +137,14 @@ internal sealed class MarkdownBlockView : UserControl
             return;
         }
 
+        _syncingText = true;
+        _editor.Text = ModelText;
+        _syncingText = false;
         _editing = true;
-        _editor.Text = Model.Text;
         _root.Child = _editor;
         _editor.Focus();
         _editor.CaretIndex = Math.Clamp(caretIndex, 0, _editor.Text?.Length ?? 0);
+        EditingStarted?.Invoke(this);
     }
 
     /// <summary>回渲染（提交文本）。</summary>
@@ -112,13 +157,12 @@ internal sealed class MarkdownBlockView : UserControl
 
         _editing = false;
         var text = _editor.Text ?? string.Empty;
-        _root.Child = _richText;
-        if (!string.Equals(text, Model.Text, StringComparison.Ordinal))
+        if (!string.Equals(text, ModelText, StringComparison.Ordinal))
         {
-            Model.Text = text;
-            UpdateRichText();
+            ModelText = text;
             TextCommitted?.Invoke(this, text);
         }
+        UpdateRichText();
     }
 
     /// <summary>外部替换内容（例如预览回写）时刷新显示。</summary>
@@ -134,13 +178,24 @@ internal sealed class MarkdownBlockView : UserControl
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (_editing)
+        if (_editing || !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
             return;
         }
 
-        var point = e.GetPosition(_richText);
-        var offset = _richText.GetTextOffset(point);
+        var offset = ReferenceEquals(_root.Child, _richText)
+            ? MarkdownTextRunParser.GetSourceOffset(ModelText, _richText.GetTextOffset(e.GetPosition(_richText)))
+            : ModelText.Length;
+        if (_root.Child == _preview && e.Source is Visual source)
+        {
+            var text = source as SelectableTextBlock ?? source.GetVisualAncestors().OfType<SelectableTextBlock>().FirstOrDefault();
+            if (text?.TextLayout is { } layout)
+            {
+                var visible = layout.HitTestPoint(e.GetPosition(text)).TextPosition;
+                offset = _isCode || Model.Kind == MarkdownBlockKind.Raw ? visible
+                    : MarkdownTextRunParser.GetSourceOffset(ModelText, visible);
+            }
+        }
         BeginEdit(offset);
         e.Handled = true;
     }
@@ -151,18 +206,23 @@ internal sealed class MarkdownBlockView : UserControl
         {
             case Key.Escape:
                 _editing = false;
-                var original = Model.Text;
-                _root.Child = _richText;
-                _editor.Text = original;
                 UpdateRichText();
                 e.Handled = true;
                 break;
 
-            case Key.Enter when !_isCode && !e.KeyModifiers.HasFlag(KeyModifiers.Shift):
-                // 段落/标题内回车 = 结束本块编辑（换行请用 Shift+Enter）。
+            case Key.Enter when !_isCode && Model.Kind != MarkdownBlockKind.Raw && e.KeyModifiers == KeyModifiers.None:
                 e.Handled = true;
+                var caret = _editor.CaretIndex;
                 CommitAndRender();
-                NavigateRequested?.Invoke(1);
+                SplitRequested?.Invoke(this, caret);
+                break;
+
+            case Key.Enter when e.KeyModifiers == KeyModifiers.Shift:
+                var start = Math.Min(_editor.SelectionStart, _editor.SelectionEnd);
+                var length = Math.Abs(_editor.SelectionEnd - _editor.SelectionStart);
+                _editor.Text = CurrentText.Remove(start, length).Insert(start, _isCode ? "\n" : "  \n");
+                _editor.CaretIndex = start + (_isCode ? 1 : 3);
+                e.Handled = true;
                 break;
 
             case Key.Tab:
@@ -175,11 +235,24 @@ internal sealed class MarkdownBlockView : UserControl
 
     private void UpdateRichText()
     {
+        var useViewer = !_isTableCell || ModelText.Contains("![", StringComparison.Ordinal) || ModelText.Contains('$');
+        if (useViewer)
+        {
+            _preview.ImageBasePath = _options.ImageBasePath;
+            _preview.TypographyTheme = _options.TypographyTheme;
+            _preview.TypographySize = _options.TypographySize;
+            _preview.Markdown = Model.Kind == MarkdownBlockKind.ListItem || RenderQuoteAsParagraph
+                ? Model.Text : MarkdownBlockParser.WriteCanonical([Model]);
+            if (!_editing) _root.Child = _preview;
+            return;
+        }
         _richText.BindPalette(_options);
+        _richText.FontWeight = Model.HeadingLevel > 0 ? FontWeight.Bold : FontWeight.Normal;
         _richText.RunFontSize = _runFontSize;
         _richText.SetRuns(_isCode
             ? MarkdownTextRunParser.Plain(Model.Text, code: true)
             : MarkdownTextRunParser.Parse(Model.Text));
+        if (!_editing) _root.Child = _richText;
     }
 }
 
@@ -187,7 +260,7 @@ internal sealed class MarkdownBlockView : UserControl
 internal sealed class MarkdownTableView : UserControl
 {
     private readonly Grid _grid = new();
-    private readonly List<List<TextBox>> _cells = [];
+    private readonly List<List<MarkdownBlockView>> _cells = [];
     private readonly MarkdownBlockModel _model;
     private readonly MarkdownBlockViewOptions _options;
 
@@ -203,6 +276,16 @@ internal sealed class MarkdownTableView : UserControl
             CornerRadius = new CornerRadius(6),
             Child = _grid
         };
+        var menu = new ContextMenu();
+        var labels = new[] { "添加行", "删除末行", "添加列", "删除末列" };
+        for (var action = 0; action < labels.Length; action++)
+        {
+            var capturedAction = action;
+            var item = new MenuItem { Header = labels[action] };
+            item.Click += (_, _) => StructureChangeRequested?.Invoke(this, capturedAction);
+            menu.Items.Add(item);
+        }
+        ContextMenu = menu;
     }
 
     /// <summary>单元格内容变化回调。</summary>
@@ -237,36 +320,29 @@ internal sealed class MarkdownTableView : UserControl
         for (var row = 0; row < rows.Count; row++)
         {
             _grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            var rowBoxes = new List<TextBox>();
+            var rowBoxes = new List<MarkdownBlockView>();
             for (var column = 0; column < columnCount; column++)
             {
                 var value = column < rows[row].Count ? rows[row][column] : string.Empty;
                 var isHeader = row == 0 && _model.HasHeader;
-                var box = new TextBox
-                {
-                    Text = value,
-                    BorderThickness = new Thickness(0),
-                    Background = Brushes.Transparent,
-                    FontWeight = isHeader ? FontWeight.SemiBold : FontWeight.Normal,
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    VerticalContentAlignment = VerticalAlignment.Center
-                };
+                var cellModel = new MarkdownBlockModel { Kind = MarkdownBlockKind.Paragraph, Text = value,
+                    HeadingLevel = isHeader ? 6 : 0 };
+                var box = new MarkdownBlockView(cellModel, false, _options, isTableCell: true) { RunFontSize = _options.FontSize };
                 var capturedRow = row;
                 var capturedColumn = column;
-                box.LostFocus += (_, _) => CommitCell(capturedRow, capturedColumn, box.Text ?? string.Empty);
-                box.KeyDown += (_, args) =>
+                box.TextCommitted = (_, text) => CommitCell(capturedRow, capturedColumn, text);
+                box.SplitRequested = (_, _) => MoveFocus(capturedRow + 1, capturedColumn);
+                box.NavigateRequested = direction =>
                 {
-                    if (args.Key == Key.Enter)
-                    {
-                        args.Handled = true;
-                        CommitCell(capturedRow, capturedColumn, box.Text ?? string.Empty);
-                        MoveFocus(capturedRow + 1, capturedColumn);
-                    }
+                    var next = capturedRow * columnCount + capturedColumn + direction;
+                    MoveFocus(next / columnCount, next % columnCount);
                 };
-
-                Grid.SetRow(box, row);
-                Grid.SetColumn(box, column);
-                _grid.Children.Add(box);
+                var cell = new Border { Padding = new Thickness(10, 8), Child = box,
+                    BorderBrush = _options.SeparatorBrush, BorderThickness = new Thickness(0, 0, 1, 1),
+                    Background = isHeader ? _options.TableHeaderBackgroundBrush ?? _options.CodeBackgroundBrush : Brushes.Transparent };
+                Grid.SetRow(cell, row);
+                Grid.SetColumn(cell, column);
+                _grid.Children.Add(cell);
                 rowBoxes.Add(box);
             }
 
@@ -294,7 +370,7 @@ internal sealed class MarkdownTableView : UserControl
     {
         if (row >= 0 && row < _cells.Count && column >= 0 && column < _cells[row].Count)
         {
-            _cells[row][column].Focus();
+            _cells[row][column].BeginEditAtEnd();
         }
     }
 }

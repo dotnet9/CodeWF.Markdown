@@ -15,14 +15,15 @@ using FullMarkdownViewer = CodeWF.Markdown.Controls.MarkdownViewer;
 
 namespace CodeWF.Markdown.Tests.Rendering;
 
-public sealed class MarkdownInlineStyleTests
+[Collection("AvaloniaPlatform")]
+public sealed class MarkdownInlineStyleTests(AvaloniaPlatformFixture platform)
 {
 	private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
 		.UseAdvancedExtensions()
 		.Build();
 
 	[Fact]
-	public void MarkdownViewer_DefaultContentFontFamily_IncludesCjkFallbacks()
+    public void MarkdownViewer_DefaultContentFontFamily_IncludesCjkFallbacks() => platform.Run(() =>
 	{
 		var viewer = CreateViewer();
 		var defaultFamily = FullMarkdownViewer.ContentFontFamilyProperty
@@ -31,11 +32,11 @@ public sealed class MarkdownInlineStyleTests
 		var familyName = defaultFamily.ToString();
 
 		Assert.Contains("Microsoft YaHei", familyName);
-		Assert.Contains("Noto Sans CJK SC", familyName);
-	}
+        Assert.Contains("Noto Sans CJK SC", familyName);
+    });
 
 	[Fact]
-	public void ConvertInlines_WhenParagraphHasMixedEmphasis_KeepsStylesScopedToInlineRuns()
+    public void ConvertInlines_WhenParagraphHasMixedEmphasis_KeepsStylesScopedToInlineRuns() => platform.Run(() =>
 	{
 		var viewer = CreateViewer();
 
@@ -57,11 +58,11 @@ public sealed class MarkdownInlineStyleTests
 		Assert.Equal("人民", italicRuns[1].Text);
 		Assert.Equal(FontStyle.Italic, italicRuns[1].FontStyle);
 		Assert.Equal("共和国", italicRuns[2].Text);
-		Assert.NotEqual(FontStyle.Italic, italicRuns[2].FontStyle);
-	}
+        Assert.NotEqual(FontStyle.Italic, italicRuns[2].FontStyle);
+    });
 
 	[Fact]
-	public void ConvertInlines_WhenParagraphHasMixedStrikethrough_KeepsDecorationScopedToInlineRuns()
+    public void ConvertInlines_WhenParagraphHasMixedStrikethrough_KeepsDecorationScopedToInlineRuns() => platform.Run(() =>
 	{
 		var viewer = CreateViewer();
 
@@ -75,8 +76,8 @@ public sealed class MarkdownInlineStyleTests
 		Assert.Equal("人民", runs[1].Text);
 		Assert.Same(TextDecorations.Strikethrough, runs[1].TextDecorations);
 		Assert.Equal("共和国", runs[2].Text);
-		Assert.Null(runs[2].TextDecorations);
-	}
+        Assert.Null(runs[2].TextDecorations);
+    });
 
 	private static IReadOnlyList<AvaloniaInline> ConvertParagraphInlines(object viewer, string markdown)
 	{

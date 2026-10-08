@@ -45,6 +45,16 @@ public class MarkdownLiveEditorView : UserControl
     private bool _autoPairEnabled = true;
     private int _activeIndex = -1;
 
+    public static readonly StyledProperty<string?> ImageBasePathProperty =
+        AvaloniaProperty.Register<MarkdownLiveEditorView, string?>(nameof(ImageBasePath));
+
+    /// <summary>相对图片的文档目录。</summary>
+    public string? ImageBasePath
+    {
+        get => GetValue(ImageBasePathProperty);
+        set => SetValue(ImageBasePathProperty, value);
+    }
+
     public MarkdownLiveEditorView()
         : this(new MarkdownEditorOptions(), null)
     {
@@ -60,8 +70,8 @@ public class MarkdownLiveEditorView : UserControl
         _blockOptions = new MarkdownBlockViewOptions();
 
         _blockHost.Orientation = Orientation.Vertical;
-        _blockHost.Spacing = 6;
-        _blockHost.Margin = new Thickness(6, 20, 34, 28);
+        _blockHost.Spacing = 0;
+        _blockHost.Margin = new Thickness(32, 20, 32, 48);
 
         BuildPaneHead(out _paneHead, out _chipHost, out _paneTitle);
         UpdatePaneHead();
@@ -132,7 +142,39 @@ public class MarkdownLiveEditorView : UserControl
     }
 
     /// <summary>编辑器字号。</summary>
-    public double EditorFontSize { get; set; } = 15;
+    public static readonly StyledProperty<double> EditorFontSizeProperty =
+        AvaloniaProperty.Register<MarkdownLiveEditorView, double>(nameof(EditorFontSize), 15);
+
+    /// <summary>可编辑表格的表头底色；未设置时使用内置代码底色。</summary>
+    public static readonly StyledProperty<IBrush?> TableHeaderBackgroundBrushProperty =
+        AvaloniaProperty.Register<MarkdownLiveEditorView, IBrush?>(nameof(TableHeaderBackgroundBrush));
+
+    public IBrush? TableHeaderBackgroundBrush
+    {
+        get => GetValue(TableHeaderBackgroundBrushProperty);
+        set => SetValue(TableHeaderBackgroundBrushProperty, value);
+    }
+
+    public double EditorFontSize
+    {
+        get => GetValue(EditorFontSizeProperty);
+        set => SetValue(EditorFontSizeProperty, value);
+    }
+
+    public static readonly StyledProperty<string?> TypographyThemeProperty =
+        AvaloniaProperty.Register<MarkdownLiveEditorView, string?>(nameof(TypographyTheme));
+    public static readonly StyledProperty<string?> TypographySizeProperty =
+        AvaloniaProperty.Register<MarkdownLiveEditorView, string?>(nameof(TypographySize));
+    public string? TypographyTheme
+    {
+        get => GetValue(TypographyThemeProperty);
+        set => SetValue(TypographyThemeProperty, value);
+    }
+    public string? TypographySize
+    {
+        get => GetValue(TypographySizeProperty);
+        set => SetValue(TypographySizeProperty, value);
+    }
 
     /// <summary>正文字色（预览渲染用，随 <see cref="EditorForegroundKey"/> 令牌解析）。</summary>
     public IBrush TextBrush => _blockOptions.TextBrush;
@@ -171,6 +213,7 @@ public class MarkdownLiveEditorView : UserControl
         try
         {
             _models.Clear();
+            _activeIndex = -1;
             _models.AddRange(MarkdownBlockParser.Parse(markdown));
             RebuildBlocks();
         }
@@ -196,14 +239,10 @@ public class MarkdownLiveEditorView : UserControl
 
         if (_activeIndex >= 0 && _activeIndex < _models.Count)
         {
-            var model = _models[_activeIndex];
-            model.Text += text;
-            if (_blockViews[_activeIndex] is MarkdownBlockView view)
+            if (FindBlockView(_blockViews[_activeIndex]) is { } view)
             {
-                view.RefreshFromModel();
+                view.InsertText(text);
             }
-
-            RaiseChanged();
             return;
         }
 
@@ -248,14 +287,7 @@ public class MarkdownLiveEditorView : UserControl
         }
 
         _activeIndex = index;
-        if (_blockViews[index] is MarkdownBlockView view)
-        {
-            view.BeginEditAtEnd();
-        }
-        else if (_blockViews[index] is Grid { Children: { Count: > 1 } children } && children[1] is MarkdownBlockView inner)
-        {
-            inner.BeginEditAtEnd();
-        }
+        FindBlockView(_blockViews[index])?.BeginEditAtEnd();
 
         RaiseSelectionChanged();
     }
@@ -271,6 +303,31 @@ public class MarkdownLiveEditorView : UserControl
     }
 
     #region 视图构建
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (_paneHead is null) return;
+        if (change.Property == HeaderTextProperty || change.Property == ChipTextProperty) UpdatePaneHead();
+        if (change.Property == ImageBasePathProperty)
+        {
+            _blockOptions.ImageBasePath = ImageBasePath;
+            RebuildBlocks();
+        }
+        if (change.Property == EditorFontSizeProperty) RebuildBlocks();
+        if (change.Property == TableHeaderBackgroundBrushProperty)
+        {
+            _blockOptions.TableHeaderBackgroundBrush = TableHeaderBackgroundBrush;
+            RebuildBlocks();
+        }
+        if (change.Property == TypographyThemeProperty || change.Property == TypographySizeProperty)
+        {
+            _blockOptions.TypographyTheme = TypographyTheme;
+            _blockOptions.TypographySize = TypographySize;
+            RebuildBlocks();
+        }
+        if (change.Property == EditorBackgroundKeyProperty || change.Property == EditorForegroundKeyProperty) ApplyThemedVisuals();
+    }
+
 
     private Control BuildContent()
     {
@@ -299,10 +356,13 @@ public class MarkdownLiveEditorView : UserControl
         var icon = new Avalonia.Controls.Shapes.Path
         {
             Classes = { "stroke-ico" },
-            Width = 12,
-            Height = 12,
-            Data = Geometry.Parse("M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z")
+            VerticalAlignment = VerticalAlignment.Center
         };
+        icon.SetValue(WidthProperty, 12, Avalonia.Data.BindingPriority.Style);
+        icon.SetValue(HeightProperty, 12, Avalonia.Data.BindingPriority.Style);
+        icon.SetValue(Avalonia.Controls.Shapes.Path.DataProperty,
+            Geometry.Parse("M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"),
+            Avalonia.Data.BindingPriority.Style);
 
         var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         left.Children.Add(icon);
@@ -333,12 +393,36 @@ public class MarkdownLiveEditorView : UserControl
 
         for (var index = 0; index < _models.Count; index++)
         {
-            _blockHost.Children.Add(BuildBlockView(index));
+            var model = _models[index];
+            var end = index + 1;
+            if (model.Kind == MarkdownBlockKind.Quote && model.QuoteDepth == 1 && model.Source is not null)
+            {
+                while (end < _models.Count && _models[end].Kind == MarkdownBlockKind.Quote
+                    && _models[end].QuoteDepth == 1 && ReferenceEquals(_models[end].Source, model.Source)) end++;
+            }
+
+            if (end - index > 1)
+            {
+                var paragraphs = new StackPanel();
+                for (; index < end; index++)
+                {
+                    var paragraph = BuildBlockView(index);
+                    FindBlockView(paragraph)!.RenderQuoteAsParagraph = true;
+                    paragraphs.Children.Add(paragraph);
+                }
+                var quote = new Border { Classes = { "MdQuote", "MdLiveQuote" }, Child = paragraphs };
+                quote.SetValue(Border.BorderBrushProperty, _blockOptions.AccentBrush, Avalonia.Data.BindingPriority.Style);
+                quote.SetValue(Border.BackgroundProperty, _blockOptions.CodeBackgroundBrush, Avalonia.Data.BindingPriority.Style);
+                _blockHost.Children.Add(quote);
+                index--;
+            }
+            else _blockHost.Children.Add(BuildBlockView(index));
         }
     }
 
     private Control BuildBlockView(int index)
     {
+        _blockOptions.FontSize = EditorFontSize;
         var model = _models[index];
 
         if (model.Kind == MarkdownBlockKind.Table)
@@ -346,7 +430,14 @@ public class MarkdownLiveEditorView : UserControl
             var table = new MarkdownTableView(model, _blockOptions)
             {
                 CellsChanged = _ => RaiseChanged(),
-                StructureChangeRequested = (_, _) => RaiseChanged()
+                StructureChangeRequested = (tableView, action) =>
+                {
+                    if (MarkdownTableEditor.ChangeStructure(model, action))
+                    {
+                        tableView.RefreshFromModel();
+                        RaiseChanged();
+                    }
+                }
             };
             _blockViews.Add(table);
             return table;
@@ -367,22 +458,23 @@ public class MarkdownLiveEditorView : UserControl
         var view = new MarkdownBlockView(model, isCode: model.Kind == MarkdownBlockKind.Code, _blockOptions)
         {
             TextCommitted = OnBlockTextCommitted,
-            NavigateRequested = direction => FocusBlock(Math.Clamp(index + direction, 0, _models.Count - 1))
+            NavigateRequested = direction => FocusBlock(Math.Clamp(index + direction, 0, _models.Count - 1)),
+            EditingStarted = _ => { _activeIndex = index; RaiseSelectionChanged(); },
+            SplitRequested = SplitBlock
         };
         AttachAutoPair(view);
         view.RunFontSize = model.Kind switch
         {
             MarkdownBlockKind.Heading => model.HeadingLevel switch
             {
-                1 => 26d,
-                2 => 22d,
-                3 => 19d,
-                4 => 17d,
-                5 => 16d,
-                _ => 15d
+                1 => EditorFontSize * 2,
+                2 => EditorFontSize * 1.5,
+                3 => EditorFontSize * 1.2142857,
+                4 => EditorFontSize * 1.15,
+                _ => EditorFontSize
             },
             MarkdownBlockKind.Code => 13d,
-            _ => 15d
+            _ => EditorFontSize
         };
 
         var root = DecorateBlock(model, view);
@@ -420,7 +512,7 @@ public class MarkdownLiveEditorView : UserControl
                 {
                     row.Children.Add(new TextBlock
                     {
-                        Text = model.OrderedNumber > 0 ? $"{model.OrderedNumber}. " : "• ",
+                        Text = model.IsOrdered || model.OrderedNumber > 0 ? $"{model.OrderedNumber}. " : "• ",
                         VerticalAlignment = VerticalAlignment.Center,
                         Foreground = _blockOptions.MutedBrush,
                         MinWidth = 20
@@ -432,30 +524,9 @@ public class MarkdownLiveEditorView : UserControl
                 return row;
 
             case MarkdownBlockKind.Quote:
-                return new Border
-                {
-                    BorderThickness = new Thickness(3, 0, 0, 0),
-                    BorderBrush = _blockOptions.AccentBrush,
-                    Padding = new Thickness(10, 2, 0, 2),
-                    Child = view
-                };
-
             case MarkdownBlockKind.Heading:
-                return new Border
-                {
-                    Margin = new Thickness(0, model.HeadingLevel <= 2 ? 8 : 4, 0, 2),
-                    Child = view
-                };
-
             case MarkdownBlockKind.Code:
-                return new Border
-                {
-                    Margin = new Thickness(0, 4, 0, 4),
-                    Padding = new Thickness(10, 8, 10, 8),
-                    CornerRadius = new CornerRadius(6),
-                    Background = _blockOptions.CodeBackgroundBrush,
-                    Child = view
-                };
+                return view;
 
             default:
                 return view;
@@ -470,6 +541,47 @@ public class MarkdownLiveEditorView : UserControl
     private void OnBlockTextCommitted(MarkdownBlockView view, string text)
     {
         RaiseChanged();
+    }
+
+    private void SplitBlock(MarkdownBlockView view, int caret)
+    {
+        var index = _models.IndexOf(view.Model);
+        if (index < 0) return;
+        var model = view.Model;
+        caret = Math.Clamp(caret, 0, model.Text.Length);
+        var next = new MarkdownBlockModel
+        {
+            Kind = model.Kind == MarkdownBlockKind.Heading ? MarkdownBlockKind.Paragraph : model.Kind,
+            Text = model.Text[caret..],
+            IndentLevel = model.IndentLevel,
+            QuoteDepth = model.QuoteDepth,
+            IsTask = model.IsTask,
+            IsOrdered = model.IsOrdered,
+            OrderedNumber = model.OrderedNumber + (model.IsOrdered ? 1 : 0),
+            Source = model.Kind == MarkdownBlockKind.ListItem ? model.Source : null
+        };
+        model.Text = model.Text[..caret];
+        if (model.Kind == MarkdownBlockKind.ListItem && model.Text.Length == 0)
+        {
+            model.Kind = MarkdownBlockKind.Paragraph;
+            model.IsTask = model.IsOrdered = false;
+        }
+        else
+        {
+            _models.Insert(index + 1, next);
+            if (model.IsOrdered)
+            {
+                for (var following = index + 2; following < _models.Count; following++)
+                {
+                    var item = _models[following];
+                    if (!ReferenceEquals(item.Source, model.Source)) break;
+                    if (item.IsOrdered && item.IndentLevel == model.IndentLevel) item.OrderedNumber++;
+                }
+            }
+        }
+        RebuildBlocks();
+        RaiseChanged();
+        FocusBlock(model.Kind == MarkdownBlockKind.Paragraph && model.Text.Length == 0 ? index : index + 1);
     }
 
     private void AttachAutoPair(MarkdownBlockView view)
@@ -687,13 +799,15 @@ public class MarkdownLiveEditorView : UserControl
         FocusBlock(index);
     }
 
-    private static TextBox? FindActiveEditor(Control control) => control switch
+    private static MarkdownBlockView? FindBlockView(Control control) => control switch
     {
-        MarkdownBlockView view => view.ActiveEditor,
-        Grid { Children: { Count: > 1 } children } => children.OfType<MarkdownBlockView>().FirstOrDefault()?.ActiveEditor,
-        Border { Child: MarkdownBlockView inner } => inner.ActiveEditor,
+        MarkdownBlockView view => view,
+        Panel panel => panel.Children.Select(FindBlockView).FirstOrDefault(view => view is not null),
+        Border { Child: Control child } => FindBlockView(child),
         _ => null
     };
+
+    private static TextBox? FindActiveEditor(Control control) => FindBlockView(control)?.ActiveEditor;
 
     #endregion
 

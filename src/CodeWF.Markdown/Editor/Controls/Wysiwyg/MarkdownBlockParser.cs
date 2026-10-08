@@ -3,6 +3,7 @@ using System.Text;
 using Markdig;
 using Markdig.Extensions.Tables;
 using Markdig.Extensions.TaskLists;
+using Markdig.Extensions.Mathematics;
 using Markdig.Helpers;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
@@ -23,6 +24,7 @@ public static class MarkdownBlockParser
     private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .UseYamlFrontMatter()
+        .UsePreciseSourceLocation()
         .Build();
 
     /// <summary>解析 Markdown 文本为块列表。</summary>
@@ -32,13 +34,19 @@ public static class MarkdownBlockParser
         var text = markdown ?? string.Empty;
         if (text.Length == 0)
         {
-            blocks.Add(new MarkdownBlockModel { Kind = MarkdownBlockKind.Paragraph });
+            blocks.Add(new MarkdownBlockModel
+            {
+                Kind = MarkdownBlockKind.Paragraph,
+                Source = new MarkdownBlockSource(string.Empty, string.Empty, string.Empty, "\n", string.Empty)
+            });
             return blocks;
         }
 
         var document = Markdig.Markdown.Parse(text, Pipeline);
+        var sourceCursor = 0;
         foreach (var block in document)
         {
+            var firstModel = blocks.Count;
             switch (block)
             {
                 case HeadingBlock heading:
@@ -46,7 +54,7 @@ public static class MarkdownBlockParser
                     {
                         Kind = MarkdownBlockKind.Heading,
                         HeadingLevel = Math.Clamp(heading.Level, 1, 6),
-                        Text = ExtractInlineText(heading.Inline)
+                        Text = ExtractInlineText(heading.Inline, text)
                     });
                     break;
 
@@ -54,16 +62,24 @@ public static class MarkdownBlockParser
                     blocks.Add(new MarkdownBlockModel
                     {
                         Kind = MarkdownBlockKind.Paragraph,
-                        Text = ExtractInlineText(paragraph.Inline)
+                        Text = ExtractInlineText(paragraph.Inline, text)
                     });
                     break;
 
                 case ListBlock list:
-                    AppendList(blocks, list, indentLevel: 0, quoteDepth: 0);
+                    AppendList(blocks, list, text, indentLevel: 0, quoteDepth: 0);
                     break;
 
                 case QuoteBlock quote:
-                    AppendQuote(blocks, quote);
+                    AppendQuote(blocks, quote, text);
+                    break;
+
+                case MathBlock:
+                    blocks.Add(new MarkdownBlockModel
+                    {
+                        Kind = MarkdownBlockKind.Raw,
+                        Raw = text.Substring(block.Span.Start, block.Span.Length)
+                    });
                     break;
 
                 case FencedCodeBlock fenced:
@@ -101,38 +117,35 @@ public static class MarkdownBlockParser
                     });
                     break;
 
-                case ContainerBlock container:
-                    foreach (var child in container)
-                    {
-                        if (child is LeafBlock leaf)
-                        {
-                            blocks.Add(new MarkdownBlockModel
-                            {
-                                Kind = MarkdownBlockKind.Raw,
-                                Raw = ExtractLines(leaf.Lines)
-                            });
-                        }
-                    }
-
-                    break;
-
                 default:
-                    if (block is LeafBlock leafBlock)
+                    blocks.Add(new MarkdownBlockModel
                     {
-                        blocks.Add(new MarkdownBlockModel
-                        {
-                            Kind = MarkdownBlockKind.Raw,
-                            Raw = ExtractLines(leafBlock.Lines)
-                        });
-                    }
-
+                        Kind = MarkdownBlockKind.Raw,
+                        Raw = text.Substring(block.Span.Start, block.Span.Length)
+                    });
                     break;
             }
+
+            var end = Math.Min(text.Length, block.Span.End + 1);
+            var group = blocks.GetRange(firstModel, blocks.Count - firstModel);
+            var source = new MarkdownBlockSource(text[sourceCursor..block.Span.Start], text[block.Span.Start..end],
+                WriteCanonical(group).TrimEnd('\n'), text.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n",
+                block == document.LastOrDefault() ? text[end..] : string.Empty);
+            foreach (var model in group)
+            {
+                model.Source = source;
+            }
+            sourceCursor = end;
         }
 
         if (blocks.Count == 0)
         {
-            blocks.Add(new MarkdownBlockModel { Kind = MarkdownBlockKind.Paragraph });
+            blocks.Add(new MarkdownBlockModel
+            {
+                Kind = MarkdownBlockKind.Paragraph,
+                Source = new MarkdownBlockSource(string.Empty, text, string.Empty,
+                    text.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n", string.Empty)
+            });
         }
 
         return blocks;
@@ -140,6 +153,39 @@ public static class MarkdownBlockParser
 
     /// <summary>把块列表回写为 Markdown 文本。</summary>
     public static string Write(IReadOnlyList<MarkdownBlockModel> blocks)
+    {
+        var builder = new StringBuilder();
+        for (var index = 0; index < blocks.Count;)
+        {
+            var source = blocks[index].Source;
+            var first = index++;
+            while (source is not null && index < blocks.Count && ReferenceEquals(blocks[index].Source, source))
+            {
+                index++;
+            }
+            var group = blocks.Skip(first).Take(index - first).ToList();
+            var canonical = WriteCanonical(group).TrimEnd('\n');
+            if (source is not null)
+            {
+                builder.Append(source.LeadingTrivia);
+                builder.Append(canonical == source.CanonicalMarkdown ? source.Markdown
+                    : canonical.Replace("\n", source.LineEnding, StringComparison.Ordinal));
+                if (index == blocks.Count)
+                {
+                    builder.Append(source.TrailingTrivia);
+                }
+            }
+            else
+            {
+                if (builder.Length > 0 && builder[^1] != '\n') builder.Append('\n');
+                if (builder.Length > 0) builder.Append('\n');
+                builder.Append(WriteCanonical(group));
+            }
+        }
+        return builder.ToString();
+    }
+
+    internal static string WriteCanonical(IReadOnlyList<MarkdownBlockModel> blocks)
     {
         var builder = new StringBuilder();
         foreach (var block in blocks)
@@ -177,9 +223,11 @@ public static class MarkdownBlockParser
 
                 if (block.IsTask)
                 {
-                    builder.Append(block.IsChecked ? TaskCheckedPrefix : TaskUncheckedPrefix);
+                    if (block.IsOrdered)
+                        builder.Append(block.OrderedNumber).Append(block.IsChecked ? ". [x] " : ". [ ] ");
+                    else builder.Append(block.IsChecked ? TaskCheckedPrefix : TaskUncheckedPrefix);
                 }
-                else if (block.OrderedNumber > 0)
+                else if (block.IsOrdered || block.OrderedNumber > 0)
                 {
                     builder.Append(block.OrderedNumber).Append(". ");
                 }
@@ -192,7 +240,11 @@ public static class MarkdownBlockParser
                 break;
 
             case MarkdownBlockKind.Quote:
-                builder.Append("> ").Append(block.Text).Append('\n');
+                foreach (var line in block.Text.Split('\n'))
+                {
+                    for (var depth = 0; depth < Math.Max(1, block.QuoteDepth); depth++) builder.Append("> ");
+                    builder.Append(line).Append('\n');
+                }
                 break;
 
             case MarkdownBlockKind.Code:
@@ -255,7 +307,7 @@ public static class MarkdownBlockParser
         }
     }
 
-    private static void AppendList(List<MarkdownBlockModel> blocks, ListBlock list, int indentLevel, int quoteDepth)
+    private static void AppendList(List<MarkdownBlockModel> blocks, ListBlock list, string sourceText, int indentLevel, int quoteDepth)
     {
         var number = list.IsOrdered ? (list.OrderedStart is { } start && int.TryParse(start, out var parsed) ? parsed : 1) : 0;
         foreach (var item in list)
@@ -275,13 +327,14 @@ public static class MarkdownBlockParser
                 {
                     case ParagraphBlock paragraph:
                         var inline = paragraph.Inline;
-                        var text = ExtractInlineText(inline);
+                        var text = ExtractInlineText(inline, sourceText, quoteDepth);
                         if (first && TryGetTaskState(inline, out var taskChecked))
                         {
                             isTask = true;
                             isChecked = taskChecked;
                             // TaskLists extension keeps the space after the marker; trim it for editing.
                             text = text.TrimStart();
+                            if (text.Length >= 3 && text[0] == '[' && text[2] == ']') text = text[3..].TrimStart();
                         }
 
                         blocks.Add(new MarkdownBlockModel
@@ -292,13 +345,14 @@ public static class MarkdownBlockParser
                             QuoteDepth = quoteDepth,
                             IsTask = isTask,
                             IsChecked = isChecked,
-                            OrderedNumber = isTask ? 0 : number
+                            OrderedNumber = number,
+                            IsOrdered = list.IsOrdered
                         });
                         first = false;
                         break;
 
                     case ListBlock nested:
-                        AppendList(blocks, nested, indentLevel + 1, quoteDepth);
+                        AppendList(blocks, nested, sourceText, indentLevel + 1, quoteDepth);
                         break;
 
                     case FencedCodeBlock nestedFenced:
@@ -332,14 +386,23 @@ public static class MarkdownBlockParser
                 }
             }
 
-            if (number > 0)
+            if (first)
+            {
+                blocks.Add(new MarkdownBlockModel
+                {
+                    Kind = MarkdownBlockKind.ListItem, IndentLevel = indentLevel, QuoteDepth = quoteDepth,
+                    IsOrdered = list.IsOrdered, OrderedNumber = number
+                });
+            }
+
+            if (list.IsOrdered)
             {
                 number++;
             }
         }
     }
 
-    private static void AppendQuote(List<MarkdownBlockModel> blocks, QuoteBlock quote)
+    private static void AppendQuote(List<MarkdownBlockModel> blocks, QuoteBlock quote, string sourceText, int depth = 1)
     {
         foreach (var child in quote)
         {
@@ -349,7 +412,8 @@ public static class MarkdownBlockParser
                     blocks.Add(new MarkdownBlockModel
                     {
                         Kind = MarkdownBlockKind.Quote,
-                        Text = ExtractInlineText(paragraph.Inline)
+                        Text = ExtractInlineText(paragraph.Inline, sourceText, depth),
+                        QuoteDepth = depth
                     });
                     break;
 
@@ -357,12 +421,18 @@ public static class MarkdownBlockParser
                     blocks.Add(new MarkdownBlockModel
                     {
                         Kind = MarkdownBlockKind.Quote,
-                        Text = $"{new string('#', Math.Clamp(heading.Level, 1, 6))} {ExtractInlineText(heading.Inline)}"
+                        Text = ExtractInlineText(heading.Inline, sourceText, depth),
+                        HeadingLevel = heading.Level,
+                        QuoteDepth = depth
                     });
                     break;
 
                 case ListBlock list:
-                    AppendList(blocks, list, indentLevel: 0, quoteDepth: 1);
+                    AppendList(blocks, list, sourceText, indentLevel: 0, quoteDepth: depth);
+                    break;
+
+                case QuoteBlock nested:
+                    AppendQuote(blocks, nested, sourceText, depth + 1);
                     break;
 
                 case LeafBlock leaf:
@@ -499,11 +569,26 @@ public static class MarkdownBlockParser
         return false;
     }
 
-    private static string ExtractInlineText(ContainerInline? inline)
+    private static string ExtractInlineText(ContainerInline? inline, string? sourceText = null, int quoteDepth = 0)
     {
         if (inline is null)
         {
             return string.Empty;
+        }
+
+        var children = inline.Where(child => child.Span.Length > 0).ToList();
+        if (sourceText is not null && children.Count > 0)
+        {
+            var start = children.Min(child => child.Span.Start);
+            var end = children.Max(child => child.Span.End) + 1;
+            if (start >= 0 && end <= sourceText.Length)
+            {
+                var text = sourceText[start..end];
+                if (quoteDepth > 0)
+                    text = System.Text.RegularExpressions.Regex.Replace(text,
+                        $@"(?m)^[ ]{{0,3}}(?:>[ \t]?){{1,{quoteDepth}}}", string.Empty);
+                return text;
+            }
         }
 
         var builder = new StringBuilder();

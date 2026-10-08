@@ -1,4 +1,4 @@
-﻿<Window
+<Window
     x:Class="CodeWF.Markdown.Sample.Views.MainWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -29,10 +29,7 @@
 
     <Window.Resources>
         <DataTemplate x:Key="LanguageSelectionTemplate" x:DataType="sample:SampleLanguage">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" />
-                <TextBlock Foreground="{DynamicResource SemiColorText2}" Text="{Binding DisplayTag}" />
-            </StackPanel>
+            <TextBlock Text="{Binding DisplayName}" />
         </DataTemplate>
     </Window.Resources>
 
@@ -41,9 +38,7 @@
         <StyleInclude Source="avares://CodeWF.Markdown.Sample/Themes/ShellStyles.axaml" />
     </Window.Styles>
 
-    <!-- 下边距 -30：ExtendClientArea 窗口在 Windows 上会把 30px 状态栏高度重复计入窗口高度，
-         补偿后内容正好落在窗口底边，不会在状态栏下再留一条空白。 -->
-    <Grid Margin="0 0 0 -30" RowDefinitions="44,*,30">
+    <Grid RowDefinitions="44,*,30">
         <!-- ① 自定义标题栏 -->
         <Border
             Grid.Row="0"
@@ -53,12 +48,12 @@
             <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
                 <StackPanel
                     Grid.Column="0"
-                    Margin="12 0 0 0"
+                    Margin="0"
                     Orientation="Horizontal"
                     Spacing="10">
                     <Border Classes="brand-logo">
                         <TextBlock
-                            FontSize="11"
+                            FontSize="13"
                             FontWeight="Bold"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -83,6 +78,7 @@
                     Grid.Column="3"
                     Orientation="Horizontal"
                     Spacing="6"
+                    Margin="0 0 10 0"
                     VerticalAlignment="Center">
                     <ComboBox
                         MinWidth="110"
@@ -95,12 +91,12 @@
                         Classes="icon-btn"
                         Command="{Binding ToggleDarkThemeCommand}"
                         ToolTip.Tip="明暗切换">
-                        <TextBlock Text="🌙" />
+                        <TextBlock Text="{Binding ThemeIconText}" />
                     </Button>
                 </StackPanel>
                 <StackPanel
                     Grid.Column="4"
-                    Margin="0 0 6 0"
+                    Margin="0"
                     Orientation="Horizontal"
                     Spacing="0"
                     VerticalAlignment="Stretch">
@@ -152,31 +148,30 @@
                         SelectedItem="{Binding SelectedFile}">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:MarkdownSampleFile">
-                                <Grid ColumnDefinitions="3,*">
+                                <Grid>
                                     <Border
                                         x:Name="ActiveBar"
                                         Width="3"
+                                        HorizontalAlignment="Left"
                                         Margin="0 9 0 9"
-                                        Background="{DynamicResource SemiColorPrimary}"
+                                        Background="{DynamicResource DemoAccent}"
                                         CornerRadius="0 3 3 0"
-                                        IsVisible="False" />
+                                        Classes="active-bar" />
                                     <StackPanel
-                                        Grid.Column="1"
-                                        Margin="7 0 0 0"
+                                        Margin="10 8"
                                         Orientation="Horizontal"
                                         Spacing="10">
                                     <Border
+                                        Classes="doc-icon"
                                         Width="30"
                                         Height="30"
                                         CornerRadius="7"
-                                        Background="{DynamicResource SemiColorBg0}"
-                                        BorderBrush="{DynamicResource SemiColorBorder}"
+                                        Background="{DynamicResource DemoBgWindow}"
                                         BorderThickness="1">
                                         <Path
                                             Width="15"
                                             Height="15"
                                             Data="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6"
-                                            Stroke="{DynamicResource SemiColorText2}"
                                             StrokeThickness="1.6"
                                             StrokeLineCap="Round"
                                             StrokeJoin="Round" />
@@ -185,11 +180,11 @@
                                         <TextBlock
                                             Classes="doc-name"
                                             FontWeight="SemiBold"
-                                            Text="{Binding Name}" />
+                                            Text="{Binding DisplayName}" />
                                         <TextBlock
                                             Classes="doc-desc"
                                             FontSize="11"
-                                            Foreground="{DynamicResource SemiColorText2}"
+                                            Margin="0 1 0 0"
                                             Text="{Binding Description}" />
                                     </StackPanel>
                                     </StackPanel>
@@ -202,108 +197,12 @@
             </Border>
 
             <!-- 内容列 -->
-            <Grid Grid.Column="1" RowDefinitions="44,*,30">
+            <Grid Grid.Column="1" RowDefinitions="44,*">
                 <!-- ③ 工具栏 -->
                 <!-- ③ 工具栏（对应原型 .toolbar：三段视图切换 + 排版主题 + 字号 + 性能演示 + 导出） -->
                 <Border Grid.Row="0" Classes="toolbar">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border x:Name="ViewSegment" Classes="segment">
-                            <StackPanel Orientation="Horizontal">
-                                <Button
-                                    Classes="seg"
-                                    Click="ViewModeButton_Click"
-                                    Tag="edit">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <Path
-                                            Width="13"
-                                            Height="13"
-                                            Data="M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
-                                            Stretch="Uniform"
-                                            Stroke="{DynamicResource DemoTextSecondary}"
-                                            StrokeLineCap="Round"
-                                            StrokeThickness="2" />
-                                        <TextBlock Text="编辑" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button
-                                    Classes="seg on"
-                                    Click="ViewModeButton_Click"
-                                    Tag="split">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <Path
-                                            Width="13"
-                                            Height="13"
-                                            Data="M3 3h18v18H3z M12 3v18"
-                                            Stretch="Uniform"
-                                            Stroke="{DynamicResource DemoAccent}"
-                                            StrokeThickness="2" />
-                                        <TextBlock Text="分栏" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button
-                                    Classes="seg"
-                                    Click="ViewModeButton_Click"
-                                    Tag="live"
-                                    ToolTip.Tip="单栏实时编辑：输入 Markdown 即时渲染">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <Path
-                                            Width="13"
-                                            Height="13"
-                                            Data="M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z M4 12h6"
-                                            Stretch="Uniform"
-                                            Stroke="{DynamicResource DemoTextSecondary}"
-                                            StrokeLineCap="Round"
-                                            StrokeThickness="2" />
-                                        <TextBlock Text="实时" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button
-                                    Classes="seg"
-                                    Click="ViewModeButton_Click"
-                                    Tag="preview">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <Path
-                                            Width="13"
-                                            Height="13"
-                                            Data="M3 3h18v18H3z M3 12h18"
-                                            Stretch="Uniform"
-                                            Stroke="{DynamicResource DemoTextSecondary}"
-                                            StrokeThickness="2" />
-                                        <TextBlock Text="预览" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </Border>
-                        <TextBlock
-                            Classes="group-label"
-                            VerticalAlignment="Center"
-                            Text="排版主题" />
-                        <ComboBox
-                            x:Name="TypographyThemeSelect"
-                            MinWidth="170"
-                            Height="30"
-                            ItemsSource="{Binding TypographyThemes}"
-                            SelectedItem="{Binding SelectedTypographyTheme, Mode=TwoWay}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="vm:TypographyThemeChoice">
-                                    <TextBlock Text="{Binding Name}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <TextBlock
-                            Classes="group-label"
-                            VerticalAlignment="Center"
-                            Text="字号" />
-                        <ComboBox
-                            x:Name="FontSizeSelect"
-                            MinWidth="90"
-                            Height="30"
-                            SelectedIndex="0"
-                            SelectionChanged="FontSizeSelect_SelectionChanged">
-                            <ComboBoxItem Content="标准" />
-                            <ComboBoxItem Content="紧凑" />
-                        </ComboBox>
-                        <Panel Margin="6 0 0 0" />
+                    <DockPanel LastChildFill="True">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10">
                         <DropDownButton VerticalContentAlignment="Center">
                             <DropDownButton.Content>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -316,16 +215,18 @@
                                         StrokeJoin="Round"
                                         StrokeLineCap="Round"
                                         StrokeThickness="2" />
-                                    <TextBlock Text="性能演示 ▾" VerticalAlignment="Center" />
+                                    <TextBlock Text="性能演示" VerticalAlignment="Center" />
                                 </StackPanel>
                             </DropDownButton.Content>
                             <DropDownButton.Flyout>
                                 <MenuFlyout>
-                                    <MenuItem Header="增量替换压力 Ctrl+1" />
-                                    <MenuItem Header="中部插入演示 Ctrl+2" />
-                                    <MenuItem Header="尾部追加演示 Ctrl+3" />
+                                    <MenuItem Header="增量替换压力" Command="{Binding StartIncrementalStressCommand}" CommandParameter="replace" InputGesture="Ctrl+1" />
+                                    <MenuItem Header="中部插入演示" Command="{Binding StartIncrementalStressCommand}" CommandParameter="insert" InputGesture="Ctrl+2" />
+                                    <MenuItem Header="尾部追加演示" Command="{Binding StartIncrementalStressCommand}" CommandParameter="append" InputGesture="Ctrl+3" />
                                     <Separator />
-                                    <MenuItem Command="{Binding ToggleIncrementalStressCommand}" Header="停止演示" />
+                                    <MenuItem Command="{Binding StopIncrementalStressCommand}" Header="停止演示" />
+                                    <Separator />
+                                    <MenuItem Command="{Binding SetViewModeCommand}" CommandParameter="pair" Header="双预览排版对照" />
                                 </MenuFlyout>
                             </DropDownButton.Flyout>
                         </DropDownButton>
@@ -340,7 +241,7 @@
                                         Stroke="{DynamicResource DemoTextSecondary}"
                                         StrokeLineCap="Round"
                                         StrokeThickness="2" />
-                                    <TextBlock Text="导出 ▾" VerticalAlignment="Center" />
+                                    <TextBlock Text="导出" VerticalAlignment="Center" />
                                 </StackPanel>
                             </DropDownButton.Content>
                             <DropDownButton.Flyout>
@@ -373,20 +274,116 @@
                                 </MenuFlyout>
                             </DropDownButton.Flyout>
                         </DropDownButton>
-                    </StackPanel>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border x:Name="ViewSegment" Classes="segment">
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    Classes="seg"
+                                    Click="ViewModeButton_Click"
+                                    Tag="edit">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Path
+                                            Width="13"
+                                            Height="13"
+                                            Data="M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+                                            Stretch="Uniform"
+                                            StrokeLineCap="Round"
+                                            StrokeThickness="2" />
+                                        <TextBlock Text="编辑" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button
+                                    Classes="seg on"
+                                    Click="ViewModeButton_Click"
+                                    Tag="split">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Path
+                                            Width="13"
+                                            Height="13"
+                                            Data="M3 3h18v18H3z M12 3v18"
+                                            Stretch="Uniform"
+                                            StrokeThickness="2" />
+                                        <TextBlock Text="分栏" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button
+                                    Classes="seg"
+                                    Click="ViewModeButton_Click"
+                                    Tag="live"
+                                    ToolTip.Tip="单栏实时编辑：输入 Markdown 即时渲染">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Path
+                                            Width="13"
+                                            Height="13"
+                                            Data="M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z M4 12h6"
+                                            Stretch="Uniform"
+                                            StrokeLineCap="Round"
+                                            StrokeThickness="2" />
+                                        <TextBlock Text="实时" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button
+                                    Classes="seg"
+                                    Click="ViewModeButton_Click"
+                                    Tag="preview">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Path
+                                            Width="13"
+                                            Height="13"
+                                            Data="M3 3h18v18H3z M3 12h18"
+                                            Stretch="Uniform"
+                                            StrokeThickness="2" />
+                                        <TextBlock Text="预览" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock
+                            Classes="group-label"
+                            VerticalAlignment="Center"
+                            Text="排版主题" />
+                        <ComboBox
+                            x:Name="TypographyThemeSelect"
+                            Height="30"
+                            ItemsSource="{Binding TypographyThemes}"
+                            SelectedItem="{Binding SelectedTypographyTheme, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TypographyThemeChoice">
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock
+                            Classes="group-label"
+                            VerticalAlignment="Center"
+                            Text="字号" />
+                        <ComboBox
+                            x:Name="FontSizeSelect"
+                            Height="30"
+                            SelectedIndex="0"
+                            SelectionChanged="FontSizeSelect_SelectionChanged">
+                            <ComboBoxItem Content="标准" />
+                            <ComboBoxItem Content="紧凑" />
+                        </ComboBox>
+                        </StackPanel>
+                    </DockPanel>
                 </Border>
                 <Grid Grid.Row="1">
                     <!-- 编辑 / 分栏 / 实时 / 预览 四种模式都由该视图自己按 ViewMode 切换列宽与显示，
                          此处不要再绑 IsEditorVisible，否则选「预览」会把预览列一起隐藏掉。 -->
                     <views:MarkdownEditorPreviewView
                         x:Name="EditorPreview"
+                        IsVisible="{Binding !IsPairVisible}"
                         ViewMode="{Binding ViewMode}" />
+                    <views:MarkdownViewerPairDemoView IsVisible="{Binding IsPairVisible}" />
                 </Grid>
 
                 <!-- ⑥ 状态栏 -->
-                <views:StatusBarView Grid.Row="2" />
             </Grid>
         </Grid>
+
+        <views:StatusBarView Grid.Row="2" />
 
         <!-- Quick Open 浮层 (Ctrl+P) -->
         <Border
@@ -409,7 +406,7 @@
                             x:Name="QuickOpenInput"
                             KeyDown="QuickOpenInput_KeyDown"
                             Margin="12 12 12 0"
-                            Watermark="搜索文件…"
+                            PlaceholderText="搜索文件…"
                             Text="{Binding QuickOpenFilter, Mode=TwoWay}" />
                         <ListBox
                             x:Name="QuickOpenList"

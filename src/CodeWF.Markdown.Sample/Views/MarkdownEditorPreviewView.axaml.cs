@@ -53,6 +53,8 @@ public partial class MarkdownEditorPreviewView : UserControl
     public MarkdownEditorPreviewView()
     {
         InitializeComponent();
+        MarkdownEditor.Editor.WordWrap = false;
+        MarkdownEditor.Editor.HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto;
         MarkdownEditor.MarkdownChanged += (_, text) => PushTextToViewModel(text);
         LiveEditor.MarkdownChanged += (_, text) => PushTextToViewModel(text);
         DataContextChanged += (_, _) => AttachViewModel(DataContext as MainWindowViewModel);
@@ -196,13 +198,20 @@ public partial class MarkdownEditorPreviewView : UserControl
 
         if (_viewModel.Markdown != text)
         {
-            _viewModel.Markdown = text;
+            _syncingEditor = true;
+            try
+            {
+                _viewModel.Markdown = text;
+                if (_liveMode) MarkdownEditor.SetText(text);
+                else LiveEditor.SetText(text);
+            }
+            finally { _syncingEditor = false; }
         }
     }
 
     private void SyncEditorFromViewModel()
     {
-        if (_viewModel == null)
+        if (_syncingEditor || _viewModel == null)
         {
             return;
         }
@@ -214,8 +223,11 @@ public partial class MarkdownEditorPreviewView : UserControl
         }
 
         _syncingEditor = true;
-        MarkdownEditor.SetText(text);
-        LiveEditor.SetText(text);
-        _syncingEditor = false;
+        try
+        {
+            MarkdownEditor.SetText(text);
+            LiveEditor.SetText(text);
+        }
+        finally { _syncingEditor = false; }
     }
 }

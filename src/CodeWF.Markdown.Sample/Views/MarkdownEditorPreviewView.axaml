@@ -26,6 +26,8 @@
         <Grid Grid.Column="0">
             <editor:MarkdownEditorView
                 x:Name="MarkdownEditor"
+                EditorPadding="14 16"
+                EditorFontSize="13"
                 AccentKey="DemoAccent"
                 ChipText="Markdown"
                 CodeKey="DemoCodeBrush"
@@ -43,6 +45,11 @@
                 WarningKey="DemoDanger" />
             <editor:MarkdownLiveEditorView
                 x:Name="LiveEditor"
+                EditorFontSize="14"
+                TableHeaderBackgroundBrush="{DynamicResource DemoAccentSoft}"
+                ImageBasePath="{Binding ImageBasePath}"
+                TypographyTheme="{Binding CurrentTypographyTheme}"
+                TypographySize="{Binding CurrentTypographySize}"
                 ChipText="所见即所得"
                 EditorBackgroundKey="DemoBgWindow"
                 EditorForegroundKey="DemoText"
@@ -74,12 +81,13 @@
                 </Border>
                 <ScrollViewer
                     Grid.Row="1"
-                    Padding="28 32 48 0"
+                    Margin="32 28 32 0"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
                     <Border MaxWidth="820" HorizontalAlignment="Center">
                         <!-- 只读渲染结果：MarkdownViewer 不接受输入，编辑一律在左侧编辑器或实时视图里进行 -->
                         <md:MarkdownViewer
+                            ImageBasePath="{Binding ImageBasePath}"
                             Markdown="{Binding Markdown}"
                             TypographySize="{Binding CurrentTypographySize}"
                             TypographyTheme="{Binding CurrentTypographyTheme}" />
@@ -88,4 +96,54 @@
             </Grid>
         </Border>
     </Grid>
+    <UserControl.Styles>
+        <Style Selector="editor|MarkdownLiveEditorView Border.MdLiveQuote">
+            <Setter Property="Background" Value="{DynamicResource DemoAccentSoft}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoAccent}" />
+            <Setter Property="Padding" Value="16 10" />
+            <Setter Property="Margin" Value="0 14" />
+            <Setter Property="CornerRadius" Value="0 8 8 0" />
+        </Style>
+        <Style Selector="Button.MdCopyButton">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style Selector="Button.MdCopyButton TextBlock">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="md|MarkdownViewer[TypographyTheme=Simple][TypographySize=Normal] Border.MdH1Border">
+            <Setter Property="Margin" Value="0 8 0 20" />
+        </Style>
+        <Style Selector="md|MarkdownViewer[TypographyTheme=Simple][TypographySize=Normal] Border.MdH2Border">
+            <Setter Property="Margin" Value="0 30 0 14" />
+            <Setter Property="Padding" Value="0 0 0 8" />
+        </Style>
+        <Style Selector="md|MarkdownViewer[TypographyTheme=Simple][TypographySize=Normal] Border.MdH3Border">
+            <Setter Property="Margin" Value="0 22 0 10" />
+        </Style>
+        <Style Selector="md|MarkdownViewer[TypographyTheme=Simple] Border.MdQuote">
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoAccent}" />
+            <Setter Property="Padding" Value="16 10" />
+            <Setter Property="Margin" Value="0 14" />
+            <Setter Property="CornerRadius" Value="0 8 8 0" />
+        </Style>
+        <Style Selector="md|MarkdownViewer[TypographyTheme=Simple][TypographySize=Normal]">
+            <Setter Property="ParagraphFontSize" Value="14" />
+            <Setter Property="ParagraphLineHeight" Value="25.9" />
+            <Setter Property="Heading1FontSize" Value="28" />
+            <Setter Property="Heading2FontSize" Value="21" />
+            <Setter Property="Heading3FontSize" Value="17" />
+            <Setter Property="ParagraphMargin" Value="0 10" />
+            <Setter Property="BlockSpacing" Value="0" />
+        </Style>
+        <Style Selector="md|MarkdownViewer[TypographyTheme=Simple]">
+            <Setter Property="TextBrush" Value="{DynamicResource DemoText}" />
+            <Setter Property="MutedTextBrush" Value="{DynamicResource DemoTextSecondary}" />
+            <Setter Property="AccentBrush" Value="{DynamicResource DemoAccent}" />
+            <Setter Property="QuoteBackgroundBrush" Value="{DynamicResource DemoAccentSoft}" />
+            <Setter Property="TableHeaderBackgroundBrush" Value="{DynamicResource DemoAccentSoft}" />
+            <Setter Property="CodeBackgroundBrush" Value="{DynamicResource DemoCodeBg}" />
+            <Setter Property="BorderLineBrush" Value="{DynamicResource DemoBorderStrong}" />
+        </Style>
+    </UserControl.Styles>
 </UserControl>

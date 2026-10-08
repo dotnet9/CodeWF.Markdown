@@ -10,6 +10,62 @@ namespace CodeWF.Markdown.Tests.Editor;
 /// </summary>
 public sealed class MarkdownBlockParserTests
 {
+    [Fact]
+    public void Parse_MultilineQuoteRemovesPhysicalMarkers()
+    {
+        var model = Assert.Single(MarkdownBlockParser.Parse("> **one**\n> [two](#anchor)"));
+        Assert.Equal("**one**\n[two](#anchor)", model.Text);
+    }
+
+    [Theory]
+    [InlineData("  \r\n\r\n")]
+    [InlineData("\n\n")]
+    public void Parse_WhitespaceDocumentRoundTripsExactly(string markdown)
+        => Assert.Equal(markdown, MarkdownBlockParser.Write(MarkdownBlockParser.Parse(markdown)));
+
+    [Theory]
+    [InlineData("1. a\n2. b\n3. c", 1)]
+    [InlineData("0. a\n1. b\n2. c", 0)]
+    [InlineData("7. a\n8. b\n9. c", 7)]
+    public void Parse_OrderedList_PreservesEveryNumberAndSource(string markdown, int start)
+    {
+        var blocks = MarkdownBlockParser.Parse(markdown);
+        Assert.Equal(new[] { start, start + 1, start + 2 }, blocks.Select(block => block.OrderedNumber));
+        Assert.Equal(markdown, MarkdownBlockParser.Write(blocks));
+    }
+
+    [Theory]
+    [InlineData("> **粗** 和 [链接](https://x)", "https://x")]
+    [InlineData("> 微信公众号排版工具。**[Dotnet9](#jump_8)**", "#jump_8")]
+    public void Parse_Quote_PreservesInlineStyles(string markdown, string url)
+    {
+        var quote = Assert.Single(MarkdownBlockParser.Parse(markdown));
+        Assert.Equal(MarkdownBlockKind.Quote, quote.Kind);
+        var runs = MarkdownTextRunParser.Parse(quote.Text);
+        Assert.Contains(runs, run => run.Bold);
+        Assert.Contains(runs, run => run.LinkUrl == url);
+        Assert.DoesNotContain(runs, run => run.Text.Contains("**", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("# Title\r\n\r\nparagraph\r\n")]
+    [InlineData("1. a\n2. b\n3. c")]
+    [InlineData("> outer\n>\n> > **inner**\n")]
+    [InlineData("![image](assets/a.png \"title\")\n\n$x^2$\n\n$$\nx^2\n$$")]
+    [InlineData("<!-- comment -->\n\n~~strike~~ and \\*literal\\*\n")]
+    [InlineData("- parent\n  - child\n\n    continuation\n")]
+    public void ParseThenWrite_PreservesUntouchedSource(string markdown) =>
+        Assert.Equal(markdown, MarkdownBlockParser.Write(MarkdownBlockParser.Parse(markdown)));
+
+    [Fact]
+    public void EditingOneBlock_PreservesOtherSource()
+    {
+        const string markdown = "# Title\r\n\r\noriginal\r\n\r\n![alt](a.png \"title\")\r\n";
+        var blocks = MarkdownBlockParser.Parse(markdown);
+        blocks[1].Text = "changed";
+        Assert.Equal(markdown.Replace("original", "changed", StringComparison.Ordinal), MarkdownBlockParser.Write(blocks));
+    }
+
     [Theory]
     [InlineData("# Title", 1)]
     [InlineData("### Third", 3)]

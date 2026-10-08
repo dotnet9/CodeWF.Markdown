@@ -15,6 +15,10 @@ public partial class App : Application
 {
 	public override void Initialize()
 	{
+		CodeWF.Markdown.Highlighting.CodeWFMarkdownHighlightingExtensions.UseHighlighting();
+		CodeWF.Markdown.Images.CodeWFMarkdownImagesExtensions.UseImages();
+		CodeWF.Markdown.MathRendering.CodeWFMarkdownMathExtensions.UseMath();
+		CodeWF.Markdown.Mermaid.CodeWFMarkdownMermaidExtensions.EnsureRegistered();
 		AvaloniaXamlLoader.Load(this);
 		var langPlugin = new JsonLangPlugin
 		{

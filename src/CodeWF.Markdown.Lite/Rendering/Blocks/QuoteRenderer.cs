@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Layout;
 using CodeWF.Markdown.Controls;
 using Markdig.Syntax;
@@ -19,7 +20,7 @@ internal sealed class QuoteRenderer : IMarkdownBlockRenderer
 
         var border = new Border();
         context.AddMarkdownClass(border, MarkdownStyleKeys.Quote);
-        context.BindTheme(border, Border.BorderBrushProperty, MarkdownViewer.BorderLineBrushProperty);
+        context.BindTheme(border, Border.BorderBrushProperty, MarkdownViewer.BorderLineBrushProperty, BindingPriority.Style);
         context.BindTheme(border, Border.BackgroundProperty, MarkdownViewer.QuoteBackgroundBrushProperty);
 
         var stack = new StackPanel { Orientation = Orientation.Vertical };

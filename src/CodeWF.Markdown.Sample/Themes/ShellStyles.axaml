@@ -52,8 +52,8 @@
             <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
         </Style>
         <Style Selector="Border.tb-doc">
-            <Setter Property="Margin" Value="10 0 0 0" />
-            <Setter Property="Padding" Value="10 0 0 0" />
+            <Setter Property="Margin" Value="14 0 0 0" />
+            <Setter Property="Padding" Value="14 0 0 0" />
             <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="1 0 0 0" />
         </Style>
@@ -112,6 +112,51 @@
             <Setter Property="BorderThickness" Value="0 0 1 0" />
         </Style>
         <!-- 选中态主色左条（对应原型 .doc-item.active::before） -->
+        <Style Selector="Border.active-bar">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="ListBox.doc-list">
+            <Setter Property="Padding" Value="8 0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0 0 0 2" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Theme">
+                <ControlTheme TargetType="ListBoxItem">
+                    <Setter Property="Template">
+                        <ControlTemplate>
+                            <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                                <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter>
+                </ControlTheme>
+            </Setter>
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem:pointerover">
+            <Setter Property="Background" Value="{DynamicResource DemoBgHover}" />
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem:selected">
+            <Setter Property="Background" Value="{DynamicResource DemoBgActive}" />
+        </Style>
+        <Style Selector="Border.doc-icon">
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
+        </Style>
+        <Style Selector="Border.doc-icon Path">
+            <Setter Property="Stroke" Value="{DynamicResource DemoTextSecondary}" />
+            <Setter Property="Stretch" Value="Uniform" />
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem:selected Border.doc-icon">
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoAccent}" />
+        </Style>
+        <Style Selector="ListBox.doc-list ListBoxItem:selected Border.doc-icon Path">
+            <Setter Property="Stroke" Value="{DynamicResource DemoAccent}" />
+        </Style>
         <Style Selector="ListBox.doc-list ListBoxItem:selected Border#ActiveBar">
             <Setter Property="IsVisible" Value="True" />
         </Style>
@@ -122,8 +167,8 @@
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="LetterSpacing" Value="0.8" />
-            <Setter Property="Foreground" Value="{DynamicResource SemiColorText3}" />
-            <Setter Property="Margin" Value="16 14 0 8" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
+            <Setter Property="Margin" Value="18 14 0 8" />
         </Style>
         <Style Selector="Border.sidebar.collapsed TextBlock.side-label">
             <Setter Property="IsVisible" Value="False" />
@@ -162,6 +207,42 @@
             <Setter Property="BorderThickness" Value="0 0 0 1" />
             <Setter Property="Padding" Value="12 0" />
         </Style>
+        <Style Selector="Border.toolbar > DockPanel">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.toolbar ComboBox">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8 0" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
+        </Style>
+        <Style Selector="ComboBox#TypographyThemeSelect">
+            <Setter Property="MinWidth" Value="140" />
+        </Style>
+        <Style Selector="ComboBox#FontSizeSelect">
+            <Setter Property="MinWidth" Value="72" />
+        </Style>
+        <Style Selector="Window.compact Border.toolbar TextBlock.group-label">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="Window.compact Button.seg">
+            <Setter Property="Padding" Value="8 0" />
+        </Style>
+        <Style Selector="Window.compact ComboBox#TypographyThemeSelect">
+            <Setter Property="MinWidth" Value="120" />
+        </Style>
+        <Style Selector="Border.toolbar DropDownButton">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Padding" Value="12 0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="{DynamicResource DemoBgWindow}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextSecondary}" />
+            <Setter Property="FontSize" Value="12.5" />
+        </Style>
         <Style Selector="Border.segment">
             <Setter Property="Background" Value="{DynamicResource DemoBgHover}" />
             <Setter Property="CornerRadius" Value="8" />
@@ -169,10 +250,20 @@
         </Style>
         <Style Selector="Button.seg">
             <Setter Property="Height" Value="28" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="13" />
             <Setter Property="Padding" Value="14 0" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{DynamicResource SemiColorText2}" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
+        </Style>
+        <Style Selector="Button.seg TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
+        </Style>
+        <Style Selector="Button.seg Path">
+            <Setter Property="Stroke" Value="{DynamicResource DemoTextMuted}" />
         </Style>
         <Style Selector="Button.seg.on">
             <Setter Property="Background" Value="{DynamicResource DemoBgWindow}" />
@@ -202,6 +293,44 @@
             <Setter Property="BorderBrush" Value="{DynamicResource DemoBorder}" />
             <Setter Property="BorderThickness" Value="0 0 0 1" />
             <Setter Property="Padding" Value="12 0" />
+        </Style>
+        <Style Selector="Button.seg.on TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource DemoAccent}" />
+        </Style>
+        <Style Selector="Button.seg.on Path">
+            <Setter Property="Stroke" Value="{DynamicResource DemoAccent}" />
+        </Style>
+        <Style Selector="Button.seg.on /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DemoBgWindow}" />
+            <Setter Property="BoxShadow" Value="0 1 3 0 #1F101828" />
+        </Style>
+        <Style Selector="Border.pane-head > Grid">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.pane-head StackPanel">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.pane-head Path.stroke-ico">
+            <Setter Property="Width" Value="6" />
+            <Setter Property="Height" Value="6" />
+            <Setter Property="Data" Value="M3 0 A3 3 0 1 0 3 6 A3 3 0 1 0 3 0" />
+            <Setter Property="Fill" Value="{DynamicResource DemoAccent}" />
+            <Setter Property="StrokeThickness" Value="0" />
+        </Style>
+        <Style Selector="Border.kbd-chip">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.kbd-chip > TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
+        </Style>
+        <Style Selector="TextBlock.doc-name">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoText}" />
+        </Style>
+        <Style Selector="TextBlock.doc-desc">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource DemoTextMuted}" />
         </Style>
         <Style Selector="Ellipse.pane-dot">
             <Setter Property="Width" Value="6" />

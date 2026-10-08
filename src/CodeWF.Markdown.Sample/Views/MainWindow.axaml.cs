@@ -23,10 +23,16 @@ public partial class MainWindow : Window
         _viewModel?.ConfigureHost(this);
         _viewModel?.PropertyChanged += ViewModel_PropertyChanged;
         KeyDown += MainWindow_KeyDown;
+        SizeChanged += (_, _) => Classes.Set("compact", Bounds.Width < 1200);
     }
 
     private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
     {
+        if (e.KeyModifiers == KeyModifiers.Control && e.Key is Key.D1 or Key.D2 or Key.D3)
+        {
+            Vm?.StartIncrementalStressCommand.Execute(e.Key switch { Key.D1 => "replace", Key.D2 => "insert", _ => "append" });
+            e.Handled = true;
+        }
         if (e.Key == Key.P && e.KeyModifiers == KeyModifiers.Control)
         {
             Vm?.ToggleQuickOpen();
@@ -82,6 +88,7 @@ public partial class MainWindow : Window
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(MainWindowViewModel.ViewMode)) SetViewSegment(Vm?.ViewMode ?? "split");
         if (e.PropertyName == nameof(MainWindowViewModel.IsSidebarCollapsed))
         {
             UpdateSidebarLayout();

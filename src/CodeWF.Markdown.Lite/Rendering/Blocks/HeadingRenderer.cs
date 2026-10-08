@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
 using CodeWF.Markdown.Controls;
@@ -25,8 +26,8 @@ internal sealed class HeadingRenderer : IMarkdownBlockRenderer
             border,
             MarkdownStyleKeys.HeadingBorder,
             MarkdownStyleKeys.GetHeadingBorderClass(heading.Level));
-        context.BindTheme(border, Border.BorderBrushProperty, MarkdownViewer.AccentBrushProperty);
-        context.BindTheme(border, Layoutable.MarginProperty, MarkdownViewer.HeadingMarginProperty);
+        context.BindTheme(border, Border.BorderBrushProperty, MarkdownViewer.AccentBrushProperty, BindingPriority.Style);
+        context.BindTheme(border, Layoutable.MarginProperty, MarkdownViewer.HeadingMarginProperty, BindingPriority.Style);
 
         var textBlock = context.CreateSelectableText(MarkdownStyleKeys.Heading, MarkdownStyleKeys.GetHeadingClass(heading.Level));
         textBlock.FontWeight = FontWeight.Bold;

@@ -90,6 +90,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private int _incrementalReplaceTick;
     private int _incrementalInsertTick;
     private int _incrementalAppendTick;
+    private string? _incrementalStressMode;
     private SampleLanguage? _selectLanguage;
 
     public MainWindowViewModel()
@@ -102,6 +103,13 @@ public sealed class MainWindowViewModel : ObservableObject
         };
         _incrementalStressTimer.Tick += (_, _) => ApplyIncrementalStressTick();
         ToggleIncrementalStressCommand = new RelayCommand(ToggleIncrementalStress);
+        StartIncrementalStressCommand = new RelayCommand<string?>(mode =>
+        {
+            StopIncrementalStress();
+            _incrementalStressMode = mode;
+            ToggleIncrementalStress();
+        });
+        StopIncrementalStressCommand = new RelayCommand(StopIncrementalStress);
 
         _markdownBasePath = ResolveMarkdownBasePath();
         ThemeVariants =
@@ -122,7 +130,7 @@ public sealed class MainWindowViewModel : ObservableObject
         SelectedThemeVariant = FindThemeVariantOption(GetEnvironmentValue(AppThemeEnvironmentVariable))
                                ?? ThemeVariants[0];
         SelectedTypographyTheme = FindTypographyThemeChoice(TypographyThemes, GetEnvironmentValue(TypographyThemeEnvironmentVariable))
-                                  ?? TypographyThemes.FirstOrDefault(theme => theme.Key == MarkdownTypographyThemes.OrangeHeart)
+                                  ?? TypographyThemes.FirstOrDefault(theme => theme.Key == MarkdownTypographyThemes.Simple)
                                   ?? TypographyThemes.FirstOrDefault();
         FirstViewerSelectedTypographyTheme = ViewerTypographyThemeChoices.FirstOrDefault();
         FirstViewerSelectedCompactLayout = ViewerCompactLayoutChoices.FirstOrDefault();
@@ -142,7 +150,7 @@ public sealed class MainWindowViewModel : ObservableObject
         ExportPdfCommand = new AsyncRelayCommand<string?>(_ => ExportCoreAsync("pdf"));
         ExportWordCommand = new AsyncRelayCommand<string?>(_ => ExportCoreAsync("word"));
         CopySocialHtmlCommand = new AsyncRelayCommand<string?>(CopySocialHtmlAsync);
-        VersionText = "v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "13.0.0");
+        VersionText = "v" + (typeof(MainWindowViewModel).Assembly.GetName().Version?.ToString(3) ?? "14.0.0");
         UpdateStatistics();
     }
 
@@ -159,6 +167,10 @@ public sealed class MainWindowViewModel : ObservableObject
     public List<SampleLanguage> Languages { get; }
 
     public RelayCommand ToggleIncrementalStressCommand { get; }
+
+    public RelayCommand<string?> StartIncrementalStressCommand { get; }
+
+    public RelayCommand StopIncrementalStressCommand { get; }
 
     public RelayCommand ToggleSidebarCommand { get; }
 
@@ -279,7 +291,9 @@ public sealed class MainWindowViewModel : ObservableObject
         private set => SetProperty(ref field, value);
     }
 
-    public string SampleName => SelectedFile?.Name ?? string.Empty;
+    public string SampleName => SelectedFile is { } file ? file.DisplayName + ".md" : string.Empty;
+
+    public string? ImageBasePath => SelectedFile is { } file ? Path.GetDirectoryName(file.Path) : _markdownBasePath;
 
     public void SetViewMode(string? mode) => ViewMode = mode ?? "split";
 
@@ -504,6 +518,7 @@ public sealed class MainWindowViewModel : ObservableObject
                 StopIncrementalStress();
                 LoadMarkdown();
                 OnPropertyChanged(nameof(SampleName));
+                OnPropertyChanged(nameof(ImageBasePath));
             }
         }
     }
@@ -532,6 +547,7 @@ public sealed class MainWindowViewModel : ObservableObject
             if (SetProperty(ref field, value) && value is not null && Application.Current is { } app)
             {
                 app.RequestedThemeVariant = value.ThemeVariant;
+                ThemeIconText = value.Key == "dark" ? "☀️" : "🌙";
                 OnPropertyChanged(nameof(PreviewThemeText));
             }
         }
@@ -721,7 +737,8 @@ public sealed class MainWindowViewModel : ObservableObject
     private void ApplyIncrementalStressTick()
     {
         _incrementalStressTick++;
-        switch ((_incrementalStressTick - 1) % 3)
+        var mode = _incrementalStressMode switch { "replace" => 0, "insert" => 1, "append" => 2, _ => (_incrementalStressTick - 1) % 3 };
+        switch (mode)
         {
             case 0:
                 _incrementalReplaceTick++;
@@ -995,7 +1012,8 @@ public sealed class MainWindowViewModel : ObservableObject
     public string? CurrentTypographyTheme => SelectedTypographyTheme?.Key;
 
     /// <summary>排版主题显示名（状态栏芯片用）。</summary>
-    public string CurrentTypographyName => SelectedTypographyTheme?.Name ?? string.Empty;
+    public string CurrentTypographyName => SelectedTypographyTheme?.Key == MarkdownTypographyThemes.Simple
+        ? "Simple" : SelectedTypographyTheme?.Name ?? string.Empty;
 
     public string CurrentTypographySize => IsCompactLayout
         ? MarkdownTypographySizes.Small
@@ -1022,8 +1040,19 @@ public sealed class MainWindowViewModel : ObservableObject
 
 public sealed record ThemeVariantOption(string Name, string Key, ThemeVariant ThemeVariant);
 
-public sealed record TypographyThemeChoice(string Name, string? Key);
+public sealed record TypographyThemeChoice(string Name, string? Key)
+{
+    public string DisplayName => Key == MarkdownTypographyThemes.Simple ? "Simple · 默认" : Name;
+}
 
 public sealed record CompactLayoutChoice(string Name, string? Size);
 
-public sealed record MarkdownSampleFile(string Name, string Path, string Description);
+public sealed record MarkdownSampleFile(string Name, string Path, string Description)
+{
+    public string DisplayName => Name switch
+    {
+        "04-列表引用与HTML.md" => "列表与引用",
+        "05-图片链接与长文.md" => "图片与链接",
+        _ => System.Text.RegularExpressions.Regex.Replace(System.IO.Path.GetFileNameWithoutExtension(Name), @"^\d+-", string.Empty)
+    };
+}

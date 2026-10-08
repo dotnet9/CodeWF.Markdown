@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <IsPackable>false</IsPackable>
-    <TargetFrameworks>net11.0;net11.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>14.0</LangVersion>
@@ -21,8 +21,8 @@
     <PackageReference Include="Markdig" />
     <PackageReference Include="Semi.Avalonia" />
     <PackageReference Include="Avalonia.AvaloniaEdit" />
-    <PackageReference Include="VC-LTL" />
-    <PackageReference Include="YY-Thunks" Condition="'$(TargetFramework)' == 'net11.0-windows'" />
+    <PackageReference Include="VC-LTL" Condition="'$(TargetFramework)' == 'net10.0-windows' or $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win-'))" />
+    <PackageReference Include="YY-Thunks" Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win-'))" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CodeWF.Markdown\CodeWF.Markdown.csproj" />
@@ -38,6 +38,10 @@
     <None Include="..\..\docs\MarkdownSamples\**\*.md" CopyToOutputDirectory="PreserveNewest">
       <Link>MarkdownSamples\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <TargetPath>MarkdownSamples\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+    </None>
+    <None Include="..\..\docs\MarkdownSamples\images\**" CopyToOutputDirectory="PreserveNewest">
+      <Link>MarkdownSamples\images\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <TargetPath>MarkdownSamples\images\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
     </None>
     <None Include="..\..\docs\MarkdownStyles\**\*.txt" CopyToOutputDirectory="PreserveNewest">
       <Link>MarkdownStyles\%(RecursiveDir)%(Filename)%(Extension)</Link>

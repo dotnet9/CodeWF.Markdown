@@ -231,7 +231,7 @@ internal static class CodeHighlighter
     {
         var foregroundId = -1;
         var backgroundId = -1;
-        var fontStyle = TextMateFontStyle.NotSet;
+        var fontStyle = TextMateFontStyle.None;
 
         foreach (var rule in theme.Match(scopes.ToList()))
         {
@@ -272,8 +272,7 @@ internal static class CodeHighlighter
 
         return language.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries)[0].ToLowerInvariant() switch
         {
-            "csharp" => "c#",
-            "cs" => "c#",
+            "c#" or "cs" => "csharp",
             "js" => "javascript",
             "ts" => "typescript",
             "ps" => "powershell",

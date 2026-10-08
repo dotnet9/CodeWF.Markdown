@@ -14,6 +14,9 @@ public sealed class MarkdownBlockModel
     /// <summary>列表项序号（有序列表）；无序列表为 0。</summary>
     public int OrderedNumber { get; set; }
 
+    /// <summary>有序列表标识，支持合法的 0 起始编号。</summary>
+    public bool IsOrdered { get; set; }
+
     /// <summary>列表缩进（每级 2 空格）。</summary>
     public int IndentLevel { get; set; }
 
@@ -43,7 +46,13 @@ public sealed class MarkdownBlockModel
 
     /// <summary>无法结构化解析的原始 Markdown（HTML 块、数学块等）。</summary>
     public string Raw { get; set; } = string.Empty;
+
+    // 同一顶层 AST 块共用源码快照；只有被编辑的组才需要序列化。
+    internal MarkdownBlockSource? Source { get; set; }
 }
+
+internal sealed record MarkdownBlockSource(string LeadingTrivia, string Markdown, string CanonicalMarkdown,
+    string LineEnding, string TrailingTrivia);
 
 /// <summary>块类型。</summary>
 public enum MarkdownBlockKind

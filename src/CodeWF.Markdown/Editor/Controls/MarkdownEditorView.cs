@@ -8,6 +8,8 @@ using Avalonia.Styling;
 
 using AvaloniaEdit;
 using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.Highlighting.Xshd;
+using System.Xml;
 
 using CodeWF.Markdown.Editor.Services;
 
@@ -41,6 +43,7 @@ public class MarkdownEditorView : UserControl
     private const string DefaultSeparatorKey = "CodeWFMarkdownEditorSeparatorBrush";
 
     private readonly MarkdownEditorOptions _options;
+    private readonly IHighlightingDefinition _codeHighlighting;
     private readonly IMarkdownEditorActionService _actions;
     private readonly IMarkdownEditorSearchService _search;
     private readonly Border _container;
@@ -55,6 +58,10 @@ public class MarkdownEditorView : UserControl
     {
         HeaderTextProperty.Changed.AddClassHandler<MarkdownEditorView>((view, _) => view.UpdatePaneHead());
         ChipTextProperty.Changed.AddClassHandler<MarkdownEditorView>((view, _) => view.UpdatePaneHead());
+        EditorPaddingProperty.Changed.AddClassHandler<MarkdownEditorView>((view, _) =>
+        {
+            if (view._container is not null) view._container.Padding = view.EditorPadding;
+        });
     }
 
     public MarkdownEditorView()
@@ -87,7 +94,9 @@ public class MarkdownEditorView : UserControl
             WordWrap = true
         };
 
-        _editor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("MarkDown");
+        // 每个编辑器拥有独立配色，避免不同主题的并存编辑器改写全局语法定义。
+        _codeHighlighting = LoadHighlighting("CSharp-Mode", HighlightingManager.Instance);
+        _editor.SyntaxHighlighting = LoadHighlighting("MarkDown-Mode", new EditorHighlightingResolver(_codeHighlighting));
         _editor.TextArea.TextEntering += OnTextEntering;
         _editor.TextChanged += (_, _) => RaiseMarkdownChanged();
         _editor.TextArea.Caret.PositionChanged += (_, _) => RaiseSelectionChanged();
@@ -133,6 +142,15 @@ public class MarkdownEditorView : UserControl
     /// <summary>窗格头右侧芯片文案（例如 Markdown）；为 null/空时不显示芯片。</summary>
     public static readonly StyledProperty<string?> ChipTextProperty =
         AvaloniaProperty.Register<MarkdownEditorView, string?>(nameof(ChipText), "Markdown");
+
+    public static readonly StyledProperty<Thickness> EditorPaddingProperty =
+        AvaloniaProperty.Register<MarkdownEditorView, Thickness>(nameof(EditorPadding), new Thickness(6, 28, 34, 28));
+
+    public Thickness EditorPadding
+    {
+        get => GetValue(EditorPaddingProperty);
+        set => SetValue(EditorPaddingProperty, value);
+    }
 
     /// <summary>设计令牌键：编辑器背景色。</summary>
     public static readonly StyledProperty<string> EditorBackgroundKeyProperty =
@@ -503,10 +521,13 @@ public class MarkdownEditorView : UserControl
         var icon = new Avalonia.Controls.Shapes.Path
         {
             Classes = { "stroke-ico" },
-            Width = 12,
-            Height = 12,
-            Data = Geometry.Parse("M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z")
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
         };
+        icon.SetValue(WidthProperty, 12, Avalonia.Data.BindingPriority.Style);
+        icon.SetValue(HeightProperty, 12, Avalonia.Data.BindingPriority.Style);
+        icon.SetValue(Avalonia.Controls.Shapes.Path.DataProperty,
+            Geometry.Parse("M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"),
+            Avalonia.Data.BindingPriority.Style);
 
         var left = new StackPanel
         {
@@ -549,6 +570,7 @@ public class MarkdownEditorView : UserControl
         _container.Background = background;
         _editor.Background = background;
         _editor.Foreground = ResolveBrush(EditorForegroundKey);
+        _editor.TextArea.TextView.LinkTextForegroundBrush = ResolveBrush(LinkKey);
 
         _editor.TextArea.TextView.CurrentLineBackground = ResolveBrush(CurrentLineBackgroundKey) ?? Brushes.Transparent;
         _editor.TextArea.TextView.CurrentLineBorder = new Pen(ResolveBrush(CurrentLineBorderKey) ?? Brushes.Transparent, 1);
@@ -576,13 +598,10 @@ public class MarkdownEditorView : UserControl
     }
 
     // Markdown 缩进代码块通过 ruleSet 导入复用 C# 着色，内置配色（Green 注释、Blue 关键字等）
-    // 在暗色编辑器背景上不可读，映射到编辑器语义色。本控件只编辑 Markdown，改共享的 C# 定义无副作用。
+    // 在暗色编辑器背景上不可读，映射到当前实例的编辑器语义色。
     private void ApplyCodeHighlightingColors()
     {
-        if (HighlightingManager.Instance.GetDefinition("C#") is not { } codeDefinition)
-        {
-            return;
-        }
+        var codeDefinition = _codeHighlighting;
 
         SetHighlightingForeground(codeDefinition, "Comment", ResolveBrush(QuoteKey));
         SetHighlightingForeground(codeDefinition, "Preprocessor", ResolveBrush(QuoteKey));
@@ -596,6 +615,16 @@ public class MarkdownEditorView : UserControl
         SetHighlightingForeground(codeDefinition, "ReferenceTypeKeywords", ResolveBrush(DangerKey));
         SetHighlightingForeground(codeDefinition, "NullOrValueKeywords", ResolveBrush(DangerKey));
         SetHighlightingForeground(codeDefinition, "MethodCall", ResolveBrush(CodeKey));
+        foreach (var name in new[] { "Visibility", "Modifiers", "ContextKeywords", "TypeKeywords",
+            "TrueFalse", "NamespaceKeywords", "GetSetAddRemove", "SemanticKeywords" })
+        {
+            SetHighlightingForeground(codeDefinition, name, ResolveBrush(LinkKey));
+        }
+        foreach (var name in new[] { "ExceptionKeywords", "CheckedKeyword", "UnsafeKeywords",
+            "OperatorKeywords", "ParameterModifiers" })
+        {
+            SetHighlightingForeground(codeDefinition, name, ResolveBrush(CodeKey));
+        }
     }
 
     private static void SetHighlightingForeground(IHighlightingDefinition definition, string colorName, IBrush? brush)
@@ -627,6 +656,21 @@ public class MarkdownEditorView : UserControl
     private static HighlightingColor? FindColor(IHighlightingDefinition definition, string colorName) =>
         definition.NamedHighlightingColors.FirstOrDefault(
             candidate => string.Equals(candidate.Name, colorName, StringComparison.OrdinalIgnoreCase));
+
+    private static IHighlightingDefinition LoadHighlighting(string resource, IHighlightingDefinitionReferenceResolver resolver)
+    {
+        using var stream = typeof(HighlightingManager).Assembly.GetManifestResourceStream(
+            $"AvaloniaEdit.Highlighting.Resources.{resource}.xshd")
+            ?? throw new InvalidOperationException($"Missing editor highlighting resource: {resource}");
+        using var reader = XmlReader.Create(stream);
+        return HighlightingLoader.Load(reader, resolver);
+    }
+
+    private sealed class EditorHighlightingResolver(IHighlightingDefinition code) : IHighlightingDefinitionReferenceResolver
+    {
+        public IHighlightingDefinition GetDefinition(string name) => name == "C#"
+            ? code : HighlightingManager.Instance.GetDefinition(name);
+    }
 
     /// <summary>
     /// 先查宿主资源（<paramref name="key"/>），再查内置调色板（同名键）。

@@ -52,22 +52,7 @@ internal sealed class MarkdownRichTextView : TextBlock
             return 0;
         }
 
-        var bestIndex = 0;
-        var bestDistance = double.MaxValue;
-        for (var index = 0; index <= plain.Length; index++)
-        {
-            var rect = layout.HitTestTextPosition(index);
-            var centerX = rect.X;
-            var centerY = rect.Y + (rect.Height / 2);
-            var distance = Math.Abs(point.X - centerX) + (Math.Abs(point.Y - centerY) * 0.25);
-            if (distance < bestDistance)
-            {
-                bestDistance = distance;
-                bestIndex = index;
-            }
-        }
-
-        return bestIndex;
+        return Math.Clamp(layout.HitTestPoint(point).TextPosition, 0, plain.Length);
     }
 
     private void ApplyRuns()

@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Media;
 using Avalonia.Styling;
 using CodeWF.Markdown.Controls;
@@ -56,6 +57,10 @@ public interface IMarkdownRenderContext
         AvaloniaObject target,
         AvaloniaProperty<T> targetProperty,
         StyledProperty<T> sourceProperty);
+
+    /// <summary>默认块装饰可使用 Style 优先级，让宿主按语义类名覆盖局部排版。</summary>
+    IDisposable BindTheme<T>(AvaloniaObject target, AvaloniaProperty<T> targetProperty,
+        StyledProperty<T> sourceProperty, BindingPriority priority) => BindTheme(target, targetProperty, sourceProperty);
 
     SelectableTextBlock CreateSelectableText(params string[] classes);
 
