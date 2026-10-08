@@ -38,12 +38,12 @@ dotnet build CodeWF.Markdown.slnx -c Release
 dotnet test tests/CodeWF.Markdown.Tests/CodeWF.Markdown.Tests.csproj -c Release
 ```
 
-跨仓库离屏验证器位于 Vex 的 [scripts/ui-verification](https://github.com/dotnet9/Vex/tree/codex/prototype-live-editing/scripts/ui-verification)，运行方法见该目录 README。它加载实际 App/XAML/ViewModel，通过 Avalonia.Headless + Skia 绘制并发送输入，覆盖明暗主题、1400/980 宽度和四模式，以及源码行高、点击定位、键盘移动、实时标题/共享引用编辑和源码同步。截图、日志与构建输出可随时重新生成，属于临时产物。
+跨仓库离屏验证器位于 Vex 的 [scripts/ui-verification](https://github.com/dotnet9/Vex/tree/main/scripts/ui-verification)，运行方法见该目录 README。它加载实际 App/XAML/ViewModel，通过 Avalonia.Headless + Skia 绘制并发送输入，覆盖明暗主题、1400/980 宽度和四模式，以及源码行高、点击定位、键盘移动、实时标题/共享引用编辑和源码同步。截图、日志与构建输出可随时重新生成，属于临时产物。
 
-最近回归：182 项 Release 测试通过，Demo 四模式离屏验证通过。首次运行 Vex 联调前需将库当前版本的四包打入本地源；改库代码必须升开发版本，覆盖同版本 nupkg 不会刷新 NuGet 缓存。
+最近回归：182 项 Release 测试通过，Demo 四模式离屏验证通过。Vex 正式版直接从 nuget.org 恢复四包；修改库代码后的发布前联调需升开发版本并打包到本地源，覆盖同版本 nupkg 不会刷新 NuGet 缓存。
 
 ## 验证边界
 
 原型浏览器截图未在本环境获得；CSS/结构、实际布局和离屏截图共同用于核对，不能据此宣称全页逐像素一致。原生滚动条与字体度量仍可能与网页不同；Windows 窗控、拖动/最大化、多 DPI、中文 IME 连续组字需实机验证。
 
-嵌套/混合引用仍按编辑块显示；修改列表/引用成员会规范化该组 Markdown，未改动组严格保留原文。实时控件提供块编辑，尚非完整 Typora 行内编辑。复杂嵌套续行、远程图片失败重试和全部导出格式未穷尽实测。开发包联调不等于正式 NuGet、标签或安装包发布。
+嵌套/混合引用仍按编辑块显示；修改列表/引用成员会规范化该组 Markdown，未改动组严格保留原文。实时控件提供块编辑，尚非完整 Typora 行内编辑。复杂嵌套续行、远程图片失败重试和全部导出格式未穷尽实测。

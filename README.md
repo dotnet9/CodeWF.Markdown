@@ -13,9 +13,8 @@
 
 ## 仓库规范
 
-- 当前版本：`14.0.0`，版本号统一维护在根目录 `Directory.Build.props` 的 `<Version>` 节点。
-- **14.0.0 起所有 NuGet 包只支持 `net10.0`**（Mermaid 依赖仅提供 net10 资产）；Demo、App 使用 `net11.0` / `net11.0-windows`，可正常引用 net10 包。
-- `net11.0` 当前使用 preview SDK，CI 通过 `actions/setup-dotnet` 显式安装 preview SDK；发布稳定版本前应同步调整目标框架和 CI 配置。
+- 当前版本：`14.0.1`，版本号统一维护在根目录 `Directory.Build.props` 的 `<Version>` 节点。
+- **14.0.0 起所有 NuGet 包只支持 `net10.0`**（Mermaid 依赖仅提供 net10 资产）；Demo 和测试同样使用 `net10.0`，构建与发布采用 .NET 10 SDK。
 - 根目录 `logo.svg`、`logo.png`、`logo.ico` 是唯一图标源，子工程只通过 MSBuild `Link` 引用，不维护图标副本。
 - 运行时帮助、Markdown 示例、内置备忘录、设计说明等业务文档按功能保留；仓库级入口文档使用根目录 `README.md` 和 `UpdateLog.md`。
 
@@ -64,29 +63,10 @@ CodeWF.Markdown.Mermaid.CodeWFMarkdownMermaidExtensions.EnsureRegistered();
 | 能力扩展方法调用（`UseHighlighting()` 等） | **不变**（命名空间与扩展方法名全部保留） |
 | 目标框架 `net8.0;net10.0;net11.0` | **统一 `net10.0`**，net8 消费者需先升级 |
 
-## 仓库规范
-
-- 当前版本：`13.0.0.0-dev.20261006.2`（大版本重构中），版本号统一维护在根目录 `Directory.Build.props` 的 `<Version>` 节点。
-- NuGet 包项目统一支持 `net8.0;net10.0;net11.0`；Demo、App 使用 `net11.0` / `net11.0-windows`，测试项目覆盖全部三个 NuGet 目标框架。
-- `net11.0` 当前使用 preview SDK，CI 通过 `actions/setup-dotnet` 显式安装 preview SDK；发布稳定版本前应同步调整目标框架和 CI 配置。
-- 根目录 `logo.svg`、`logo.png`、`logo.ico` 是唯一图标源，子工程只通过 MSBuild `Link` 引用，不维护图标副本。
-- 运行时帮助、Markdown 示例、内置备忘录、设计说明等业务文档按功能保留；仓库级入口文档使用根目录 `README.md` 和 `UpdateLog.md`。
-
-## 包线说明（13.0.0 起）
-
-- `CodeWF.Markdown`：完整 MarkdownViewer，支持常见 Markdown 元素、代码高亮、图片预览、SVG/图片、数学渲染扩展、多语言资源和增量渲染；内置块级渲染器管线，可注册外部渲染器扩展。
-- `CodeWF.Markdown.Themes`：`CodeWF.Markdown` 的默认控件模板和多套排版主题。
-- `CodeWF.Markdown.Highlighting`（可选能力包）：TextMate 代码语法高亮；不注册时代码块降级为单色等宽。
-- `CodeWF.Markdown.Math`（可选能力包）：CSharpMath 数学公式排版；不注册时公式降级为原文。
-- `CodeWF.Markdown.Mermaid`（可选能力包，net10.0+）：把 ```mermaid 围栏代码块渲染为图表，基于 Mermaider 纯 .NET 实现，无需 JavaScript。
-- `CodeWF.Markdown.Images`（可选能力包）：图片异步加载、SVG/GIF 预览与点击放大；不注册时图片降级为替代文本。
-- `CodeWF.Markdown.Export`（可选能力包）：PNG / PDF / Word 导出与微信公众号、知乎、掘金剪贴板 HTML。
-- `CodeWF.Markdown.Lite` / `CodeWF.Markdown.Lite.Themes`：**已在 13.0.0 退役**。轻量需求等待后续 Core 包（仅核心渲染，无高亮/数学/图片依赖）；迁移期间可暂留 12.x。
-
 ### 使用 Mermaid 能力包
 
 ```csharp
-// NuGet: CodeWF.Markdown.Mermaid
+// NuGet: CodeWF.Markdown（完整包）
 CodeWF.Markdown.Mermaid.CodeWFMarkdownMermaidExtensions.EnsureRegistered();
 // 或实例扩展：viewer.UseMermaid();
 ```

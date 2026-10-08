@@ -22,12 +22,7 @@ jobs:
       - name: Set up .NET SDKs
         uses: actions/setup-dotnet@v4
         with:
-          # 目标框架 net8.0 / net10.0 / net11.0 与 ci.yml 保持一致
-          dotnet-version: |
-            8.0.x
-            10.0.x
-            11.0.x
-          dotnet-quality: preview
+          dotnet-version: '10.0.x'
 
       - name: Check tag matches package version
         shell: pwsh
