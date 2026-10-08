@@ -148,7 +148,7 @@ jobs:
             $tagName = '${{ github.ref_name }}'
             $version = $tagName.TrimStart('v', 'V')
           }
-          "version=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "tag_name=$tagName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       - name: 准备发布说明
