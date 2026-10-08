@@ -40,8 +40,4 @@
   <ItemGroup>
     <ProjectReference Include="..\CodeWF.Markdown.Lite\CodeWF.Markdown.Lite.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="" />
-    <None Include="..\..\logo.png" Pack="true" PackagePath="\" Link="logo.png" />
-  </ItemGroup>
 </Project>

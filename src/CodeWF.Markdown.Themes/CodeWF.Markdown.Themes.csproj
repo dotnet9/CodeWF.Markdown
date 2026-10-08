@@ -26,8 +26,4 @@
     <ProjectReference Include="..\CodeWF.Markdown\CodeWF.Markdown.csproj" />
     <ProjectReference Include="..\CodeWF.Markdown.Lite.Themes\CodeWF.Markdown.Lite.Themes.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="" />
-    <None Include="..\..\logo.png" Pack="true" PackagePath="\" Link="logo.png" />
-  </ItemGroup>
 </Project>
