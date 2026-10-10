@@ -1,3 +1,18 @@
+> [!WARNING]
+> # ⚠️ 本仓库已停止维护 / This repository is no longer maintained
+>
+> 本仓库已归档：不再接受 Issue 与 Pull Request，NuGet 旧包保留但不再升级。
+>
+> This repository is archived: issues and pull requests are closed, and existing NuGet packages will not receive updates.
+>
+> **替代方案 / Replacement:**
+>
+> | 旧包 / Old packages | 新包 / New packages |
+> |---|---|
+> | CodeWF.Markdown(.Lite)(.Themes) | CodeWF.Avalonia.Markdown(.Lite)（主题已内置） |
+>
+> 新仓库 / New repository: **https://github.com/dotnet9/CodeWF.Avalonia**
+
 ﻿# CodeWF.Markdown
 
 基于 Avalonia 12 的 Markdown 渲染控件、排版主题和可运行示例。该仓库从 `CodeWF.AvaloniaControls` 拆分而来，只保留 Markdown 相关代码与文档。
